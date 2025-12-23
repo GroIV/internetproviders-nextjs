@@ -4,6 +4,11 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { LocationInfo } from '@/components/LocationInfo'
 import { getProviderCoverageCount } from '@/lib/getProvidersByLocation'
+import {
+  JsonLd,
+  generateBreadcrumbSchema,
+  generateProviderSchema,
+} from '@/lib/seo'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -36,9 +41,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Provider Not Found' }
   }
 
+  const technologies = provider.technologies || []
+  const techString = technologies.length > 0 ? technologies.join(', ') : 'high-speed internet'
+
   return {
     title: `${provider.name} Internet Plans & Pricing`,
-    description: `Compare ${provider.name} internet plans, pricing, and availability. Find the best ${provider.name} deals in your area.`,
+    description: `Compare ${provider.name} internet plans, pricing, and availability. ${provider.name} offers ${techString} service in ${provider.coverageCount.toLocaleString()} ZIP codes.`,
+    alternates: {
+      canonical: `/providers/${slug}`,
+    },
+    openGraph: {
+      title: `${provider.name} Internet Plans & Pricing`,
+      description: `Compare ${provider.name} internet plans, pricing, and availability. Find the best ${provider.name} deals in your area.`,
+      url: `/providers/${slug}`,
+      type: 'website',
+    },
   }
 }
 
@@ -52,17 +69,34 @@ export default async function ProviderPage({ params }: Props) {
 
   const technologies = provider.technologies || []
 
+  // Generate structured data
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'Providers', url: '/providers' },
+    { name: provider.name, url: `/providers/${slug}` },
+  ])
+
+  const providerSchema = generateProviderSchema({
+    name: provider.name,
+    slug: provider.slug,
+    description: `${provider.name} is an internet service provider offering ${technologies.join(', ') || 'internet'} service across the United States.`,
+    technologies: technologies,
+    category: provider.category || 'Internet',
+  })
+
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-4xl mx-auto">
-        {/* Breadcrumb */}
-        <nav className="mb-8 text-sm text-gray-400">
-          <Link href="/" className="hover:text-white">Home</Link>
-          <span className="mx-2">/</span>
-          <Link href="/providers" className="hover:text-white">Providers</Link>
-          <span className="mx-2">/</span>
-          <span className="text-white">{provider.name}</span>
-        </nav>
+    <>
+      <JsonLd data={[breadcrumbSchema, providerSchema]} />
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
+          {/* Breadcrumb */}
+          <nav className="mb-8 text-sm text-gray-400" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-white">Home</Link>
+            <span className="mx-2">/</span>
+            <Link href="/providers" className="hover:text-white">Providers</Link>
+            <span className="mx-2">/</span>
+            <span className="text-white">{provider.name}</span>
+          </nav>
 
         {/* Header */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">
@@ -206,7 +240,8 @@ export default async function ProviderPage({ params }: Props) {
             Check Availability in Your Area
           </Link>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

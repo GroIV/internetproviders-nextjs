@@ -4,10 +4,53 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { ZipSearch } from '@/components/ZipSearch'
 import { getProviderSlug, cleanProviderName } from '@/lib/providers'
 import { RelatedRankings } from '@/components/RelatedRankings'
+import { JsonLd, generateBreadcrumbSchema } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Compare Internet Providers',
-  description: 'Compare internet providers in your area. Enter your ZIP code to see available options, speeds, and coverage.',
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ zip?: string }>
+}): Promise<Metadata> {
+  const params = await searchParams
+  const zipCode = params.zip
+
+  if (zipCode) {
+    // Check if we have data for this ZIP
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from('zip_broadband_coverage')
+      .select('city')
+      .eq('zip_code', zipCode)
+      .single()
+
+    if (data?.city) {
+      return {
+        title: `Internet Providers in ${data.city} (${zipCode})`,
+        description: `Compare internet providers in ${data.city}, ${zipCode}. See available fiber, cable, and wireless options with coverage percentages.`,
+        alternates: {
+          canonical: `/compare?zip=${zipCode}`,
+        },
+      }
+    } else {
+      // Soft 404 - ZIP not found, add noindex
+      return {
+        title: `Internet Providers - ZIP ${zipCode}`,
+        description: `Search for internet providers in your area.`,
+        robots: {
+          index: false,
+          follow: true,
+        },
+      }
+    }
+  }
+
+  return {
+    title: 'Compare Internet Providers',
+    description: 'Compare internet providers in your area. Enter your ZIP code to see available options, speeds, and coverage.',
+    alternates: {
+      canonical: '/compare',
+    },
+  }
 }
 
 interface CoverageData {
@@ -268,9 +311,23 @@ export default async function ComparePage({
     getProvidersByZip(zipCode),
   ])
 
+  // Generate breadcrumb schema
+  const breadcrumbItems = [
+    { name: 'Home', url: '/' },
+    { name: 'Compare Providers', url: '/compare' },
+  ]
+  if (zipCode && result) {
+    breadcrumbItems.push({
+      name: result.city || `ZIP ${zipCode}`,
+      url: `/compare?zip=${zipCode}`,
+    })
+  }
+
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-4xl mx-auto">
+    <>
+      <JsonLd data={generateBreadcrumbSchema(breadcrumbItems)} />
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-4">
@@ -437,7 +494,8 @@ export default async function ComparePage({
         <div className="mt-12">
           <RelatedRankings title="Explore Internet Rankings" />
         </div>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

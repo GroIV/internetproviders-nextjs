@@ -7,6 +7,11 @@ import { ZipSearch } from '@/components/ZipSearch'
 import { ProviderLink } from '@/components/ProviderLink'
 import { RelatedRankings } from '@/components/RelatedRankings'
 import { cleanProviderName, getProviderSlug } from '@/lib/providers'
+import {
+  JsonLd,
+  generateBreadcrumbSchema,
+  generateLocalBusinessSchema,
+} from '@/lib/seo'
 
 interface Props {
   params: Promise<{ state: string; city: string }>
@@ -109,9 +114,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'City Not Found' }
   }
 
+  const citySlug = cityToSlug(info.city.name)
+
   return {
     title: `Internet Providers in ${info.city.name}, ${info.stateInfo.code} | Compare ISPs`,
     description: `Compare internet providers in ${info.city.name}, ${info.stateInfo.name}. Find the best fiber, cable, and wireless internet options. Check speeds, prices, and availability.`,
+    alternates: {
+      canonical: `/internet/${state}/${citySlug}`,
+    },
+    openGraph: {
+      title: `Internet Providers in ${info.city.name}, ${info.stateInfo.code}`,
+      description: `Compare internet providers in ${info.city.name}, ${info.stateInfo.name}. Find the best fiber, cable, and wireless options.`,
+      url: `/internet/${state}/${citySlug}`,
+    },
   }
 }
 
@@ -139,6 +154,7 @@ export default async function CityPage({ params }: Props) {
   }
 
   const { stateInfo, city: cityInfo } = info
+  const citySlug = cityToSlug(cityInfo.name)
   const [coverage, providers] = await Promise.all([
     getCoverageData(cityInfo.zip),
     getProviders(cityInfo.zip),
@@ -149,19 +165,35 @@ export default async function CityPage({ params }: Props) {
   const cableProviders = providers.filter(p => getProviderType(p.name).type === 'Cable')
   const wirelessProviders = providers.filter(p => ['5G/Wireless', 'Satellite'].includes(getProviderType(p.name).type))
 
+  // Generate structured data
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'Internet by State', url: '/internet' },
+    { name: stateInfo.name, url: `/internet/${state}` },
+    { name: cityInfo.name, url: `/internet/${state}/${citySlug}` },
+  ])
+
+  const localBusinessSchema = generateLocalBusinessSchema({
+    city: cityInfo.name,
+    state: state,
+    stateName: stateInfo.name,
+  })
+
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-5xl mx-auto">
-        {/* Breadcrumb */}
-        <nav className="mb-8 text-sm text-gray-400">
-          <Link href="/" className="hover:text-white">Home</Link>
-          <span className="mx-2">/</span>
-          <Link href="/internet" className="hover:text-white">Internet by State</Link>
-          <span className="mx-2">/</span>
-          <Link href={`/internet/${state}`} className="hover:text-white">{stateInfo.name}</Link>
-          <span className="mx-2">/</span>
-          <span className="text-white">{cityInfo.name}</span>
-        </nav>
+    <>
+      <JsonLd data={[breadcrumbSchema, localBusinessSchema]} />
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-5xl mx-auto">
+          {/* Breadcrumb */}
+          <nav className="mb-8 text-sm text-gray-400" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-white">Home</Link>
+            <span className="mx-2">/</span>
+            <Link href="/internet" className="hover:text-white">Internet by State</Link>
+            <span className="mx-2">/</span>
+            <Link href={`/internet/${state}`} className="hover:text-white">{stateInfo.name}</Link>
+            <span className="mx-2">/</span>
+            <span className="text-white">{cityInfo.name}</span>
+          </nav>
 
         {/* Header */}
         <div className="text-center mb-12">
@@ -368,7 +400,8 @@ export default async function CityPage({ params }: Props) {
             Compare Providers
           </Link>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
