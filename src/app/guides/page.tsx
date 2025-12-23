@@ -53,7 +53,7 @@ interface Guide {
   publish_date: string
 }
 
-async function getGuides(page: number, limit: number, category?: string) {
+async function getGuides(page: number, limit: number, category?: string, zipCode?: string) {
   const supabase = createAdminClient()
   const offset = (page - 1) * limit
 
@@ -64,6 +64,11 @@ async function getGuides(page: number, limit: number, category?: string) {
 
   if (category) {
     query = query.eq('category', category)
+  }
+
+  // If zipCode provided, filter to that ZIP or nearby (same city)
+  if (zipCode) {
+    query = query.eq('zip_code', zipCode)
   }
 
   const { data, error, count } = await query
@@ -78,21 +83,77 @@ async function getGuides(page: number, limit: number, category?: string) {
   return { guides: data || [], total: count || 0 }
 }
 
-async function getCategoryCounts() {
+// Get unique guides (one per slug) for general browsing
+async function getUniqueGuides(page: number, limit: number, category?: string) {
   const supabase = createAdminClient()
 
-  // Get counts for each category
-  const { data, error } = await supabase
+  // First get distinct slugs with their first occurrence
+  let query = supabase
     .from('guides')
-    .select('category')
+    .select('slug, title, description, category, city, zip_code, publish_date, guide_id')
     .eq('status', 'published')
+
+  if (category) {
+    query = query.eq('category', category)
+  }
+
+  const { data, error } = await query
+    .order('publish_date', { ascending: false })
+
+  if (error || !data) {
+    console.error('Error fetching guides:', error)
+    return { guides: [], total: 0 }
+  }
+
+  // Deduplicate by slug, keeping first occurrence
+  const seenSlugs = new Set<string>()
+  const uniqueGuides = data.filter(guide => {
+    if (seenSlugs.has(guide.slug)) {
+      return false
+    }
+    seenSlugs.add(guide.slug)
+    return true
+  })
+
+  const total = uniqueGuides.length
+  const offset = (page - 1) * limit
+  const paginatedGuides = uniqueGuides.slice(offset, offset + limit)
+
+  return { guides: paginatedGuides, total }
+}
+
+async function getCategoryCounts(zipCode?: string) {
+  const supabase = createAdminClient()
+
+  let query = supabase
+    .from('guides')
+    .select('category, slug')
+    .eq('status', 'published')
+
+  if (zipCode) {
+    query = query.eq('zip_code', zipCode)
+  }
+
+  const { data, error } = await query
 
   if (error || !data) return {}
 
+  // If no zipCode, deduplicate by slug before counting
   const counts: Record<string, number> = {}
-  data.forEach((guide) => {
-    counts[guide.category] = (counts[guide.category] || 0) + 1
-  })
+
+  if (zipCode) {
+    data.forEach((guide) => {
+      counts[guide.category] = (counts[guide.category] || 0) + 1
+    })
+  } else {
+    const seenSlugs = new Set<string>()
+    data.forEach((guide) => {
+      if (!seenSlugs.has(guide.slug)) {
+        seenSlugs.add(guide.slug)
+        counts[guide.category] = (counts[guide.category] || 0) + 1
+      }
+    })
+  }
 
   return counts
 }
@@ -108,9 +169,13 @@ export default async function GuidesPage({
   const zipCode = params.zip
   const limit = 24
 
+  // If user has a ZIP code, show guides for their area
+  // Otherwise show unique guides (deduplicated by slug)
   const [{ guides, total }, categoryCounts] = await Promise.all([
-    getGuides(page, limit, category),
-    getCategoryCounts(),
+    zipCode
+      ? getGuides(page, limit, category, zipCode)
+      : getUniqueGuides(page, limit, category),
+    getCategoryCounts(zipCode),
   ])
 
   const totalPages = Math.ceil(total / limit)
