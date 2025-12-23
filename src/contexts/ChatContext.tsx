@@ -27,6 +27,7 @@ const ChatContext = createContext<ChatContextType | null>(null)
 
 const STORAGE_KEY = 'chat_messages'
 const WELCOMED_KEY = 'chat_welcomed'
+const WELCOMED_ZIP_KEY = 'chat_welcomed_zip'
 const PROACTIVE_PAGES_KEY = 'chat_proactive_pages'
 
 // Generate proactive message based on page type (no API call needed)
@@ -101,6 +102,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [hasWelcomed, setHasWelcomed] = useState(false)
+  const [welcomedZip, setWelcomedZip] = useState<string | null>(null)
   const [pageContext, setPageContext] = useState('')
   const [chatSectionVisible, setChatSectionVisible] = useState(true)
   const [proactivePages, setProactivePages] = useState<Set<string>>(new Set())
@@ -110,6 +112,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const storedMessages = localStorage.getItem(STORAGE_KEY)
     const storedWelcomed = localStorage.getItem(WELCOMED_KEY)
+    const storedWelcomedZip = localStorage.getItem(WELCOMED_ZIP_KEY)
     const storedProactivePages = localStorage.getItem(PROACTIVE_PAGES_KEY)
 
     if (storedMessages) {
@@ -123,6 +126,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     if (storedWelcomed === 'true') {
       setHasWelcomed(true)
+    }
+
+    if (storedWelcomedZip) {
+      setWelcomedZip(storedWelcomedZip)
     }
 
     if (storedProactivePages) {
@@ -142,10 +149,31 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [messages])
 
+  // Reset chat when location changes significantly
+  const resetForNewLocation = useCallback((newZip: string, newCity: string) => {
+    // Clear existing chat
+    setMessages([])
+    setHasWelcomed(false)
+    setWelcomedZip(null)
+    setProactivePages(new Set())
+    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(WELCOMED_KEY)
+    localStorage.removeItem(WELCOMED_ZIP_KEY)
+    localStorage.removeItem(PROACTIVE_PAGES_KEY)
+    initializingRef.current = false
+  }, [])
+
   // Initialize chat with welcome message
   const initializeChat = useCallback(async (zipCode: string, city: string, providerCount?: number) => {
+    // If we already welcomed for a different ZIP, reset first
+    if (welcomedZip && welcomedZip !== zipCode) {
+      resetForNewLocation(zipCode, city)
+      // Small delay to let state update
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+
     // Prevent multiple initializations
-    if (initializingRef.current || hasWelcomed || messages.length > 0) {
+    if (initializingRef.current || (hasWelcomed && welcomedZip === zipCode)) {
       return
     }
 
@@ -165,7 +193,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       if (data.message) {
         setMessages([{ role: 'assistant', content: data.message }])
         setHasWelcomed(true)
+        setWelcomedZip(zipCode)
         localStorage.setItem(WELCOMED_KEY, 'true')
+        localStorage.setItem(WELCOMED_ZIP_KEY, zipCode)
       }
     } catch (error) {
       console.error('Failed to initialize chat:', error)
@@ -176,12 +206,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       setMessages([{ role: 'assistant', content: fallbackMessage }])
       setHasWelcomed(true)
+      setWelcomedZip(zipCode)
       localStorage.setItem(WELCOMED_KEY, 'true')
+      localStorage.setItem(WELCOMED_ZIP_KEY, zipCode)
     } finally {
       setIsLoading(false)
       initializingRef.current = false
     }
-  }, [hasWelcomed, messages.length])
+  }, [hasWelcomed, welcomedZip, resetForNewLocation])
 
   // Send a message
   const sendMessage = useCallback(async (content: string, zipCode?: string) => {
@@ -224,9 +256,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const clearHistory = useCallback(() => {
     setMessages([])
     setHasWelcomed(false)
+    setWelcomedZip(null)
     setProactivePages(new Set())
     localStorage.removeItem(STORAGE_KEY)
     localStorage.removeItem(WELCOMED_KEY)
+    localStorage.removeItem(WELCOMED_ZIP_KEY)
     localStorage.removeItem(PROACTIVE_PAGES_KEY)
   }, [])
 
