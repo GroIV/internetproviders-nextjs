@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { LocationInfo } from '@/components/LocationInfo'
+import { getProviderCoverageCount } from '@/lib/getProvidersByLocation'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -21,13 +22,10 @@ async function getProvider(slug: string) {
     return null
   }
 
-  // Get coverage count
-  const { count } = await supabase
-    .from('coverage')
-    .select('*', { count: 'exact', head: true })
-    .eq('provider_id', provider.id)
+  // Get coverage count by matching to FCC provider data
+  const coverageCount = await getProviderCoverageCount(provider.name)
 
-  return { ...provider, coverageCount: count || 0 }
+  return { ...provider, coverageCount }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

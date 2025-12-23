@@ -165,3 +165,85 @@ export async function getProvidersByTechnology(
 
   return providers || []
 }
+
+/**
+ * Get the ZIP code coverage count for a provider
+ * This matches our provider to FCC provider(s) and counts the ZIPs in their CBSA coverage
+ */
+export async function getProviderCoverageCount(providerName: string): Promise<number> {
+  const supabase = createAdminClient()
+
+  // Provider name variations for FCC database search
+  const nameVariations: Record<string, string[]> = {
+    'Spectrum': ['charter'],
+    'Xfinity': ['comcast'],
+    'AT&T Internet': ['at&t'],
+    'Verizon Fios': ['verizon'],
+    'Cox Internet': ['cox'],
+    'Frontier': ['frontier'],
+    'CenturyLink': ['centurylink', 'lumen'],
+    'Optimum': ['altice', 'cablevision'],
+    'Mediacom': ['mediacom'],
+    'Windstream': ['windstream'],
+    'WOW!': ['wide open west', 'wideopenwest'],
+    'Astound Broadband': ['rcn', 'grande', 'wave broadband'],
+    'Google Fiber': ['google fiber'],
+    'Metronet': ['metronet'],
+    'Ziply Fiber': ['ziply'],
+    'Brightspeed': ['brightspeed'],
+    'EarthLink': ['earthlink'],
+    'HughesNet': ['hughes'],
+    'Viasat': ['viasat'],
+    'Starlink': ['spacex', 'starlink'],
+    'T-Mobile': ['t-mobile'],
+  }
+
+  // Build search patterns for this provider
+  const searchTerms = [providerName.toLowerCase()]
+  const variations = nameVariations[providerName]
+  if (variations) {
+    searchTerms.push(...variations)
+  }
+
+  // Search FCC providers using ilike for each search term
+  const matchingFccIds: string[] = []
+
+  for (const term of searchTerms) {
+    const { data: fccMatches } = await supabase
+      .from('fcc_providers')
+      .select('provider_id')
+      .ilike('name', `%${term}%`)
+
+    if (fccMatches) {
+      matchingFccIds.push(...fccMatches.map(f => f.provider_id))
+    }
+  }
+
+  // Deduplicate
+  const uniqueFccIds = [...new Set(matchingFccIds)]
+
+  if (uniqueFccIds.length === 0) {
+    return 0
+  }
+
+  // Get CBSA codes for these FCC providers
+  const { data: cbsaData } = await supabase
+    .from('cbsa_providers')
+    .select('cbsa_code')
+    .in('provider_id', uniqueFccIds)
+
+  if (!cbsaData || cbsaData.length === 0) {
+    return 0
+  }
+
+  // Get unique CBSA codes
+  const uniqueCbsaCodes = [...new Set(cbsaData.map(d => d.cbsa_code))]
+
+  // Count ZIPs in these CBSAs
+  const { count } = await supabase
+    .from('zip_cbsa_mapping')
+    .select('*', { count: 'exact', head: true })
+    .in('cbsa_code', uniqueCbsaCodes)
+
+  return count || 0
+}
