@@ -90,7 +90,7 @@ async function getUniqueGuides(page: number, limit: number, category?: string) {
   // First get distinct slugs with their first occurrence
   let query = supabase
     .from('guides')
-    .select('slug, title, description, category, city, zip_code, publish_date, guide_id')
+    .select('slug, title, description, category, city, state, zip_code, publish_date, guide_id')
     .eq('status', 'published')
 
   if (category) {
@@ -169,14 +169,31 @@ export default async function GuidesPage({
   const zipCode = params.zip
   const limit = 24
 
-  // If user has a ZIP code, show guides for their area
-  // Otherwise show unique guides (deduplicated by slug)
-  const [{ guides, total }, categoryCounts] = await Promise.all([
-    zipCode
-      ? getGuides(page, limit, category, zipCode)
-      : getUniqueGuides(page, limit, category),
-    getCategoryCounts(zipCode),
-  ])
+  // Try to get guides for user's ZIP code first
+  // If none found, fall back to unique guides (deduplicated by slug)
+  let guides: Guide[] = []
+  let total = 0
+  let effectiveZip = zipCode
+
+  if (zipCode) {
+    const zipResult = await getGuides(page, limit, category, zipCode)
+    if (zipResult.total > 0) {
+      guides = zipResult.guides
+      total = zipResult.total
+    } else {
+      // No guides for this ZIP, show all unique guides instead
+      effectiveZip = undefined
+      const uniqueResult = await getUniqueGuides(page, limit, category)
+      guides = uniqueResult.guides
+      total = uniqueResult.total
+    }
+  } else {
+    const uniqueResult = await getUniqueGuides(page, limit, category)
+    guides = uniqueResult.guides
+    total = uniqueResult.total
+  }
+
+  const categoryCounts = await getCategoryCounts(effectiveZip)
 
   const totalPages = Math.ceil(total / limit)
 
