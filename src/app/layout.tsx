@@ -6,8 +6,8 @@ import { Footer } from "@/components/Footer";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { LocationBanner } from "@/components/LocationBanner";
-import { GlobalChat } from "@/components/GlobalChat";
-import { MainContent } from "@/components/MainContent";
+import { PageChatSection } from "@/components/PageChatSection";
+import { FloatingChatButton } from "@/components/FloatingChatButton";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { JsonLd, generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo";
 
@@ -87,22 +87,17 @@ export default function RootLayout({
       <head>
         <JsonLd data={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       </head>
-      <body className={`${outfit.variable} font-sans antialiased bg-gray-950 text-gray-100 min-h-screen`}>
+      <body className={`${outfit.variable} font-sans antialiased bg-gray-950 text-gray-100 min-h-screen flex flex-col`}>
         <LocationProvider>
           <ChatProvider>
-            <div className="flex min-h-screen">
-              {/* Main content area - shrinks on desktop to make room for chat sidebar */}
-              <MainContent>
-                <Navbar />
-                <LocationBanner />
-                <main className="flex-grow">
-                  {children}
-                </main>
-                <Footer />
-              </MainContent>
-              {/* Global chat sidebar/FAB */}
-              <GlobalChat />
-            </div>
+            <Navbar />
+            <LocationBanner />
+            <PageChatSection />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
+            <FloatingChatButton />
             <InstallPrompt />
           </ChatProvider>
         </LocationProvider>

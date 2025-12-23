@@ -13,11 +13,13 @@ interface ChatContextType {
   isLoading: boolean
   hasWelcomed: boolean
   pageContext: string
+  chatSectionVisible: boolean
   sendMessage: (content: string, zipCode?: string) => Promise<void>
   initializeChat: (zipCode: string, city: string, providerCount?: number) => Promise<void>
   clearHistory: () => void
   setIsOpen: (open: boolean) => void
   setPageContext: (context: string) => void
+  setChatSectionVisible: (visible: boolean) => void
 }
 
 const ChatContext = createContext<ChatContextType | null>(null)
@@ -31,6 +33,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [hasWelcomed, setHasWelcomed] = useState(false)
   const [pageContext, setPageContext] = useState('')
+  const [chatSectionVisible, setChatSectionVisible] = useState(true)
   const initializingRef = useRef(false)
 
   // Load from localStorage on mount
@@ -153,11 +156,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         isLoading,
         hasWelcomed,
         pageContext,
+        chatSectionVisible,
         sendMessage,
         initializeChat,
         clearHistory,
         setIsOpen,
         setPageContext,
+        setChatSectionVisible,
       }}
     >
       {children}
