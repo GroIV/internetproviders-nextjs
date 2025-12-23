@@ -1,4 +1,4 @@
-import { ZipSearch } from '@/components/ZipSearch'
+import { HeroSearch } from '@/components/HeroSearch'
 import Link from 'next/link'
 
 export default function Home() {
@@ -17,7 +17,7 @@ export default function Home() {
               Get the perfect plan for streaming, gaming, or working from home.
             </p>
 
-            <ZipSearch />
+            <HeroSearch />
           </div>
         </div>
       </section>
