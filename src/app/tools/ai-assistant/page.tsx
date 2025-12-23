@@ -20,6 +20,9 @@ export default function AiAssistantPage() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [zipCode, setZipCode] = useState('')
+  const [locationStatus, setLocationStatus] = useState<'idle' | 'detecting' | 'detected' | 'failed'>('idle')
+  const [cityName, setCityName] = useState('')
+  const [isPrecise, setIsPrecise] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -29,6 +32,114 @@ export default function AiAssistantPage() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Auto-detect location on mount - try both IP and browser geolocation
+  useEffect(() => {
+    const detectLocation = async () => {
+      // Skip if already have a ZIP
+      if (zipCode) return
+
+      setLocationStatus('detecting')
+
+      // Start IP geolocation (fast, no permission needed)
+      const ipPromise = fetch('/api/location')
+        .then(res => res.json())
+        .catch(() => null)
+
+      // Start browser geolocation simultaneously (may show permission prompt)
+      let browserResult: { zipCode: string; city: string } | null = null
+      const browserPromise = new Promise<{ zipCode: string; city: string } | null>((resolve) => {
+        if (!navigator.geolocation) {
+          resolve(null)
+          return
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            try {
+              const { latitude, longitude } = position.coords
+              const geoResponse = await fetch(
+                `/api/location/reverse-geocode?lat=${latitude}&lng=${longitude}`
+              )
+              const geoData = await geoResponse.json()
+
+              if (geoData.success && geoData.location?.zipCode) {
+                resolve({
+                  zipCode: geoData.location.zipCode,
+                  city: geoData.location.city || '',
+                })
+              } else {
+                resolve(null)
+              }
+            } catch {
+              resolve(null)
+            }
+          },
+          () => resolve(null), // User denied or error
+          { enableHighAccuracy: true, timeout: 10000 }
+        )
+      })
+
+      // Use IP result immediately if available
+      const ipData = await ipPromise
+      if (ipData?.success && ipData.location?.zipCode) {
+        setZipCode(ipData.location.zipCode)
+        setCityName(ipData.location.city || '')
+        setLocationStatus('detected')
+      }
+
+      // Wait for browser geolocation - if it succeeds, update to precise location
+      browserResult = await browserPromise
+      if (browserResult) {
+        setZipCode(browserResult.zipCode)
+        setCityName(browserResult.city)
+        setIsPrecise(true)
+        setLocationStatus('detected')
+      } else if (!ipData?.success) {
+        // Both failed
+        setLocationStatus('failed')
+      }
+    }
+
+    detectLocation()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Function to request precise browser geolocation
+  const requestPreciseLocation = async () => {
+    if (!navigator.geolocation) {
+      return
+    }
+
+    setLocationStatus('detecting')
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords
+          const geoResponse = await fetch(
+            `/api/location/reverse-geocode?lat=${latitude}&lng=${longitude}`
+          )
+          const geoData = await geoResponse.json()
+
+          if (geoData.success && geoData.location?.zipCode) {
+            setZipCode(geoData.location.zipCode)
+            setCityName(geoData.location.city || '')
+            setIsPrecise(true)
+            setLocationStatus('detected')
+          } else {
+            setLocationStatus('detected') // Keep previous location
+          }
+        } catch {
+          setLocationStatus('detected') // Keep previous location
+        }
+      },
+      () => {
+        // User denied - keep existing location
+        setLocationStatus('detected')
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return
@@ -98,18 +209,43 @@ export default function AiAssistantPage() {
         </div>
 
         {/* ZIP Code Input */}
-        <div className="mb-4 flex items-center justify-center gap-2">
+        <div className="mb-4 flex items-center justify-center gap-2 flex-wrap">
           <span className="text-sm text-gray-400">Your ZIP:</span>
           <input
             type="text"
             maxLength={5}
-            placeholder="Enter ZIP"
+            placeholder={locationStatus === 'detecting' ? 'Detecting...' : 'Enter ZIP'}
             value={zipCode}
-            onChange={(e) => setZipCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
+            onChange={(e) => {
+              setZipCode(e.target.value.replace(/\D/g, '').slice(0, 5))
+              setCityName('') // Clear city name when manually entering
+              setIsPrecise(false)
+            }}
             className="w-24 px-3 py-1 bg-gray-800 border border-gray-700 rounded text-center text-sm focus:outline-none focus:border-blue-500"
           />
-          {zipCode.length === 5 && (
-            <span className="text-green-400 text-sm">Ready for local results</span>
+          {locationStatus === 'detecting' && (
+            <span className="text-yellow-400 text-sm flex items-center gap-1">
+              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Detecting location...
+            </span>
+          )}
+          {zipCode.length === 5 && locationStatus !== 'detecting' && (
+            <span className="text-green-400 text-sm">
+              {cityName ? `${cityName}` : 'Ready'}
+              {isPrecise && ' (precise)'}
+            </span>
+          )}
+          {zipCode.length === 5 && locationStatus !== 'detecting' && !isPrecise && (
+            <button
+              onClick={requestPreciseLocation}
+              className="text-xs text-blue-400 hover:text-blue-300 underline"
+              title="Use browser location for more accurate results"
+            >
+              Use precise location
+            </button>
           )}
         </div>
 

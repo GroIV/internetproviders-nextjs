@@ -1,12 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLocation } from '@/contexts/LocationContext'
 
-export function ZipSearch() {
-  const [zipCode, setZipCode] = useState('')
+interface ZipSearchProps {
+  defaultZip?: string
+  syncWithGlobal?: boolean // If true, updates global location context
+  navigateTo?: string // Custom redirect path, defaults to /compare?zip=
+}
+
+export function ZipSearch({
+  defaultZip = '',
+  syncWithGlobal = true,
+  navigateTo
+}: ZipSearchProps) {
+  const { location, setManualZip } = useLocation()
+  const [zipCode, setZipCode] = useState(defaultZip)
   const [error, setError] = useState('')
   const router = useRouter()
+
+  // Auto-populate from global location if no default provided
+  useEffect(() => {
+    if (!defaultZip && location?.zipCode && !zipCode) {
+      setZipCode(location.zipCode)
+    }
+  }, [location?.zipCode, defaultZip, zipCode])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,7 +38,14 @@ export function ZipSearch() {
       return
     }
 
-    router.push(`/compare?zip=${cleanZip}`)
+    // Update global location context
+    if (syncWithGlobal) {
+      setManualZip(cleanZip)
+    }
+
+    // Navigate to compare page or custom path
+    const path = navigateTo || `/compare?zip=${cleanZip}`
+    router.push(path)
   }
 
   return (

@@ -14,6 +14,9 @@ const categoryLabels: Record<string, string> = {
   'comparison': 'Comparisons',
   'speed-guide': 'Speed Guides',
   'no-contracts': 'No Contract',
+  'streaming': 'Streaming',
+  'work-from-home': 'Work From Home',
+  'family': 'Family',
 }
 
 const categoryColors: Record<string, string> = {
@@ -22,11 +25,36 @@ const categoryColors: Record<string, string> = {
   'comparison': 'bg-blue-600/20 text-blue-400',
   'speed-guide': 'bg-cyan-600/20 text-cyan-400',
   'no-contracts': 'bg-orange-600/20 text-orange-400',
+  'streaming': 'bg-red-600/20 text-red-400',
+  'work-from-home': 'bg-indigo-600/20 text-indigo-400',
+  'family': 'bg-pink-600/20 text-pink-400',
 }
 
-async function getGuides(page = 1, category?: string, zipCode?: string) {
+const categoryIcons: Record<string, string> = {
+  'budget': '💰',
+  'gaming': '🎮',
+  'comparison': '🔌',
+  'speed-guide': '⚡',
+  'no-contracts': '📝',
+  'streaming': '📺',
+  'work-from-home': '💼',
+  'family': '👨‍👩‍👧‍👦',
+}
+
+interface Guide {
+  guide_id: string
+  title: string
+  description: string
+  category: string
+  zip_code: string
+  city: string
+  state: string | null
+  slug: string
+  publish_date: string
+}
+
+async function getGuides(page: number, limit: number, category?: string) {
   const supabase = createAdminClient()
-  const limit = 24
   const offset = (page - 1) * limit
 
   let query = supabase
@@ -38,57 +66,35 @@ async function getGuides(page = 1, category?: string, zipCode?: string) {
     query = query.eq('category', category)
   }
 
-  if (zipCode) {
-    query = query.eq('zip_code', zipCode)
-  }
-
-  const { data, count, error } = await query
+  const { data, error, count } = await query
     .order('publish_date', { ascending: false })
     .range(offset, offset + limit - 1)
 
   if (error) {
     console.error('Error fetching guides:', error)
-    return { guides: [], total: 0, totalPages: 0 }
+    return { guides: [], total: 0 }
   }
 
-  return {
-    guides: data || [],
-    total: count || 0,
-    totalPages: Math.ceil((count || 0) / limit),
-  }
+  return { guides: data || [], total: count || 0 }
 }
 
-async function getCategoryCounts(zipCode?: string) {
+async function getCategoryCounts() {
   const supabase = createAdminClient()
 
-  let query = supabase
+  // Get counts for each category
+  const { data, error } = await supabase
     .from('guides')
     .select('category')
     .eq('status', 'published')
 
-  if (zipCode) {
-    query = query.eq('zip_code', zipCode)
-  }
-
-  const { data, error } = await query
-
   if (error || !data) return {}
 
   const counts: Record<string, number> = {}
-  data.forEach(item => {
-    counts[item.category] = (counts[item.category] || 0) + 1
+  data.forEach((guide) => {
+    counts[guide.category] = (counts[guide.category] || 0) + 1
   })
-  return counts
-}
 
-async function checkZipHasGuides(zipCode: string) {
-  const supabase = createAdminClient()
-  const { count } = await supabase
-    .from('guides')
-    .select('*', { count: 'exact', head: true })
-    .eq('zip_code', zipCode)
-    .eq('status', 'published')
-  return (count || 0) > 0
+  return counts
 }
 
 export default async function GuidesPage({
@@ -97,20 +103,17 @@ export default async function GuidesPage({
   searchParams: Promise<{ page?: string; category?: string; zip?: string }>
 }) {
   const params = await searchParams
-  const page = parseInt(params.page || '1')
+  const page = Math.max(1, parseInt(params.page || '1'))
   const category = params.category
   const zipCode = params.zip
+  const limit = 24
 
-  // Check if the requested ZIP has guides
-  const zipHasGuides = zipCode ? await checkZipHasGuides(zipCode) : false
-
-  // Only filter by ZIP if it has guides
-  const effectiveZip = zipHasGuides ? zipCode : undefined
-
-  const [{ guides, total, totalPages }, categoryCounts] = await Promise.all([
-    getGuides(page, category, effectiveZip),
-    getCategoryCounts(effectiveZip),
+  const [{ guides, total }, categoryCounts] = await Promise.all([
+    getGuides(page, limit, category),
+    getCategoryCounts(),
   ])
+
+  const totalPages = Math.ceil(total / limit)
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -119,45 +122,21 @@ export default async function GuidesPage({
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-4">Internet Guides</h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Expert guides to help you find the perfect internet service for your needs
+            Expert guides to help you find the perfect internet service for your needs.
+            Browse {total.toLocaleString()} guides across all categories.
           </p>
         </div>
 
-        {/* Location-aware message */}
+        {/* Location-aware component */}
         <GuidesClient
           zipCode={zipCode}
-          zipHasGuides={zipHasGuides}
+          zipHasGuides={true}
           categoryLabels={categoryLabels}
           categoryColors={categoryColors}
         />
 
-        {/* No local guides message */}
-        {zipCode && !zipHasGuides && (
-          <div className="mb-8 p-4 bg-yellow-900/20 border border-yellow-800/50 rounded-lg text-center">
-            <p className="text-yellow-200">
-              No guides available yet for ZIP code <span className="font-semibold">{zipCode}</span>.
-              Showing all guides below.
-            </p>
-            <Link href="/guides" className="text-sm text-yellow-400 hover:text-yellow-300 mt-1 inline-block">
-              Clear ZIP filter
-            </Link>
-          </div>
-        )}
-
-        {/* Local guides success message */}
-        {zipCode && zipHasGuides && (
-          <div className="mb-8 p-4 bg-green-900/20 border border-green-800/50 rounded-lg text-center">
-            <p className="text-green-200">
-              Showing guides for ZIP code <span className="font-semibold">{zipCode}</span>
-            </p>
-            <Link href="/guides" className="text-sm text-green-400 hover:text-green-300 mt-1 inline-block">
-              Show all guides
-            </Link>
-          </div>
-        )}
-
         {/* Category Filters */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
+        <div className="flex flex-wrap justify-center gap-3 mb-8">
           <Link
             href={`/guides${zipCode ? `?zip=${zipCode}` : ''}`}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -166,26 +145,36 @@ export default async function GuidesPage({
                 : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
             }`}
           >
-            All ({total})
+            All ({total.toLocaleString()})
           </Link>
-          {Object.entries(categoryLabels).map(([key, label]) => (
-            <Link
-              key={key}
-              href={`/guides?category=${key}${zipCode ? `&zip=${zipCode}` : ''}`}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                category === key
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              {label} ({categoryCounts[key] || 0})
-            </Link>
-          ))}
+          {Object.entries(categoryLabels).map(([key, label]) => {
+            const count = categoryCounts[key] || 0
+            if (count === 0) return null
+            return (
+              <Link
+                key={key}
+                href={`/guides?category=${key}${zipCode ? `&zip=${zipCode}` : ''}`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  category === key
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                }`}
+              >
+                {categoryIcons[key]} {label} ({count.toLocaleString()})
+              </Link>
+            )
+          })}
+        </div>
+
+        {/* Results Info */}
+        <div className="text-center text-gray-400 text-sm mb-6">
+          Showing {((page - 1) * limit) + 1}-{Math.min(page * limit, total)} of {total.toLocaleString()} guides
+          {category && ` in ${categoryLabels[category] || category}`}
         </div>
 
         {/* Guides Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {guides.map((guide) => (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {guides.map((guide: Guide) => (
             <article
               key={guide.guide_id}
               className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-colors"
@@ -193,62 +182,157 @@ export default async function GuidesPage({
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <span className={`px-2 py-1 rounded text-xs font-medium ${categoryColors[guide.category] || 'bg-gray-600/20 text-gray-400'}`}>
-                    {categoryLabels[guide.category] || guide.category}
+                    {categoryIcons[guide.category]} {categoryLabels[guide.category] || guide.category}
                   </span>
                   <span className="text-xs text-gray-500">{guide.zip_code}</span>
                 </div>
                 <h2 className="text-lg font-semibold mb-2 line-clamp-2">
-                  <Link href={`/guides/${guide.slug}`} className="hover:text-blue-400 transition-colors">
+                  <Link
+                    href={`/guides/${guide.slug}?zip=${guide.zip_code}`}
+                    className="hover:text-blue-400 transition-colors"
+                  >
                     {guide.title}
                   </Link>
                 </h2>
                 <p className="text-sm text-gray-400 line-clamp-3 mb-4">
                   {guide.description}
                 </p>
-                <Link
-                  href={`/guides/${guide.slug}`}
-                  className="text-sm text-blue-400 hover:text-blue-300 font-medium inline-flex items-center gap-1"
-                >
-                  Read Guide
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
+                <div className="flex items-center justify-between">
+                  <Link
+                    href={`/guides/${guide.slug}?zip=${guide.zip_code}`}
+                    className="text-sm text-blue-400 hover:text-blue-300 font-medium inline-flex items-center gap-1"
+                  >
+                    Read Guide
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                  {guide.city && (
+                    <span className="text-xs text-gray-500">{guide.city}</span>
+                  )}
+                </div>
               </div>
             </article>
           ))}
         </div>
 
+        {guides.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-400">No guides found for this category.</p>
+            <Link href="/guides" className="text-blue-400 hover:text-blue-300 mt-2 inline-block">
+              View all guides
+            </Link>
+          </div>
+        )}
+
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2">
+          <div className="flex justify-center items-center gap-2 mb-12">
             {page > 1 && (
               <Link
                 href={`/guides?page=${page - 1}${category ? `&category=${category}` : ''}${zipCode ? `&zip=${zipCode}` : ''}`}
-                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
               >
-                Previous
+                ← Previous
               </Link>
             )}
-            <span className="px-4 py-2 text-gray-400">
-              Page {page} of {totalPages}
-            </span>
+
+            <div className="flex items-center gap-1">
+              {/* First page */}
+              {page > 3 && (
+                <>
+                  <Link
+                    href={`/guides?page=1${category ? `&category=${category}` : ''}${zipCode ? `&zip=${zipCode}` : ''}`}
+                    className="w-10 h-10 flex items-center justify-center bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    1
+                  </Link>
+                  {page > 4 && <span className="text-gray-500 px-2">...</span>}
+                </>
+              )}
+
+              {/* Page numbers around current */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = Math.max(1, Math.min(page - 2, totalPages - 4)) + i
+                if (pageNum > totalPages || pageNum < 1) return null
+                return (
+                  <Link
+                    key={pageNum}
+                    href={`/guides?page=${pageNum}${category ? `&category=${category}` : ''}${zipCode ? `&zip=${zipCode}` : ''}`}
+                    className={`w-10 h-10 flex items-center justify-center rounded-lg transition-colors ${
+                      page === pageNum
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    }`}
+                  >
+                    {pageNum}
+                  </Link>
+                )
+              })}
+
+              {/* Last page */}
+              {page < totalPages - 2 && (
+                <>
+                  {page < totalPages - 3 && <span className="text-gray-500 px-2">...</span>}
+                  <Link
+                    href={`/guides?page=${totalPages}${category ? `&category=${category}` : ''}${zipCode ? `&zip=${zipCode}` : ''}`}
+                    className="w-10 h-10 flex items-center justify-center bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    {totalPages}
+                  </Link>
+                </>
+              )}
+            </div>
+
             {page < totalPages && (
               <Link
                 href={`/guides?page=${page + 1}${category ? `&category=${category}` : ''}${zipCode ? `&zip=${zipCode}` : ''}`}
-                className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
               >
-                Next
+                Next →
               </Link>
             )}
           </div>
         )}
 
-        {guides.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-400">No guides found.</p>
+        {/* Popular Locations */}
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8">
+          <h2 className="text-xl font-semibold mb-6 text-center">Browse by Location</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+            <Link
+              href="/internet/texas"
+              className="px-4 py-3 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors"
+            >
+              Texas
+            </Link>
+            <Link
+              href="/internet/california"
+              className="px-4 py-3 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors"
+            >
+              California
+            </Link>
+            <Link
+              href="/internet/florida"
+              className="px-4 py-3 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors"
+            >
+              Florida
+            </Link>
+            <Link
+              href="/internet/new-york"
+              className="px-4 py-3 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 hover:text-white transition-colors"
+            >
+              New York
+            </Link>
           </div>
-        )}
+          <div className="text-center mt-4">
+            <Link
+              href="/internet"
+              className="text-blue-400 hover:text-blue-300 text-sm"
+            >
+              View all states →
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )

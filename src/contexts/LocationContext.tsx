@@ -36,15 +36,85 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       try {
-        setLocation(JSON.parse(stored))
+        const parsedLocation = JSON.parse(stored)
+        setLocation(parsedLocation)
+        // If stored location is IP-based, try to upgrade to GPS in background
+        if (parsedLocation.source === 'ip') {
+          tryGPSUpgrade()
+        }
       } catch {
         localStorage.removeItem(STORAGE_KEY)
       }
     } else {
-      // Auto-detect from IP on first visit
-      detectFromIP()
+      // Auto-detect from IP on first visit, then try GPS
+      detectFromIPThenGPS()
     }
   }, [])
+
+  // Try to detect from IP first, then automatically try GPS
+  const detectFromIPThenGPS = async () => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // Start IP detection
+      const ipResponse = await fetch('/api/location')
+      const ipData = await ipResponse.json()
+
+      if (ipData.success && ipData.location) {
+        // Set IP location immediately
+        setLocation({
+          city: ipData.location.city,
+          region: ipData.location.region,
+          regionCode: ipData.location.regionCode,
+          zipCode: ipData.location.zipCode,
+          latitude: ipData.location.latitude,
+          longitude: ipData.location.longitude,
+          source: 'ip',
+        })
+      }
+      setIsLoading(false)
+
+      // Try GPS upgrade in background
+      tryGPSUpgrade()
+    } catch (err) {
+      setError('Failed to detect location')
+      setIsLoading(false)
+    }
+  }
+
+  // Try to upgrade to GPS location in background (doesn't show loading state)
+  const tryGPSUpgrade = () => {
+    if (!navigator.geolocation) return
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords
+        try {
+          const response = await fetch(`/api/location/reverse-geocode?lat=${latitude}&lng=${longitude}`)
+          const data = await response.json()
+
+          if (data.success && data.location?.zipCode) {
+            setLocation({
+              city: data.location.city,
+              region: data.location.region,
+              regionCode: data.location.regionCode,
+              zipCode: data.location.zipCode,
+              latitude: data.location.latitude,
+              longitude: data.location.longitude,
+              source: 'gps',
+            })
+          }
+        } catch {
+          // Silently fail - keep IP location
+        }
+      },
+      () => {
+        // User denied or error - silently fail, keep IP location
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
 
   // Save to localStorage when location changes
   useEffect(() => {

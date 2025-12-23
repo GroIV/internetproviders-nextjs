@@ -37,6 +37,9 @@ export function Navbar() {
                 <Link href="/best/fiber-providers" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
                   Best Fiber Providers
                 </Link>
+                <Link href="/best/cable-providers" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
+                  Best Cable Providers
+                </Link>
                 <Link href="/fastest/providers" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
                   Fastest Providers
                 </Link>

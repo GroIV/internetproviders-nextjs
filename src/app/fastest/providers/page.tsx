@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ZipSearch } from '@/components/ZipSearch'
+import { LocationInfo } from '@/components/LocationInfo'
+import { RelatedRankings } from '@/components/RelatedRankings'
 
 export const metadata: Metadata = {
   title: 'Fastest Internet Providers 2025 | Gigabit & Multi-Gig ISPs',
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 const fastestProviders = [
   {
     name: 'Google Fiber',
+    slug: 'google-fiber',
     maxSpeed: '8 Gbps',
     technology: 'Fiber',
     latency: '< 5ms',
@@ -20,6 +22,7 @@ const fastestProviders = [
   },
   {
     name: 'AT&T Fiber',
+    slug: 'att',
     maxSpeed: '5 Gbps',
     technology: 'Fiber',
     latency: '< 10ms',
@@ -30,6 +33,7 @@ const fastestProviders = [
   },
   {
     name: 'Frontier Fiber',
+    slug: 'frontier',
     maxSpeed: '5 Gbps',
     technology: 'Fiber',
     latency: '< 10ms',
@@ -40,6 +44,7 @@ const fastestProviders = [
   },
   {
     name: 'Verizon Fios',
+    slug: 'verizon',
     maxSpeed: '2.3 Gbps',
     technology: 'Fiber',
     latency: '< 8ms',
@@ -50,6 +55,7 @@ const fastestProviders = [
   },
   {
     name: 'Xfinity',
+    slug: 'xfinity',
     maxSpeed: '2 Gbps',
     technology: 'Cable',
     latency: '< 15ms',
@@ -60,6 +66,7 @@ const fastestProviders = [
   },
   {
     name: 'Cox',
+    slug: 'cox',
     maxSpeed: '2 Gbps',
     technology: 'Fiber/Cable',
     latency: '< 12ms',
@@ -122,7 +129,7 @@ export default function FastestProvidersPage() {
             Looking for blazing-fast speeds? These providers offer gigabit and
             multi-gigabit connections for the ultimate internet experience.
           </p>
-          <ZipSearch />
+          <LocationInfo message="Showing fastest providers" />
         </div>
 
         {/* Speed Stats */}
@@ -155,7 +162,11 @@ export default function FastestProvidersPage() {
                     {index + 1}
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">{provider.name}</h3>
+                    <h3 className="text-lg font-semibold">
+                      <Link href={`/providers/${provider.slug}`} className="hover:text-cyan-400 transition-colors">
+                        {provider.name}
+                      </Link>
+                    </h3>
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-gray-500">{provider.technology}</span>
                       <span className="text-gray-700">•</span>
@@ -244,6 +255,9 @@ export default function FastestProvidersPage() {
             </p>
           </div>
         </div>
+
+        {/* Related Rankings */}
+        <RelatedRankings title="More Internet Rankings" />
 
         {/* CTA */}
         <div className="text-center bg-gradient-to-r from-cyan-900/50 to-purple-900/50 rounded-xl p-8">

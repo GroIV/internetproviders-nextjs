@@ -1,7 +1,9 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/server'
-import { ZipSearch } from '@/components/ZipSearch'
+import { LocationInfo } from '@/components/LocationInfo'
+import { ProviderLink } from '@/components/ProviderLink'
+import { RelatedRankings } from '@/components/RelatedRankings'
 
 export const metadata: Metadata = {
   title: 'Best Fiber Internet Providers 2025 | Top-Rated Fiber ISPs',
@@ -11,6 +13,7 @@ export const metadata: Metadata = {
 const fiberProviderDetails = [
   {
     name: 'AT&T Fiber',
+    slug: 'att',
     maxSpeed: '5 Gbps',
     startingPrice: '$55/mo',
     pros: ['Symmetrical upload/download', 'No data caps', 'Wide availability'],
@@ -19,6 +22,7 @@ const fiberProviderDetails = [
   },
   {
     name: 'Verizon Fios',
+    slug: 'verizon',
     maxSpeed: '2 Gbps',
     startingPrice: '$50/mo',
     pros: ['No contracts required', 'Excellent reliability', 'Great customer service'],
@@ -27,6 +31,7 @@ const fiberProviderDetails = [
   },
   {
     name: 'Google Fiber',
+    slug: 'google-fiber',
     maxSpeed: '8 Gbps',
     startingPrice: '$70/mo',
     pros: ['Fastest speeds available', 'Simple pricing', 'No data caps'],
@@ -35,6 +40,7 @@ const fiberProviderDetails = [
   },
   {
     name: 'Frontier Fiber',
+    slug: 'frontier',
     maxSpeed: '5 Gbps',
     startingPrice: '$50/mo',
     pros: ['Competitive pricing', 'No annual contracts', 'Growing coverage'],
@@ -43,6 +49,7 @@ const fiberProviderDetails = [
   },
   {
     name: 'CenturyLink/Quantum Fiber',
+    slug: 'centurylink',
     maxSpeed: '940 Mbps',
     startingPrice: '$30/mo',
     pros: ['Price for life guarantee', 'No contracts', 'Good value'],
@@ -126,7 +133,7 @@ export default async function BestFiberProvidersPage() {
             Fiber optic internet offers the fastest, most reliable connection available.
             Compare top-rated fiber ISPs to find the best option in your area.
           </p>
-          <ZipSearch />
+          <LocationInfo message="Showing fiber providers available" />
         </div>
 
         {/* Stats */}
@@ -190,7 +197,11 @@ export default async function BestFiberProvidersPage() {
                     {index + 1}
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold">{provider.name}</h3>
+                    <h3 className="text-xl font-semibold">
+                      <Link href={`/providers/${provider.slug}`} className="hover:text-purple-400 transition-colors">
+                        {provider.name}
+                      </Link>
+                    </h3>
                     <StarRating rating={provider.rating} />
                   </div>
                 </div>
@@ -237,6 +248,9 @@ export default async function BestFiberProvidersPage() {
             </div>
           ))}
         </div>
+
+        {/* Related Rankings */}
+        <RelatedRankings title="More Internet Rankings" />
 
         {/* CTA */}
         <div className="text-center bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-xl p-8">

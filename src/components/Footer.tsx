@@ -10,6 +10,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-gray-400">
               <li><Link href="/compare" className="hover:text-white transition-colors">Find Providers</Link></li>
               <li><Link href="/best/fiber-providers" className="hover:text-white transition-colors">Best Fiber</Link></li>
+              <li><Link href="/best/cable-providers" className="hover:text-white transition-colors">Best Cable</Link></li>
               <li><Link href="/cheapest/providers" className="hover:text-white transition-colors">Cheapest Internet</Link></li>
               <li><Link href="/fastest/providers" className="hover:text-white transition-colors">Fastest Internet</Link></li>
               <li><Link href="/deals" className="hover:text-white transition-colors">Deals & Promotions</Link></li>
@@ -31,6 +32,7 @@ export function Footer() {
             <h3 className="font-semibold text-white mb-4">Resources</h3>
             <ul className="space-y-2 text-sm text-gray-400">
               <li><Link href="/guides" className="hover:text-white transition-colors">Guides</Link></li>
+              <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
               <li><Link href="/tools/speed-test" className="hover:text-white transition-colors">Speed Test</Link></li>
               <li><Link href="/tools/quiz" className="hover:text-white transition-colors">Find Your Plan</Link></li>
               <li><Link href="/tools/ai-assistant" className="hover:text-white transition-colors">AI Assistant</Link></li>

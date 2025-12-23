@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
-import { ZipSearch } from '@/components/ZipSearch'
+import { LocationInfo } from '@/components/LocationInfo'
+import { RelatedRankings } from '@/components/RelatedRankings'
 
 export const metadata: Metadata = {
   title: 'Cheapest Internet Providers 2025 | Budget-Friendly ISPs',
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 const cheapProviders = [
   {
     name: 'Spectrum Internet',
+    slug: 'spectrum',
     price: '$30/mo',
     speed: '300 Mbps',
     highlight: 'No contracts',
@@ -18,6 +20,7 @@ const cheapProviders = [
   },
   {
     name: 'Xfinity Connect',
+    slug: 'xfinity',
     price: '$25/mo',
     speed: '75 Mbps',
     highlight: 'Lowest price',
@@ -26,6 +29,7 @@ const cheapProviders = [
   },
   {
     name: 'AT&T Internet Air',
+    slug: 'att',
     price: '$35/mo',
     speed: '100+ Mbps',
     highlight: '5G wireless',
@@ -34,6 +38,7 @@ const cheapProviders = [
   },
   {
     name: 'T-Mobile 5G Home',
+    slug: 't-mobile',
     price: '$40/mo',
     speed: '100+ Mbps',
     highlight: 'No credit check',
@@ -42,6 +47,7 @@ const cheapProviders = [
   },
   {
     name: 'Verizon 5G Home',
+    slug: 'verizon',
     price: '$35/mo',
     speed: '300+ Mbps',
     highlight: 'With mobile plan',
@@ -50,6 +56,7 @@ const cheapProviders = [
   },
   {
     name: 'Frontier Fiber',
+    slug: 'frontier',
     price: '$50/mo',
     speed: '500 Mbps',
     highlight: 'Best fiber value',
@@ -104,7 +111,7 @@ export default function CheapestProvidersPage() {
             Get reliable internet without breaking the bank. We've found the most
             affordable options that still deliver good speeds and service.
           </p>
-          <ZipSearch />
+          <LocationInfo message="Showing affordable providers" />
         </div>
 
         {/* Key Stats */}
@@ -138,7 +145,11 @@ export default function CheapestProvidersPage() {
               )}
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold">{provider.name}</h3>
+                  <h3 className="text-lg font-semibold">
+                    <Link href={`/providers/${provider.slug}`} className="hover:text-green-400 transition-colors">
+                      {provider.name}
+                    </Link>
+                  </h3>
                   <span className="text-xs text-green-400">{provider.highlight}</span>
                 </div>
                 <div className="text-right">
@@ -205,6 +216,9 @@ export default function CheapestProvidersPage() {
             </div>
           </div>
         </div>
+
+        {/* Related Rankings */}
+        <RelatedRankings title="More Internet Rankings" />
 
         {/* CTA */}
         <div className="text-center bg-gradient-to-r from-green-900/50 to-blue-900/50 rounded-xl p-8">

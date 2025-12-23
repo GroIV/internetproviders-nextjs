@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/server'
-import { ZipSearch } from '@/components/ZipSearch'
+import { LocationInfo } from '@/components/LocationInfo'
+import { RelatedRankings } from '@/components/RelatedRankings'
 
 export const metadata: Metadata = {
   title: 'Internet Deals & Promotions 2025 | Current ISP Offers',
@@ -88,7 +89,7 @@ export default async function DealsPage() {
             Save money on your internet bill with these current promotions and
             limited-time offers from top providers.
           </p>
-          <ZipSearch />
+          <LocationInfo message="Showing deals available" />
         </div>
 
         {/* Featured Deal */}
@@ -99,7 +100,12 @@ export default async function DealsPage() {
                 <span className="inline-block px-3 py-1 bg-red-600 text-white rounded-full text-sm font-medium mb-3">
                   Featured Deal
                 </span>
-                <h2 className="text-2xl font-bold mb-2">{promotions[0].provider_name} - {promotions[0].offer_title}</h2>
+                <h2 className="text-2xl font-bold mb-2">
+                  <Link href={`/providers/${promotions[0].provider_slug}`} className="hover:text-red-300 transition-colors">
+                    {promotions[0].provider_name}
+                  </Link>
+                  {' '}- {promotions[0].offer_title}
+                </h2>
                 <p className="text-gray-300 mb-4">
                   {promotions[0].offer_description || promotions[0].requirements || 'Limited time offer for new customers.'}
                 </p>
@@ -133,7 +139,11 @@ export default async function DealsPage() {
                 {deal.promo_type === 'gift_card' ? 'Gift Card' : 'Deal'}
               </span>
 
-              <h3 className="text-lg font-semibold mb-1">{deal.provider_name}</h3>
+              <h3 className="text-lg font-semibold mb-1">
+                <Link href={`/providers/${deal.provider_slug}`} className="hover:text-blue-400 transition-colors">
+                  {deal.provider_name}
+                </Link>
+              </h3>
               <p className="text-xl font-bold text-green-400 mb-2">{deal.offer_title}</p>
               <p className="text-sm text-gray-400 mb-4">{deal.requirements || deal.offer_description}</p>
 
@@ -228,6 +238,9 @@ export default async function DealsPage() {
             ))}
           </div>
         </div>
+
+        {/* Related Rankings */}
+        <RelatedRankings title="More Internet Rankings" />
 
         {/* CTA */}
         <div className="text-center bg-gradient-to-r from-red-900/50 to-orange-900/50 rounded-xl p-8">

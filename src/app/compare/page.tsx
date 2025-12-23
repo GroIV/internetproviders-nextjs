@@ -1,6 +1,9 @@
 import { Metadata } from 'next'
+import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/server'
 import { ZipSearch } from '@/components/ZipSearch'
+import { getProviderSlug, cleanProviderName } from '@/lib/providers'
+import { RelatedRankings } from '@/components/RelatedRankings'
 
 export const metadata: Metadata = {
   title: 'Compare Internet Providers',
@@ -221,26 +224,20 @@ function ProviderCard({ provider }: { provider: Provider }) {
     color = 'text-blue-400'
   }
 
-  // Clean up provider name
-  let displayName = provider.name
-    .replace(', Inc.', '')
-    .replace(' Inc.', '')
-    .replace(' Corporation', '')
-    .replace(' Corp.', '')
-    .replace(' LLC', '')
-    .replace(' Communications', '')
-    .replace('Space Exploration Technologies', 'Starlink')
+  // Clean up provider name and get slug
+  const displayName = cleanProviderName(provider.name)
+  const slug = getProviderSlug(provider.name)
 
-  return (
-    <div className="flex items-center justify-between p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-gray-700 transition-colors">
+  const content = (
+    <div className="flex items-center justify-between p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-gray-700 transition-colors group">
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
-          <span className="text-xl font-bold text-gray-500">
+          <span className={`text-xl font-bold ${slug ? 'text-gray-500 group-hover:text-blue-400 transition-colors' : 'text-gray-500'}`}>
             {displayName.charAt(0)}
           </span>
         </div>
         <div>
-          <h4 className="font-semibold">{displayName}</h4>
+          <h4 className={`font-semibold ${slug ? 'group-hover:text-blue-400 transition-colors' : ''}`}>{displayName}</h4>
           <p className={`text-sm ${color}`}>{type}</p>
         </div>
       </div>
@@ -250,6 +247,12 @@ function ProviderCard({ provider }: { provider: Provider }) {
       </div>
     </div>
   )
+
+  if (slug) {
+    return <Link href={`/providers/${slug}`}>{content}</Link>
+  }
+
+  return content
 }
 
 export default async function ComparePage({
@@ -429,6 +432,11 @@ export default async function ComparePage({
             </div>
           </div>
         )}
+
+        {/* Related Rankings */}
+        <div className="mt-12">
+          <RelatedRankings title="Explore Internet Rankings" />
+        </div>
       </div>
     </div>
   )

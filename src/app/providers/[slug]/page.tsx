@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ZipSearch } from '@/components/ZipSearch'
+import { LocationInfo } from '@/components/LocationInfo'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -120,9 +120,9 @@ export default async function ProviderPage({ params }: Props) {
         <div className="bg-gradient-to-r from-blue-900/50 to-cyan-900/50 rounded-xl p-8 mb-8">
           <h2 className="text-2xl font-bold mb-4 text-center">Check {provider.name} Availability</h2>
           <p className="text-gray-400 text-center mb-6">
-            Enter your ZIP code to see if {provider.name} is available at your address
+            See if {provider.name} is available at your address
           </p>
-          <ZipSearch />
+          <LocationInfo message={`Checking ${provider.name} availability`} />
         </div>
 
         {/* About Section */}
