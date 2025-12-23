@@ -1,66 +1,94 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/server'
-import { LocationInfo } from '@/components/LocationInfo'
+import { getProvidersByZip, getProvidersByTechnology, getCityForZip } from '@/lib/getProvidersByLocation'
 import { RelatedRankings } from '@/components/RelatedRankings'
+import { LocationAwareRankings } from '@/components/LocationAwareRankings'
 
 export const metadata: Metadata = {
   title: 'Best Cable Internet Providers 2025 | Top-Rated Cable ISPs',
   description: 'Compare the best cable internet providers in 2025. Find top-rated cable ISPs with fast speeds, wide availability, and competitive pricing near you.',
 }
 
-const cableProviderDetails = [
-  {
-    name: 'Xfinity',
-    slug: 'xfinity',
+// Provider details for display (pros/cons, ratings, etc.)
+const providerDetails: Record<string, {
+  maxSpeed: string
+  startingPrice: string
+  pros: string[]
+  cons: string[]
+  rating: number
+}> = {
+  'xfinity': {
     maxSpeed: '2 Gbps',
     startingPrice: '$35/mo',
     pros: ['Widest cable coverage', 'Fast speeds available', 'Bundle options with TV'],
     cons: ['Data caps in most areas', 'Price increases after promo', 'Equipment rental fees'],
     rating: 4.0,
-    coverage: '41 states',
   },
-  {
-    name: 'Spectrum',
-    slug: 'spectrum',
+  'spectrum': {
     maxSpeed: '1 Gbps',
     startingPrice: '$50/mo',
     pros: ['No data caps', 'No contracts required', 'Free modem included'],
     cons: ['Upload speeds lag behind', 'Limited to 1 Gbps max', 'Price increases after year 1'],
     rating: 3.9,
-    coverage: '41 states',
   },
-  {
-    name: 'Cox',
-    slug: 'cox',
+  'cox': {
     maxSpeed: '2 Gbps',
     startingPrice: '$50/mo',
     pros: ['Strong regional coverage', 'Panoramic WiFi option', 'Good bundle deals'],
     cons: ['1.25TB data cap', 'Higher prices than competitors', 'Limited availability'],
     rating: 3.7,
-    coverage: '18 states',
   },
-  {
-    name: 'Optimum',
-    slug: 'optimum',
+  'optimum': {
     maxSpeed: '1 Gbps',
     startingPrice: '$40/mo',
     pros: ['Competitive pricing', 'No annual contracts', 'Free installation promos'],
     cons: ['Regional availability only', 'Data caps apply', 'Customer service issues'],
     rating: 3.5,
-    coverage: '4 states',
   },
-  {
-    name: 'Mediacom',
-    slug: 'mediacom',
+  'mediacom': {
     maxSpeed: '1 Gbps',
     startingPrice: '$30/mo',
     pros: ['Low starting prices', 'Good rural coverage', 'Xtream WiFi360'],
     cons: ['Data caps on all plans', 'Limited to certain regions', 'Speeds vary by area'],
     rating: 3.4,
-    coverage: '22 states',
   },
-]
+  'wow': {
+    maxSpeed: '1 Gbps',
+    startingPrice: '$40/mo',
+    pros: ['No contracts', 'Competitive pricing', 'Good customer service'],
+    cons: ['Limited regional availability', 'Data caps on some plans'],
+    rating: 3.6,
+  },
+  'astound': {
+    maxSpeed: '1.2 Gbps',
+    startingPrice: '$35/mo',
+    pros: ['Fast speeds', 'No contracts', 'Local customer service'],
+    cons: ['Very limited availability', 'Prices vary by region'],
+    rating: 3.5,
+  },
+  'rcn': {
+    maxSpeed: '1 Gbps',
+    startingPrice: '$35/mo',
+    pros: ['No contracts', 'Good value', 'Reliable service'],
+    cons: ['Very limited geographic coverage', 'Fewer plan options'],
+    rating: 3.6,
+  },
+  'suddenlink': {
+    maxSpeed: '1 Gbps',
+    startingPrice: '$40/mo',
+    pros: ['Available in rural areas', 'Bundle options'],
+    cons: ['Data caps apply', 'Mixed customer reviews'],
+    rating: 3.2,
+  },
+  'atlantic-broadband': {
+    maxSpeed: '1 Gbps',
+    startingPrice: '$40/mo',
+    pros: ['No contracts', 'Good regional coverage'],
+    cons: ['Limited to East Coast', 'Data caps on some plans'],
+    rating: 3.4,
+  },
+}
 
 // States where cable is most common
 const topCableStates = [
@@ -75,7 +103,6 @@ const topCableStates = [
 async function getCableCoverageStats() {
   const supabase = createAdminClient()
 
-  // Get average cable coverage from our data
   const { data } = await supabase
     .from('zip_broadband_coverage')
     .select('cable_100_20')
@@ -120,8 +147,49 @@ function StarRating({ rating }: { rating: number }) {
   )
 }
 
-export default async function BestCableProvidersPage() {
+export default async function BestCableProvidersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ zip?: string }>
+}) {
+  const params = await searchParams
+  const zipCode = params.zip
   const { avgCoverage, totalZips } = await getCableCoverageStats()
+
+  // Get providers based on location or show national list
+  let providers: Array<{
+    id: number
+    name: string
+    slug: string
+    technologies: string[]
+    category: string
+    coveragePercent?: number
+  }> = []
+  let cityName: string | null = null
+  let isFiltered = false
+
+  if (zipCode && /^\d{5}$/.test(zipCode)) {
+    // Get location-specific providers
+    const locationProviders = await getProvidersByZip(zipCode, 'Cable')
+    if (locationProviders.length > 0) {
+      providers = locationProviders
+      cityName = await getCityForZip(zipCode)
+      isFiltered = true
+    }
+  }
+
+  // If no location or no providers found, show national list
+  if (providers.length === 0) {
+    const allCableProviders = await getProvidersByTechnology('Cable')
+    providers = allCableProviders.map(p => ({ ...p, coveragePercent: undefined }))
+  }
+
+  // Sort by rating (from our details) if we have it
+  providers.sort((a, b) => {
+    const ratingA = providerDetails[a.slug]?.rating || 0
+    const ratingB = providerDetails[b.slug]?.rating || 0
+    return ratingB - ratingA
+  })
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -147,7 +215,15 @@ export default async function BestCableProvidersPage() {
             Cable internet offers fast speeds and wide availability across the US.
             Compare top-rated cable ISPs to find the best option in your area.
           </p>
-          <LocationInfo message="Showing cable providers available" />
+
+          {/* Location-aware component */}
+          <LocationAwareRankings
+            technology="Cable"
+            currentZip={zipCode}
+            cityName={cityName}
+            isFiltered={isFiltered}
+            providerCount={providers.length}
+          />
         </div>
 
         {/* Stats */}
@@ -161,8 +237,8 @@ export default async function BestCableProvidersPage() {
             <div className="text-sm text-gray-400">Top Speeds Available</div>
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-purple-400">{totalZips.toLocaleString()}</div>
-            <div className="text-sm text-gray-400">ZIP Codes Analyzed</div>
+            <div className="text-2xl font-bold text-purple-400">{providers.length}</div>
+            <div className="text-sm text-gray-400">{isFiltered ? 'Available Here' : 'Cable Providers'}</div>
           </div>
         </div>
 
@@ -204,74 +280,102 @@ export default async function BestCableProvidersPage() {
         </div>
 
         {/* Provider Rankings */}
-        <h2 className="text-2xl font-semibold mb-6">Top Cable Providers Ranked</h2>
-        <div className="space-y-6 mb-12">
-          {cableProviderDetails.map((provider, index) => (
-            <div
-              key={provider.name}
-              className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-blue-600/50 transition-colors"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center text-2xl font-bold text-white">
-                    {index + 1}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">
-                      <Link href={`/providers/${provider.slug}`} className="hover:text-blue-400 transition-colors">
-                        {provider.name}
-                      </Link>
-                    </h3>
-                    <StarRating rating={provider.rating} />
-                  </div>
-                </div>
-                <div className="flex gap-6 text-center">
-                  <div>
-                    <div className="text-lg font-bold text-blue-400">{provider.maxSpeed}</div>
-                    <div className="text-xs text-gray-500">Max Speed</div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold text-green-400">{provider.startingPrice}</div>
-                    <div className="text-xs text-gray-500">Starting At</div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold text-purple-400">{provider.coverage}</div>
-                    <div className="text-xs text-gray-500">Coverage</div>
-                  </div>
-                </div>
-              </div>
+        <h2 className="text-2xl font-semibold mb-6">
+          {isFiltered ? `Cable Providers in ${cityName || `ZIP ${zipCode}`}` : 'Top Cable Providers Ranked'}
+        </h2>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <div className="text-sm font-medium text-green-400 mb-2">Pros</div>
-                  <ul className="text-sm text-gray-400 space-y-1">
-                    {provider.pros.map((pro, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        {pro}
-                      </li>
-                    ))}
-                  </ul>
+        {providers.length === 0 ? (
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center mb-12">
+            <p className="text-gray-400 mb-4">No cable providers found for this location.</p>
+            <Link href="/best/cable-providers" className="text-blue-400 hover:text-blue-300">
+              View all cable providers →
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-6 mb-12">
+            {providers.map((provider, index) => {
+              const details = providerDetails[provider.slug]
+              return (
+                <div
+                  key={provider.slug}
+                  className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-blue-600/50 transition-colors"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center text-2xl font-bold text-white">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold">
+                          <Link href={`/providers/${provider.slug}`} className="hover:text-blue-400 transition-colors">
+                            {provider.name}
+                          </Link>
+                        </h3>
+                        {details && <StarRating rating={details.rating} />}
+                      </div>
+                    </div>
+                    <div className="flex gap-6 text-center">
+                      {details ? (
+                        <>
+                          <div>
+                            <div className="text-lg font-bold text-blue-400">{details.maxSpeed}</div>
+                            <div className="text-xs text-gray-500">Max Speed</div>
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold text-green-400">{details.startingPrice}</div>
+                            <div className="text-xs text-gray-500">Starting At</div>
+                          </div>
+                        </>
+                      ) : (
+                        <div>
+                          <div className="text-lg font-bold text-blue-400">Cable</div>
+                          <div className="text-xs text-gray-500">Technology</div>
+                        </div>
+                      )}
+                      {provider.coveragePercent !== undefined && (
+                        <div>
+                          <div className="text-lg font-bold text-purple-400">{provider.coveragePercent}%</div>
+                          <div className="text-xs text-gray-500">Local Coverage</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {details && (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm font-medium text-green-400 mb-2">Pros</div>
+                        <ul className="text-sm text-gray-400 space-y-1">
+                          {details.pros.map((pro, i) => (
+                            <li key={i} className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              {pro}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-red-400 mb-2">Cons</div>
+                        <ul className="text-sm text-gray-400 space-y-1">
+                          {details.cons.map((con, i) => (
+                            <li key={i} className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
+                              {con}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <div className="text-sm font-medium text-red-400 mb-2">Cons</div>
-                  <ul className="text-sm text-gray-400 space-y-1">
-                    {provider.cons.map((con, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                        {con}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              )
+            })}
+          </div>
+        )}
 
         {/* Browse by State - Internal Links */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-12">
@@ -303,11 +407,11 @@ export default async function BestCableProvidersPage() {
           <h2 className="text-xl font-semibold mb-4">Related Guides</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <Link
-              href="/guides/streaming"
+              href="/compare/technology/fiber-vs-cable"
               className="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
             >
-              <h3 className="font-medium mb-1">Best Internet for Streaming</h3>
-              <p className="text-sm text-gray-400">Find the right speed for Netflix, Hulu, and more</p>
+              <h3 className="font-medium mb-1">Fiber vs Cable Internet</h3>
+              <p className="text-sm text-gray-400">Which technology is right for you?</p>
             </Link>
             <Link
               href="/guides/gaming"
@@ -317,18 +421,18 @@ export default async function BestCableProvidersPage() {
               <p className="text-sm text-gray-400">Low latency options for online gaming</p>
             </Link>
             <Link
-              href="/guides/work-from-home"
+              href="/guides/streaming"
               className="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
             >
-              <h3 className="font-medium mb-1">Best Internet for Remote Work</h3>
-              <p className="text-sm text-gray-400">Reliable connections for video calls and uploads</p>
+              <h3 className="font-medium mb-1">Best Internet for Streaming</h3>
+              <p className="text-sm text-gray-400">Find the right speed for Netflix, Hulu, and more</p>
             </Link>
             <Link
-              href="/guides/rural"
+              href="/compare/technology/cable-vs-5g"
               className="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
             >
-              <h3 className="font-medium mb-1">Rural Internet Options</h3>
-              <p className="text-sm text-gray-400">Alternatives when cable isn't available</p>
+              <h3 className="font-medium mb-1">Cable vs 5G Home Internet</h3>
+              <p className="text-sm text-gray-400">Traditional cable vs new wireless options</p>
             </Link>
           </div>
         </div>

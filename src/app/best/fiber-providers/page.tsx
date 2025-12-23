@@ -1,67 +1,98 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/server'
-import { LocationInfo } from '@/components/LocationInfo'
-import { ProviderLink } from '@/components/ProviderLink'
+import { getProvidersByZip, getProvidersByTechnology, getCityForZip } from '@/lib/getProvidersByLocation'
 import { RelatedRankings } from '@/components/RelatedRankings'
+import { LocationAwareRankings } from '@/components/LocationAwareRankings'
 
 export const metadata: Metadata = {
   title: 'Best Fiber Internet Providers 2025 | Top-Rated Fiber ISPs',
   description: 'Compare the best fiber internet providers in 2025. Find top-rated fiber optic ISPs with the fastest speeds, best reliability, and competitive pricing.',
 }
 
-const fiberProviderDetails = [
-  {
-    name: 'AT&T Fiber',
-    slug: 'att',
+// Provider details for display (pros/cons, ratings, etc.)
+const providerDetails: Record<string, {
+  maxSpeed: string
+  startingPrice: string
+  pros: string[]
+  cons: string[]
+  rating: number
+}> = {
+  'att': {
     maxSpeed: '5 Gbps',
     startingPrice: '$55/mo',
     pros: ['Symmetrical upload/download', 'No data caps', 'Wide availability'],
     cons: ['Price increases after promo', 'Equipment fee'],
     rating: 4.5,
   },
-  {
-    name: 'Verizon Fios',
-    slug: 'verizon',
-    maxSpeed: '2 Gbps',
+  'verizon': {
+    maxSpeed: '2.3 Gbps',
     startingPrice: '$50/mo',
     pros: ['No contracts required', 'Excellent reliability', 'Great customer service'],
     cons: ['Limited to East Coast', 'Router rental fee'],
     rating: 4.6,
   },
-  {
-    name: 'Google Fiber',
-    slug: 'google-fiber',
+  'google-fiber': {
     maxSpeed: '8 Gbps',
     startingPrice: '$70/mo',
     pros: ['Fastest speeds available', 'Simple pricing', 'No data caps'],
     cons: ['Very limited availability', 'No bundle options'],
     rating: 4.7,
   },
-  {
-    name: 'Frontier Fiber',
-    slug: 'frontier',
+  'frontier': {
     maxSpeed: '5 Gbps',
     startingPrice: '$50/mo',
     pros: ['Competitive pricing', 'No annual contracts', 'Growing coverage'],
     cons: ['Customer service varies', 'Limited TV bundles'],
     rating: 4.2,
   },
-  {
-    name: 'CenturyLink/Quantum Fiber',
-    slug: 'centurylink',
+  'centurylink': {
     maxSpeed: '940 Mbps',
     startingPrice: '$30/mo',
     pros: ['Price for life guarantee', 'No contracts', 'Good value'],
     cons: ['Slower max speeds', 'Limited fiber availability'],
     rating: 4.0,
   },
-]
+  'ziply': {
+    maxSpeed: '5 Gbps',
+    startingPrice: '$20/mo',
+    pros: ['Very affordable', 'Fast fiber speeds', 'No contracts'],
+    cons: ['Limited to Pacific Northwest', 'Growing network'],
+    rating: 4.3,
+  },
+  'epb': {
+    maxSpeed: '10 Gbps',
+    startingPrice: '$58/mo',
+    pros: ['Fastest residential speeds', 'Municipal provider', 'Great service'],
+    cons: ['Only in Chattanooga, TN area'],
+    rating: 4.8,
+  },
+  'sonic': {
+    maxSpeed: '10 Gbps',
+    startingPrice: '$40/mo',
+    pros: ['Very affordable', 'No data caps', 'Privacy focused'],
+    cons: ['Limited to California', 'Growing coverage'],
+    rating: 4.4,
+  },
+  'metronet': {
+    maxSpeed: '1 Gbps',
+    startingPrice: '$50/mo',
+    pros: ['100% fiber network', 'No contracts', 'Good value'],
+    cons: ['Limited regional availability'],
+    rating: 4.2,
+  },
+  'brightspeed': {
+    maxSpeed: '2 Gbps',
+    startingPrice: '$55/mo',
+    pros: ['Growing fiber network', 'No data caps'],
+    cons: ['Transitioning from DSL in some areas', 'Newer company'],
+    rating: 3.8,
+  },
+}
 
 async function getFiberCoverageStats() {
   const supabase = createAdminClient()
 
-  // Get average fiber coverage from our data
   const { data } = await supabase
     .from('zip_broadband_coverage')
     .select('fiber_100_20')
@@ -106,8 +137,49 @@ function StarRating({ rating }: { rating: number }) {
   )
 }
 
-export default async function BestFiberProvidersPage() {
+export default async function BestFiberProvidersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ zip?: string }>
+}) {
+  const params = await searchParams
+  const zipCode = params.zip
   const { avgCoverage, totalZips } = await getFiberCoverageStats()
+
+  // Get providers based on location or show national list
+  let providers: Array<{
+    id: number
+    name: string
+    slug: string
+    technologies: string[]
+    category: string
+    coveragePercent?: number
+  }> = []
+  let cityName: string | null = null
+  let isFiltered = false
+
+  if (zipCode && /^\d{5}$/.test(zipCode)) {
+    // Get location-specific providers
+    const locationProviders = await getProvidersByZip(zipCode, 'Fiber')
+    if (locationProviders.length > 0) {
+      providers = locationProviders
+      cityName = await getCityForZip(zipCode)
+      isFiltered = true
+    }
+  }
+
+  // If no location or no providers found, show national list
+  if (providers.length === 0) {
+    const allFiberProviders = await getProvidersByTechnology('Fiber')
+    providers = allFiberProviders.map(p => ({ ...p, coveragePercent: undefined }))
+  }
+
+  // Sort by rating (from our details) if we have it
+  providers.sort((a, b) => {
+    const ratingA = providerDetails[a.slug]?.rating || 0
+    const ratingB = providerDetails[b.slug]?.rating || 0
+    return ratingB - ratingA
+  })
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -133,7 +205,15 @@ export default async function BestFiberProvidersPage() {
             Fiber optic internet offers the fastest, most reliable connection available.
             Compare top-rated fiber ISPs to find the best option in your area.
           </p>
-          <LocationInfo message="Showing fiber providers available" />
+
+          {/* Location-aware component */}
+          <LocationAwareRankings
+            technology="Fiber"
+            currentZip={zipCode}
+            cityName={cityName}
+            isFiltered={isFiltered}
+            providerCount={providers.length}
+          />
         </div>
 
         {/* Stats */}
@@ -143,12 +223,12 @@ export default async function BestFiberProvidersPage() {
             <div className="text-sm text-gray-400">Avg Fiber Coverage</div>
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">5+ Gbps</div>
+            <div className="text-2xl font-bold text-green-400">10 Gbps</div>
             <div className="text-sm text-gray-400">Top Speeds Available</div>
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-blue-400">{totalZips.toLocaleString()}</div>
-            <div className="text-sm text-gray-400">ZIP Codes Analyzed</div>
+            <div className="text-2xl font-bold text-blue-400">{providers.length}</div>
+            <div className="text-sm text-gray-400">{isFiltered ? 'Available Here' : 'Fiber Providers'}</div>
           </div>
         </div>
 
@@ -184,69 +264,139 @@ export default async function BestFiberProvidersPage() {
         </div>
 
         {/* Provider Rankings */}
-        <h2 className="text-2xl font-semibold mb-6">Top Fiber Providers Ranked</h2>
-        <div className="space-y-6 mb-12">
-          {fiberProviderDetails.map((provider, index) => (
-            <div
-              key={provider.name}
-              className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-purple-600/50 transition-colors"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center text-2xl font-bold text-white">
-                    {index + 1}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">
-                      <Link href={`/providers/${provider.slug}`} className="hover:text-purple-400 transition-colors">
-                        {provider.name}
-                      </Link>
-                    </h3>
-                    <StarRating rating={provider.rating} />
-                  </div>
-                </div>
-                <div className="flex gap-6 text-center">
-                  <div>
-                    <div className="text-lg font-bold text-purple-400">{provider.maxSpeed}</div>
-                    <div className="text-xs text-gray-500">Max Speed</div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-bold text-green-400">{provider.startingPrice}</div>
-                    <div className="text-xs text-gray-500">Starting At</div>
-                  </div>
-                </div>
-              </div>
+        <h2 className="text-2xl font-semibold mb-6">
+          {isFiltered ? `Fiber Providers in ${cityName || `ZIP ${zipCode}`}` : 'Top Fiber Providers Ranked'}
+        </h2>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <div className="text-sm font-medium text-green-400 mb-2">Pros</div>
-                  <ul className="text-sm text-gray-400 space-y-1">
-                    {provider.pros.map((pro, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        {pro}
-                      </li>
-                    ))}
-                  </ul>
+        {providers.length === 0 ? (
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center mb-12">
+            <p className="text-gray-400 mb-4">No fiber providers found for this location.</p>
+            <p className="text-sm text-gray-500 mb-4">
+              Fiber may not be available in your area yet. Consider <Link href="/best/cable-providers" className="text-blue-400 hover:text-blue-300">cable internet</Link> as an alternative.
+            </p>
+            <Link href="/best/fiber-providers" className="text-blue-400 hover:text-blue-300">
+              View all fiber providers →
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-6 mb-12">
+            {providers.map((provider, index) => {
+              const details = providerDetails[provider.slug]
+              return (
+                <div
+                  key={provider.slug}
+                  className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-purple-600/50 transition-colors"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center text-2xl font-bold text-white">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold">
+                          <Link href={`/providers/${provider.slug}`} className="hover:text-purple-400 transition-colors">
+                            {provider.name}
+                          </Link>
+                        </h3>
+                        {details && <StarRating rating={details.rating} />}
+                      </div>
+                    </div>
+                    <div className="flex gap-6 text-center">
+                      {details ? (
+                        <>
+                          <div>
+                            <div className="text-lg font-bold text-purple-400">{details.maxSpeed}</div>
+                            <div className="text-xs text-gray-500">Max Speed</div>
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold text-green-400">{details.startingPrice}</div>
+                            <div className="text-xs text-gray-500">Starting At</div>
+                          </div>
+                        </>
+                      ) : (
+                        <div>
+                          <div className="text-lg font-bold text-purple-400">Fiber</div>
+                          <div className="text-xs text-gray-500">Technology</div>
+                        </div>
+                      )}
+                      {provider.coveragePercent !== undefined && (
+                        <div>
+                          <div className="text-lg font-bold text-cyan-400">{provider.coveragePercent}%</div>
+                          <div className="text-xs text-gray-500">Local Coverage</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {details && (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-sm font-medium text-green-400 mb-2">Pros</div>
+                        <ul className="text-sm text-gray-400 space-y-1">
+                          {details.pros.map((pro, i) => (
+                            <li key={i} className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              {pro}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-red-400 mb-2">Cons</div>
+                        <ul className="text-sm text-gray-400 space-y-1">
+                          {details.cons.map((con, i) => (
+                            <li key={i} className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
+                              {con}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <div className="text-sm font-medium text-red-400 mb-2">Cons</div>
-                  <ul className="text-sm text-gray-400 space-y-1">
-                    {provider.cons.map((con, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                        {con}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          ))}
+              )
+            })}
+          </div>
+        )}
+
+        {/* Related Guides */}
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-12">
+          <h2 className="text-xl font-semibold mb-4">Related Guides</h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            <Link
+              href="/compare/technology/fiber-vs-cable"
+              className="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <h3 className="font-medium mb-1">Fiber vs Cable Internet</h3>
+              <p className="text-sm text-gray-400">Which technology is right for you?</p>
+            </Link>
+            <Link
+              href="/guides/gaming"
+              className="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <h3 className="font-medium mb-1">Best Internet for Gaming</h3>
+              <p className="text-sm text-gray-400">Low latency options for online gaming</p>
+            </Link>
+            <Link
+              href="/guides/work-from-home"
+              className="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <h3 className="font-medium mb-1">Best Internet for Remote Work</h3>
+              <p className="text-sm text-gray-400">Reliable connections for video calls</p>
+            </Link>
+            <Link
+              href="/compare/technology/fiber-vs-5g"
+              className="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <h3 className="font-medium mb-1">Fiber vs 5G Home Internet</h3>
+              <p className="text-sm text-gray-400">Wired fiber vs wireless 5G</p>
+            </Link>
+          </div>
         </div>
 
         {/* Related Rankings */}
