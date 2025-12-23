@@ -81,33 +81,41 @@ async function getProvidersByZip(zipCode: string): Promise<Provider[]> {
 
   const supabase = createAdminClient()
 
-  // Get CBSA for this ZIP, then get providers for that CBSA
-  const { data, error } = await supabase
+  // Step 1: Get CBSA code for this ZIP
+  const { data: zipData, error: zipError } = await supabase
     .from('zip_cbsa_mapping')
-    .select(`
-      cbsa_code,
-      cbsa_providers!inner (
-        coverage_pct,
-        fcc_providers!inner (
-          name
-        )
-      )
-    `)
+    .select('cbsa_code')
     .eq('zip_code', zipCode)
     .single()
 
-  if (error || !data) {
+  if (zipError || !zipData) {
     return []
   }
 
-  // Extract and sort providers by coverage
-  const providers: Provider[] = (data.cbsa_providers as any[])
+  // Step 2: Get providers for this CBSA with their names
+  const { data: providerData, error: providerError } = await supabase
+    .from('cbsa_providers')
+    .select(`
+      coverage_pct,
+      fcc_providers (
+        name
+      )
+    `)
+    .eq('cbsa_code', zipData.cbsa_code)
+    .order('coverage_pct', { ascending: false })
+    .limit(10)
+
+  if (providerError || !providerData) {
+    return []
+  }
+
+  // Extract and format providers
+  const providers: Provider[] = providerData
     .map((cp: any) => ({
-      name: cp.fcc_providers.name,
+      name: cp.fcc_providers?.name || 'Unknown Provider',
       coverage: Math.round(cp.coverage_pct * 100),
     }))
-    .sort((a, b) => b.coverage - a.coverage)
-    .slice(0, 10) // Top 10 providers
+    .filter((p: Provider) => p.name !== 'Unknown Provider')
 
   return providers
 }
