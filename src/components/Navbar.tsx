@@ -16,9 +16,45 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden md:flex items-center space-x-1">
-          <Link href="/compare" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
-            Compare
-          </Link>
+          {/* Compare Dropdown */}
+          <div
+            className="relative"
+            onMouseEnter={() => setOpenDropdown('compare')}
+            onMouseLeave={() => setOpenDropdown(null)}
+          >
+            <button className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+              Compare
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {openDropdown === 'compare' && (
+              <div className="absolute top-full left-0 mt-1 w-56 bg-gray-900 border border-gray-800 rounded-lg shadow-xl py-2">
+                <Link href="/compare" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
+                  Compare by ZIP Code
+                </Link>
+                <div className="border-t border-gray-800 my-2" />
+                <div className="px-4 py-1 text-xs text-gray-500 uppercase tracking-wider">Providers</div>
+                <Link href="/compare/att-vs-spectrum" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
+                  AT&T vs Spectrum
+                </Link>
+                <Link href="/compare/xfinity-vs-spectrum" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
+                  Xfinity vs Spectrum
+                </Link>
+                <Link href="/compare/att-vs-verizon" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
+                  AT&T vs Verizon
+                </Link>
+                <div className="border-t border-gray-800 my-2" />
+                <div className="px-4 py-1 text-xs text-gray-500 uppercase tracking-wider">Technologies</div>
+                <Link href="/compare/technology/fiber-vs-cable" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
+                  Fiber vs Cable
+                </Link>
+                <Link href="/compare/technology/cable-vs-5g" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
+                  Cable vs 5G
+                </Link>
+              </div>
+            )}
+          </div>
 
           {/* Rankings Dropdown */}
           <div
