@@ -36,13 +36,13 @@ export function Navbar() {
                 </Link>
                 <div className="border-t border-gray-800 my-2" />
                 <div className="px-4 py-1 text-xs text-gray-500 uppercase tracking-wider">Providers</div>
-                <Link href="/compare/att-vs-spectrum" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
+                <Link href="/compare/att-internet-vs-spectrum" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
                   AT&T vs Spectrum
                 </Link>
                 <Link href="/compare/xfinity-vs-spectrum" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
                   Xfinity vs Spectrum
                 </Link>
-                <Link href="/compare/att-vs-verizon" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
+                <Link href="/compare/att-internet-vs-verizon-fios" className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-800">
                   AT&T vs Verizon
                 </Link>
                 <div className="border-t border-gray-800 my-2" />

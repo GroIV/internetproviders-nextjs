@@ -18,6 +18,54 @@ const guideTemplates: Record<string, {
   content: (city: string, zipCode: string) => string
   filterProviders?: (providers: Provider[]) => Provider[]
 }> = {
+  'best-internet-providers': {
+    id: 'best-internet-providers',
+    category: 'Comparison',
+    title: (city) => `Best Internet Providers in ${city}`,
+    description: (city) => `Compare the top-rated internet providers available in ${city}. Find the best coverage, speeds, and prices.`,
+    icon: '🏆',
+    color: 'text-blue-400',
+    content: (city, zipCode) => `
+      <h2>Top Internet Providers in ${city}</h2>
+      <p>Finding the best internet provider depends on your specific needs: speed requirements, budget, and what's available at your address. Here's how to evaluate your options:</p>
+
+      <h3>What Makes a Provider "Best"?</h3>
+      <ul>
+        <li><strong>Availability:</strong> The best provider is one that actually services your address</li>
+        <li><strong>Speed:</strong> Match your household's needs (streaming, gaming, work from home)</li>
+        <li><strong>Reliability:</strong> Uptime and consistent performance matter more than peak speeds</li>
+        <li><strong>Price:</strong> Consider total cost including equipment rental and fees</li>
+        <li><strong>Customer Service:</strong> Important when things go wrong</li>
+      </ul>
+
+      <h3>Provider Types Ranked</h3>
+      <ol>
+        <li><strong>Fiber:</strong> Best overall - fastest, most reliable, symmetrical speeds</li>
+        <li><strong>Cable:</strong> Widely available with good speeds, but shared bandwidth</li>
+        <li><strong>5G Home:</strong> Good alternative where available, no wired installation needed</li>
+        <li><strong>DSL:</strong> Older technology, slower speeds but sometimes only option</li>
+        <li><strong>Satellite:</strong> Available everywhere but high latency, data caps</li>
+      </ol>
+
+      <h3>How to Choose</h3>
+      <p>Start by checking which providers service your exact address. Then compare:</p>
+      <ul>
+        <li>Promotional vs regular pricing</li>
+        <li>Contract requirements and early termination fees</li>
+        <li>Data caps and overage charges</li>
+        <li>Equipment rental costs vs buying your own</li>
+        <li>Installation fees and scheduling</li>
+      </ul>
+
+      <h3>Red Flags to Avoid</h3>
+      <ul>
+        <li>Prices that jump significantly after promotional period</li>
+        <li>Strict data caps with expensive overages</li>
+        <li>Long-term contracts with high cancellation fees</li>
+        <li>Required equipment rental at high monthly costs</li>
+      </ul>
+    `,
+  },
   gaming: {
     id: 'gaming',
     category: 'Gaming',
@@ -418,8 +466,16 @@ async function getProviders(zipCode: string): Promise<Provider[]> {
       technologies.push('Internet')
     }
 
+    // Clean provider name for display
+    let displayName = name
+      .replace(/, Inc\.|Inc\.|Corporation|Corp\.|LLC/g, '')
+      .replace('Charter Communications', 'Spectrum')
+      .replace('Comcast Cable', 'Xfinity')
+      .replace('Space Exploration Technologies', 'Starlink')
+      .trim()
+
     return {
-      name: name.replace(/, Inc\.|Inc\.|Corporation|Corp\.|LLC| Communications/g, '').trim(),
+      name: displayName,
       technologies: [...new Set(technologies)],
       coverage_pct: Math.round(p.coverage_pct * 100),
     }

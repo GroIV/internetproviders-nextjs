@@ -107,7 +107,7 @@ const faqData: FAQCategory[] = [
         question: 'Which internet provider is the best?',
         answer: (
           <>
-            It depends on your priorities and location. <Link href="/providers/att" className="text-blue-400 hover:text-blue-300">AT&T Fiber</Link> and <Link href="/providers/verizon" className="text-blue-400 hover:text-blue-300">Verizon Fios</Link> are excellent for fiber. <Link href="/providers/xfinity" className="text-blue-400 hover:text-blue-300">Xfinity</Link> and <Link href="/providers/spectrum" className="text-blue-400 hover:text-blue-300">Spectrum</Link> offer wide cable coverage. For budget options, see our <Link href="/cheapest/providers" className="text-blue-400 hover:text-blue-300">Cheapest Providers</Link> list.
+            It depends on your priorities and location. <Link href="/providers/att-internet" className="text-blue-400 hover:text-blue-300">AT&T Fiber</Link> and <Link href="/providers/verizon-fios" className="text-blue-400 hover:text-blue-300">Verizon Fios</Link> are excellent for fiber. <Link href="/providers/xfinity" className="text-blue-400 hover:text-blue-300">Xfinity</Link> and <Link href="/providers/spectrum" className="text-blue-400 hover:text-blue-300">Spectrum</Link> offer wide cable coverage. For budget options, see our <Link href="/cheapest/providers" className="text-blue-400 hover:text-blue-300">Cheapest Providers</Link> list.
           </>
         ),
       },
@@ -192,7 +192,7 @@ const faqData: FAQCategory[] = [
         question: 'What is 5G Home Internet?',
         answer: (
           <>
-            5G Home Internet uses cellular networks instead of cables to deliver internet to your home. Providers like <Link href="/providers/t-mobile" className="text-blue-400 hover:text-blue-300">T-Mobile</Link> and <Link href="/providers/verizon" className="text-blue-400 hover:text-blue-300">Verizon</Link> offer these services with speeds of 100-300+ Mbps, often with no data caps or contracts.
+            5G Home Internet uses cellular networks instead of cables to deliver internet to your home. Providers like T-Mobile and <Link href="/providers/verizon-fios" className="text-blue-400 hover:text-blue-300">Verizon</Link> offer these services with speeds of 100-300+ Mbps, often with no data caps or contracts.
           </>
         ),
       },

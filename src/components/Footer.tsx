@@ -20,9 +20,9 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-white mb-4">Comparisons</h3>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link href="/compare/att-vs-spectrum" className="hover:text-white transition-colors">AT&T vs Spectrum</Link></li>
+              <li><Link href="/compare/att-internet-vs-spectrum" className="hover:text-white transition-colors">AT&T vs Spectrum</Link></li>
               <li><Link href="/compare/xfinity-vs-spectrum" className="hover:text-white transition-colors">Xfinity vs Spectrum</Link></li>
-              <li><Link href="/compare/att-vs-verizon" className="hover:text-white transition-colors">AT&T vs Verizon</Link></li>
+              <li><Link href="/compare/att-internet-vs-verizon-fios" className="hover:text-white transition-colors">AT&T vs Verizon</Link></li>
               <li><Link href="/compare/technology/fiber-vs-cable" className="hover:text-white transition-colors">Fiber vs Cable</Link></li>
               <li><Link href="/compare/technology/cable-vs-5g" className="hover:text-white transition-colors">Cable vs 5G</Link></li>
             </ul>

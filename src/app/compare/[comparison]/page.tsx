@@ -9,6 +9,7 @@ interface Props {
 }
 
 // Provider details for comparison (supplementary info not in DB)
+// Keys must match database slugs exactly
 const providerDetails: Record<string, {
   color: string
   tagline: string
@@ -20,7 +21,7 @@ const providerDetails: Record<string, {
   dataCap: string
   primaryTech: string
 }> = {
-  'att': {
+  'att-internet': {
     color: 'from-blue-500 to-cyan-500',
     tagline: 'America\'s largest fiber network',
     founded: '1983',
@@ -53,7 +54,7 @@ const providerDetails: Record<string, {
     dataCap: 'None',
     primaryTech: 'Cable',
   },
-  'verizon': {
+  'verizon-fios': {
     color: 'from-red-500 to-red-600',
     tagline: 'Premium fiber experience',
     founded: '2000',
@@ -64,7 +65,7 @@ const providerDetails: Record<string, {
     dataCap: 'None',
     primaryTech: 'Fiber',
   },
-  'frontier': {
+  'frontier-fiber': {
     color: 'from-red-600 to-red-400',
     tagline: 'Fiber for life pricing',
     founded: '1935',
@@ -119,11 +120,11 @@ const providerDetails: Record<string, {
     dataCap: 'None (fiber)',
     primaryTech: 'Fiber/DSL',
   },
-  'optimum': {
+  'astound-broadband': {
     color: 'from-blue-500 to-blue-600',
-    tagline: 'Northeast cable provider',
+    tagline: 'Regional cable and fiber provider',
     founded: '1973',
-    headquarters: 'Long Island City, NY',
+    headquarters: 'Princeton, NJ',
     maxSpeed: '1 Gbps',
     minPrice: '$40/mo',
     contractRequired: false,
@@ -141,37 +142,38 @@ const providerDetails: Record<string, {
     dataCap: '100 GB',
     primaryTech: 'Satellite',
   },
-  'starlink': {
+  'viasat': {
     color: 'from-gray-700 to-gray-800',
-    tagline: 'Next-gen satellite internet',
-    founded: '2015',
-    headquarters: 'Hawthorne, CA',
-    maxSpeed: '220 Mbps',
-    minPrice: '$120/mo',
-    contractRequired: false,
-    dataCap: 'Priority data limits',
+    tagline: 'High-speed satellite internet',
+    founded: '1986',
+    headquarters: 'Carlsbad, CA',
+    maxSpeed: '150 Mbps',
+    minPrice: '$70/mo',
+    contractRequired: true,
+    dataCap: 'Varies by plan',
     primaryTech: 'Satellite',
   },
 }
 
 // Popular comparison pairs for static generation
+// Slugs must match database exactly
 const popularComparisons = [
-  ['att', 'xfinity'],
-  ['att', 'spectrum'],
-  ['att', 'verizon'],
+  ['att-internet', 'xfinity'],
+  ['att-internet', 'spectrum'],
+  ['att-internet', 'verizon-fios'],
   ['xfinity', 'spectrum'],
-  ['xfinity', 'verizon'],
-  ['spectrum', 'verizon'],
-  ['frontier', 'att'],
-  ['frontier', 'verizon'],
-  ['cox', 'att'],
+  ['xfinity', 'verizon-fios'],
+  ['spectrum', 'verizon-fios'],
+  ['frontier-fiber', 'att-internet'],
+  ['frontier-fiber', 'verizon-fios'],
+  ['cox', 'att-internet'],
   ['cox', 'spectrum'],
   ['t-mobile', 'xfinity'],
   ['t-mobile', 'spectrum'],
-  ['google-fiber', 'att'],
-  ['google-fiber', 'verizon'],
-  ['starlink', 'hughesnet'],
-  ['centurylink', 'att'],
+  ['google-fiber', 'att-internet'],
+  ['google-fiber', 'verizon-fios'],
+  ['viasat', 'hughesnet'],
+  ['centurylink', 'att-internet'],
 ]
 
 async function getProvider(slug: string) {
