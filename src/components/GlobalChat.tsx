@@ -31,10 +31,22 @@ export function GlobalChat() {
 
   return (
     <>
-      {/* Floating Action Button */}
+      {/* Desktop: Always-visible sidebar */}
+      <div className="hidden lg:block fixed right-0 top-16 bottom-0 w-[380px] border-l border-gray-800 bg-gray-950 z-40">
+        <ChatWindow
+          embedded={true}
+          showQuickActions={true}
+          className="h-full rounded-none border-0"
+        />
+      </div>
+
+      {/* Desktop: Spacer to prevent content overlap */}
+      <div className="hidden lg:block w-[380px] flex-shrink-0" />
+
+      {/* Mobile/Tablet: Floating Action Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg transition-all duration-300 ${
+        className={`lg:hidden fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg transition-all duration-300 ${
           isOpen
             ? 'bg-gray-700 hover:bg-gray-600'
             : 'bg-gradient-to-br from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500'
@@ -60,45 +72,27 @@ export function GlobalChat() {
         )}
       </button>
 
-      {/* Chat Panel */}
-      <div
-        className={`fixed bottom-24 right-6 z-40 w-[380px] max-w-[calc(100vw-3rem)] transition-all duration-300 ${
-          isOpen
-            ? 'opacity-100 translate-y-0 pointer-events-auto'
-            : 'opacity-0 translate-y-4 pointer-events-none'
-        }`}
-      >
-        <div className="shadow-2xl rounded-xl">
-          <ChatWindow
-            embedded={false}
-            showQuickActions={true}
-            onClose={() => setIsOpen(false)}
-          />
-        </div>
-      </div>
-
-      {/* Mobile overlay */}
+      {/* Mobile: Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          className="lg:hidden fixed inset-0 bg-black/50 z-30"
           onClick={() => setIsOpen(false)}
         />
       )}
 
-      {/* Mobile full-screen chat */}
+      {/* Mobile: Full-screen chat panel */}
       <div
-        className={`fixed inset-0 z-40 md:hidden transition-all duration-300 ${
-          isOpen
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
+        className={`lg:hidden fixed inset-x-0 bottom-0 z-40 transition-transform duration-300 ${
+          isOpen ? 'translate-y-0' : 'translate-y-full'
         }`}
+        style={{ height: '85vh' }}
       >
-        <div className="h-full pt-safe pb-safe bg-gray-950">
+        <div className="h-full bg-gray-950 rounded-t-xl">
           <ChatWindow
-            embedded={false}
+            embedded={true}
             showQuickActions={true}
             onClose={() => setIsOpen(false)}
-            className="h-full rounded-none border-0"
+            className="h-full rounded-t-xl rounded-b-none"
           />
         </div>
       </div>

@@ -34,7 +34,11 @@ interface Message {
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, zipCode } = await request.json() as { messages: Message[], zipCode?: string }
+    const { messages, zipCode, pageContext } = await request.json() as {
+      messages: Message[]
+      zipCode?: string
+      pageContext?: string
+    }
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -45,6 +49,11 @@ export async function POST(request: NextRequest) {
 
     // If ZIP code provided, get provider context from database
     let providerContext = ''
+
+    // Add page context if provided
+    if (pageContext) {
+      providerContext += `\n\nCurrent page context: ${pageContext}`
+    }
     if (zipCode && /^\d{5}$/.test(zipCode)) {
       const supabase = createAdminClient()
 

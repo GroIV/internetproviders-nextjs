@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, FormEvent } from 'react'
+import { usePathname } from 'next/navigation'
 import { useChat } from '@/contexts/ChatContext'
 import { useLocation } from '@/contexts/LocationContext'
 
@@ -18,8 +19,108 @@ const defaultQuickActions: QuickAction[] = [
   { label: "Fiber availability", prompt: "Is fiber internet available here?" },
 ]
 
+// Get page-specific context and quick actions based on current route
+function getPageContext(pathname: string): { context: string; quickActions?: QuickAction[] } {
+  // Provider page
+  if (pathname.startsWith('/providers/')) {
+    const slug = pathname.split('/providers/')[1]
+    const providerName = slug?.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    return {
+      context: `User is viewing the ${providerName} provider page. They may have questions about this specific provider's plans, pricing, coverage, or how it compares to others.`,
+      quickActions: [
+        { label: `${providerName} plans`, prompt: `What plans does ${providerName} offer?` },
+        { label: "Pricing", prompt: `How much does ${providerName} cost per month?` },
+        { label: "Pros & cons", prompt: `What are the pros and cons of ${providerName}?` },
+        { label: "Alternatives", prompt: `What are some alternatives to ${providerName}?` },
+      ]
+    }
+  }
+
+  // Comparison page
+  if (pathname.startsWith('/compare/') && pathname.includes('-vs-')) {
+    const comparison = pathname.split('/compare/')[1]
+    const providers = comparison?.replace('technology/', '').split('-vs-').map(p =>
+      p.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    )
+    if (providers?.length === 2) {
+      return {
+        context: `User is comparing ${providers[0]} vs ${providers[1]}. Help them understand the differences and which might be better for their needs.`,
+        quickActions: [
+          { label: "Which is faster?", prompt: `Which is faster, ${providers[0]} or ${providers[1]}?` },
+          { label: "Which is cheaper?", prompt: `Which is more affordable, ${providers[0]} or ${providers[1]}?` },
+          { label: "Best for gaming", prompt: `For gaming, should I choose ${providers[0]} or ${providers[1]}?` },
+          { label: "My recommendation", prompt: `Based on my location, which do you recommend?` },
+        ]
+      }
+    }
+  }
+
+  // Guides page
+  if (pathname === '/guides') {
+    return {
+      context: `User is browsing internet guides and articles. Help them find relevant information about internet service.`,
+      quickActions: [
+        { label: "Speed guide", prompt: "What internet speed do I need?" },
+        { label: "Save money", prompt: "How can I save money on internet?" },
+        { label: "Fiber vs Cable", prompt: "Should I get fiber or cable internet?" },
+        { label: "Work from home", prompt: "Best internet setup for remote work?" },
+      ]
+    }
+  }
+
+  // Guide detail page
+  if (pathname.startsWith('/guides/')) {
+    const slug = pathname.split('/guides/')[1]
+    const title = slug?.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    return {
+      context: `User is reading a guide about "${title}". Answer questions related to this topic.`,
+    }
+  }
+
+  // State/City pages
+  if (pathname.startsWith('/internet/')) {
+    const parts = pathname.split('/internet/')[1]?.split('/')
+    if (parts?.length === 2) {
+      const city = parts[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      const state = parts[0].toUpperCase()
+      return {
+        context: `User is viewing internet providers in ${city}, ${state}. Help them find the best options in this area.`,
+        quickActions: [
+          { label: "Best provider", prompt: `What's the best internet provider in ${city}?` },
+          { label: "Fiber available?", prompt: `Is fiber internet available in ${city}?` },
+          { label: "Cheapest option", prompt: `What's the cheapest internet in ${city}?` },
+          { label: "Coverage", prompt: `How is internet coverage in ${city}?` },
+        ]
+      }
+    }
+  }
+
+  // FAQ page
+  if (pathname === '/faq') {
+    return {
+      context: `User is on the FAQ page. Help answer common questions about internet service.`,
+    }
+  }
+
+  // Speed test page
+  if (pathname === '/tools/speed-test') {
+    return {
+      context: `User is on the speed test page. Help them understand their results or troubleshoot speed issues.`,
+      quickActions: [
+        { label: "Good speed?", prompt: "What's considered a good internet speed?" },
+        { label: "Slow internet", prompt: "Why is my internet so slow?" },
+        { label: "Improve speed", prompt: "How can I improve my internet speed?" },
+        { label: "Upload vs download", prompt: "What's the difference between upload and download speed?" },
+      ]
+    }
+  }
+
+  // Default for other pages
+  return { context: '' }
+}
+
 interface ChatWindowProps {
-  embedded?: boolean // true for homepage (full height), false for floating panel
+  embedded?: boolean // true for prominent display, false for floating panel
   showQuickActions?: boolean
   onClose?: () => void
   className?: string
@@ -31,16 +132,30 @@ export function ChatWindow({
   onClose,
   className = ''
 }: ChatWindowProps) {
-  const { messages, isLoading, sendMessage, initializeChat, hasWelcomed } = useChat()
+  const pathname = usePathname()
+  const { messages, isLoading, sendMessage, initializeChat, hasWelcomed, setPageContext } = useChat()
   const { location, isLoading: locationLoading } = useLocation()
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [hasInteracted, setHasInteracted] = useState(false)
+  const prevMessagesLength = useRef(messages.length)
 
-  // Auto-scroll to bottom when messages change
+  // Get page-specific context
+  const pageInfo = getPageContext(pathname)
+
+  // Update page context when route changes
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    setPageContext(pageInfo.context)
+  }, [pathname, pageInfo.context, setPageContext])
+
+  // Only auto-scroll after user has interacted (sent a message)
+  useEffect(() => {
+    if (hasInteracted && messages.length > prevMessagesLength.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+    prevMessagesLength.current = messages.length
+  }, [messages, hasInteracted])
 
   // Initialize chat with welcome message when location is available
   useEffect(() => {
@@ -52,23 +167,24 @@ export function ChatWindow({
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (input.trim() && !isLoading) {
+      setHasInteracted(true)
       sendMessage(input.trim(), location?.zipCode || undefined)
       setInput('')
     }
   }
 
   const handleQuickAction = (prompt: string) => {
+    setHasInteracted(true)
     sendMessage(prompt, location?.zipCode || undefined)
   }
 
-  // Focus input on mount for embedded mode
-  useEffect(() => {
-    if (embedded && inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [embedded])
+  // Don't auto-focus to prevent scroll jump
+  // User can click to focus
 
   const containerHeight = embedded ? 'h-[60vh] min-h-[400px]' : 'h-[500px]'
+
+  // Use page-specific quick actions if available, otherwise defaults
+  const activeQuickActions = pageInfo.quickActions || defaultQuickActions
 
   return (
     <div className={`flex flex-col bg-gray-900 border border-gray-800 rounded-xl overflow-hidden ${containerHeight} ${className}`}>
@@ -161,7 +277,7 @@ export function ChatWindow({
       {showQuickActions && messages.length <= 1 && !isLoading && (
         <div className="px-4 pb-2">
           <div className="flex flex-wrap gap-2">
-            {defaultQuickActions.slice(0, 4).map((action, i) => (
+            {activeQuickActions.slice(0, 4).map((action, i) => (
               <button
                 key={i}
                 onClick={() => handleQuickAction(action.prompt)}

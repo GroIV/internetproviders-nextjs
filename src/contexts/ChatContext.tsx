@@ -12,10 +12,12 @@ interface ChatContextType {
   isOpen: boolean
   isLoading: boolean
   hasWelcomed: boolean
+  pageContext: string
   sendMessage: (content: string, zipCode?: string) => Promise<void>
   initializeChat: (zipCode: string, city: string, providerCount?: number) => Promise<void>
   clearHistory: () => void
   setIsOpen: (open: boolean) => void
+  setPageContext: (context: string) => void
 }
 
 const ChatContext = createContext<ChatContextType | null>(null)
@@ -28,6 +30,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [hasWelcomed, setHasWelcomed] = useState(false)
+  const [pageContext, setPageContext] = useState('')
   const initializingRef = useRef(false)
 
   // Load from localStorage on mount
@@ -112,6 +115,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({
           messages: [...messages, userMessage],
           zipCode,
+          pageContext, // Include page context for relevant responses
         }),
       })
 
@@ -131,7 +135,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [isLoading, messages])
+  }, [isLoading, messages, pageContext])
 
   // Clear chat history
   const clearHistory = useCallback(() => {
@@ -148,10 +152,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         isOpen,
         isLoading,
         hasWelcomed,
+        pageContext,
         sendMessage,
         initializeChat,
         clearHistory,
         setIsOpen,
+        setPageContext,
       }}
     >
       {children}
