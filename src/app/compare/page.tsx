@@ -92,27 +92,36 @@ async function getProvidersByZip(zipCode: string): Promise<Provider[]> {
     return []
   }
 
-  // Step 2: Get providers for this CBSA with their names
-  const { data: providerData, error: providerError } = await supabase
+  // Step 2: Get providers for this CBSA
+  const { data: cbsaData, error: cbsaError } = await supabase
     .from('cbsa_providers')
-    .select(`
-      coverage_pct,
-      fcc_providers (
-        name
-      )
-    `)
+    .select('provider_id, coverage_pct')
     .eq('cbsa_code', zipData.cbsa_code)
     .order('coverage_pct', { ascending: false })
     .limit(10)
 
-  if (providerError || !providerData) {
+  if (cbsaError || !cbsaData || cbsaData.length === 0) {
     return []
   }
 
-  // Extract and format providers
-  const providers: Provider[] = providerData
+  // Step 3: Get provider names
+  const providerIds = cbsaData.map((p: any) => p.provider_id)
+  const { data: providerNames, error: namesError } = await supabase
+    .from('fcc_providers')
+    .select('provider_id, name')
+    .in('provider_id', providerIds)
+
+  if (namesError || !providerNames) {
+    return []
+  }
+
+  // Create lookup map for names
+  const nameMap = new Map(providerNames.map((p: any) => [p.provider_id, p.name]))
+
+  // Combine and format
+  const providers: Provider[] = cbsaData
     .map((cp: any) => ({
-      name: cp.fcc_providers?.name || 'Unknown Provider',
+      name: nameMap.get(cp.provider_id) || 'Unknown Provider',
       coverage: Math.round(cp.coverage_pct * 100),
     }))
     .filter((p: Provider) => p.name !== 'Unknown Provider')
