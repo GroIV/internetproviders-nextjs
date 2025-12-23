@@ -9,19 +9,21 @@ export function Footer() {
             <h3 className="font-semibold text-white mb-4">Compare</h3>
             <ul className="space-y-2 text-sm text-gray-400">
               <li><Link href="/compare" className="hover:text-white transition-colors">Find Providers</Link></li>
-              <li><Link href="/compare/fiber-vs-cable" className="hover:text-white transition-colors">Fiber vs Cable</Link></li>
               <li><Link href="/best/fiber-providers" className="hover:text-white transition-colors">Best Fiber</Link></li>
               <li><Link href="/cheapest/providers" className="hover:text-white transition-colors">Cheapest Internet</Link></li>
+              <li><Link href="/fastest/providers" className="hover:text-white transition-colors">Fastest Internet</Link></li>
+              <li><Link href="/deals" className="hover:text-white transition-colors">Deals & Promotions</Link></li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-semibold text-white mb-4">Providers</h3>
+            <h3 className="font-semibold text-white mb-4">By Location</h3>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link href="/providers/att" className="hover:text-white transition-colors">AT&T</Link></li>
-              <li><Link href="/providers/xfinity" className="hover:text-white transition-colors">Xfinity</Link></li>
-              <li><Link href="/providers/spectrum" className="hover:text-white transition-colors">Spectrum</Link></li>
-              <li><Link href="/providers/verizon" className="hover:text-white transition-colors">Verizon Fios</Link></li>
+              <li><Link href="/internet" className="hover:text-white transition-colors">Internet by State</Link></li>
+              <li><Link href="/internet/texas" className="hover:text-white transition-colors">Texas</Link></li>
+              <li><Link href="/internet/california" className="hover:text-white transition-colors">California</Link></li>
+              <li><Link href="/internet/florida" className="hover:text-white transition-colors">Florida</Link></li>
+              <li><Link href="/internet/new-york" className="hover:text-white transition-colors">New York</Link></li>
             </ul>
           </div>
 
@@ -31,7 +33,7 @@ export function Footer() {
               <li><Link href="/guides" className="hover:text-white transition-colors">Guides</Link></li>
               <li><Link href="/tools/speed-test" className="hover:text-white transition-colors">Speed Test</Link></li>
               <li><Link href="/tools/quiz" className="hover:text-white transition-colors">Find Your Plan</Link></li>
-              <li><Link href="/coverage" className="hover:text-white transition-colors">Coverage Map</Link></li>
+              <li><Link href="/tools/ai-assistant" className="hover:text-white transition-colors">AI Assistant</Link></li>
             </ul>
           </div>
 
