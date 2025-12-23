@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useMemo } from 'react'
+import { useRef, useEffect, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { ChatWindow } from './ChatWindow'
 import { useChat } from '@/contexts/ChatContext'
@@ -81,6 +81,13 @@ export function PageChatSection() {
   const pathname = usePathname()
   const { setChatSectionVisible, sendProactiveMessage, hasWelcomed } = useChat()
   const sectionRef = useRef<HTMLDivElement>(null)
+  const [isMounted, setIsMounted] = useState(false)
+  const prevPathname = useRef(pathname)
+
+  // Handle mounting
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // Get page title
   const pageTitle = useMemo(() => getPageTitle(pathname), [pathname])
@@ -88,6 +95,15 @@ export function PageChatSection() {
   // Don't show on homepage (has its own embedded chat) or AI assistant page
   const isHomepage = pathname === '/'
   const isAiAssistantPage = pathname === '/tools/ai-assistant'
+
+  // Scroll to top when navigating to a new page (so user sees the chat)
+  useEffect(() => {
+    if (isMounted && pathname !== prevPathname.current && !isHomepage && !isAiAssistantPage) {
+      // Smooth scroll to top to show the chat section
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    prevPathname.current = pathname
+  }, [pathname, isMounted, isHomepage, isAiAssistantPage])
 
   // Send proactive message when navigating to a new page (after welcome)
   useEffect(() => {
