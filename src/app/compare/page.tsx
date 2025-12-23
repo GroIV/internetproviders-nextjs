@@ -20,6 +20,11 @@ interface CoverageData {
   dataSource: string
 }
 
+interface Provider {
+  name: string
+  coverage: number
+}
+
 async function getCoverageByZip(zipCode: string): Promise<CoverageData | null> {
   if (!zipCode || !/^\d{5}$/.test(zipCode)) {
     return null
@@ -67,6 +72,44 @@ async function getCoverageByZip(zipCode: string): Promise<CoverageData | null> {
     },
     dataSource: data.data_source,
   }
+}
+
+async function getProvidersByZip(zipCode: string): Promise<Provider[]> {
+  if (!zipCode || !/^\d{5}$/.test(zipCode)) {
+    return []
+  }
+
+  const supabase = createAdminClient()
+
+  // Get CBSA for this ZIP, then get providers for that CBSA
+  const { data, error } = await supabase
+    .from('zip_cbsa_mapping')
+    .select(`
+      cbsa_code,
+      cbsa_providers!inner (
+        coverage_pct,
+        fcc_providers!inner (
+          name
+        )
+      )
+    `)
+    .eq('zip_code', zipCode)
+    .single()
+
+  if (error || !data) {
+    return []
+  }
+
+  // Extract and sort providers by coverage
+  const providers: Provider[] = (data.cbsa_providers as any[])
+    .map((cp: any) => ({
+      name: cp.fcc_providers.name,
+      coverage: Math.round(cp.coverage_pct * 100),
+    }))
+    .sort((a, b) => b.coverage - a.coverage)
+    .slice(0, 10) // Top 10 providers
+
+  return providers
 }
 
 function CoverageBar({ percent, color }: { percent: number | null; color: string }) {
@@ -127,6 +170,71 @@ function TechnologyCard({
   )
 }
 
+function ProviderCard({ provider }: { provider: Provider }) {
+  // Determine provider type based on name
+  const isSatellite = provider.name.toLowerCase().includes('echostar') ||
+    provider.name.toLowerCase().includes('viasat') ||
+    provider.name.toLowerCase().includes('space exploration') ||
+    provider.name.toLowerCase().includes('starlink')
+
+  const isFiber = provider.name.toLowerCase().includes('at&t') ||
+    provider.name.toLowerCase().includes('verizon') ||
+    provider.name.toLowerCase().includes('frontier') ||
+    provider.name.toLowerCase().includes('centurylink') ||
+    provider.name.toLowerCase().includes('google fiber')
+
+  const isCable = provider.name.toLowerCase().includes('charter') ||
+    provider.name.toLowerCase().includes('comcast') ||
+    provider.name.toLowerCase().includes('xfinity') ||
+    provider.name.toLowerCase().includes('cox') ||
+    provider.name.toLowerCase().includes('altice') ||
+    provider.name.toLowerCase().includes('spectrum')
+
+  let type = 'Internet Provider'
+  let color = 'text-gray-400'
+
+  if (isSatellite) {
+    type = 'Satellite'
+    color = 'text-orange-400'
+  } else if (isFiber) {
+    type = 'Fiber/DSL'
+    color = 'text-purple-400'
+  } else if (isCable) {
+    type = 'Cable'
+    color = 'text-blue-400'
+  }
+
+  // Clean up provider name
+  let displayName = provider.name
+    .replace(', Inc.', '')
+    .replace(' Inc.', '')
+    .replace(' Corporation', '')
+    .replace(' Corp.', '')
+    .replace(' LLC', '')
+    .replace(' Communications', '')
+    .replace('Space Exploration Technologies', 'Starlink')
+
+  return (
+    <div className="flex items-center justify-between p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-gray-700 transition-colors">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
+          <span className="text-xl font-bold text-gray-500">
+            {displayName.charAt(0)}
+          </span>
+        </div>
+        <div>
+          <h4 className="font-semibold">{displayName}</h4>
+          <p className={`text-sm ${color}`}>{type}</p>
+        </div>
+      </div>
+      <div className="text-right">
+        <div className="text-lg font-semibold">{provider.coverage}%</div>
+        <p className="text-xs text-gray-500">area coverage</p>
+      </div>
+    </div>
+  )
+}
+
 export default async function ComparePage({
   searchParams,
 }: {
@@ -134,7 +242,11 @@ export default async function ComparePage({
 }) {
   const params = await searchParams
   const zipCode = params.zip || ''
-  const result = await getCoverageByZip(zipCode)
+
+  const [result, providers] = await Promise.all([
+    getCoverageByZip(zipCode),
+    getProvidersByZip(zipCode),
+  ])
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -142,104 +254,124 @@ export default async function ComparePage({
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">
-            {zipCode ? `Internet Coverage in ${zipCode}` : 'Check Internet Coverage'}
+            {zipCode ? `Internet Providers in ${zipCode}` : 'Find Internet Providers'}
           </h1>
           <p className="text-xl text-gray-400 mb-8">
             {zipCode
-              ? `Broadband availability in your area`
-              : `Enter your ZIP code to see broadband coverage data`}
+              ? `Compare providers and coverage in your area`
+              : `Enter your ZIP code to see available providers`}
           </p>
 
           <ZipSearch />
         </div>
 
         {/* Results */}
-        {result && (
+        {(result || providers.length > 0) && (
           <div className="mt-12">
             {/* Location Info */}
-            <div className="mb-8 p-6 bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-xl border border-blue-800/50">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-bold">{result.city || `ZIP ${result.zipCode}`}</h2>
-                  <p className="text-gray-400">ZIP Code: {result.zipCode}</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-green-400">
-                    {result.coverage.anyTechnology.speed100_20}%
+            {result && (
+              <div className="mb-8 p-6 bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-xl border border-blue-800/50">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold">{result.city || `ZIP ${result.zipCode}`}</h2>
+                    <p className="text-gray-400">ZIP Code: {result.zipCode}</p>
                   </div>
-                  <p className="text-sm text-gray-400">have 100+ Mbps access</p>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-green-400">
+                      {result.coverage.anyTechnology.speed100_20}%
+                    </div>
+                    <p className="text-sm text-gray-400">have 100+ Mbps access</p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-gray-700 flex flex-wrap gap-6 text-sm text-gray-400">
+                  <span>{result.totalHousingUnits.toLocaleString()} housing units</span>
+                  <span>Source: {result.dataSource}</span>
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-700 flex flex-wrap gap-6 text-sm text-gray-400">
-                <span>{result.totalHousingUnits.toLocaleString()} housing units</span>
-                <span>Source: {result.dataSource}</span>
+            )}
+
+            {/* Providers Section */}
+            {providers.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold mb-4">
+                  Available Providers ({providers.length})
+                </h3>
+                <div className="grid gap-3">
+                  {providers.map((provider, idx) => (
+                    <ProviderCard key={idx} provider={provider} />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Coverage by Technology */}
-            <h3 className="text-xl font-semibold mb-4">Coverage by Technology</h3>
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
-              <TechnologyCard
-                title="Fiber"
-                icon={
-                  <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                }
-                coverage={result.coverage.fiber}
-                color="bg-purple-500"
-              />
-              <TechnologyCard
-                title="Cable"
-                icon={
-                  <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                }
-                coverage={result.coverage.cable}
-                color="bg-blue-500"
-              />
-              <TechnologyCard
-                title="Fixed Wireless"
-                icon={
-                  <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
-                  </svg>
-                }
-                coverage={result.coverage.fixedWireless}
-                color="bg-green-500"
-              />
-              <TechnologyCard
-                title="Any Technology"
-                icon={
-                  <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                }
-                coverage={result.coverage.anyTechnology}
-                color="bg-yellow-500"
-              />
-            </div>
+            {result && (
+              <>
+                <h3 className="text-xl font-semibold mb-4">Coverage by Technology</h3>
+                <div className="grid md:grid-cols-2 gap-6 mb-8">
+                  <TechnologyCard
+                    title="Fiber"
+                    icon={
+                      <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    }
+                    coverage={result.coverage.fiber}
+                    color="bg-purple-500"
+                  />
+                  <TechnologyCard
+                    title="Cable"
+                    icon={
+                      <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    }
+                    coverage={result.coverage.cable}
+                    color="bg-blue-500"
+                  />
+                  <TechnologyCard
+                    title="Fixed Wireless"
+                    icon={
+                      <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                      </svg>
+                    }
+                    coverage={result.coverage.fixedWireless}
+                    color="bg-green-500"
+                  />
+                  <TechnologyCard
+                    title="Any Technology"
+                    icon={
+                      <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    }
+                    coverage={result.coverage.anyTechnology}
+                    color="bg-yellow-500"
+                  />
+                </div>
 
-            {/* Speed Tiers Explanation */}
-            <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-800 text-sm text-gray-400">
-              <p className="font-medium text-gray-300 mb-2">Speed Tiers Explained:</p>
-              <ul className="space-y-1">
-                <li><strong>Basic (25/3 Mbps):</strong> Minimum for video streaming and basic work</li>
-                <li><strong>Fast (100/20 Mbps):</strong> Good for multiple devices, HD streaming, video calls</li>
-                <li><strong>Gigabit (1000/100 Mbps):</strong> Best for heavy usage, 4K streaming, large downloads</li>
-              </ul>
-            </div>
+                {/* Speed Tiers Explanation */}
+                <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-800 text-sm text-gray-400">
+                  <p className="font-medium text-gray-300 mb-2">Speed Tiers Explained:</p>
+                  <ul className="space-y-1">
+                    <li><strong>Basic (25/3 Mbps):</strong> Minimum for video streaming and basic work</li>
+                    <li><strong>Fast (100/20 Mbps):</strong> Good for multiple devices, HD streaming, video calls</li>
+                    <li><strong>Gigabit (1000/100 Mbps):</strong> Best for heavy usage, 4K streaming, large downloads</li>
+                  </ul>
+                </div>
+              </>
+            )}
           </div>
         )}
 
         {/* No data found */}
-        {zipCode && !result && (
+        {zipCode && !result && providers.length === 0 && (
           <div className="mt-12 text-center py-12 bg-gray-900 rounded-xl border border-gray-800">
             <svg className="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h3 className="text-xl font-semibold mb-2">No Coverage Data Found</h3>
+            <h3 className="text-xl font-semibold mb-2">No Data Found</h3>
             <p className="text-gray-400 max-w-md mx-auto">
               We don't have coverage data for ZIP code {zipCode}.
               Try a nearby ZIP code or check back later.
@@ -257,13 +389,13 @@ export default async function ComparePage({
             </div>
             <div className="p-6 bg-gray-900 rounded-xl border border-gray-800">
               <div className="text-3xl mb-3">2</div>
-              <h3 className="font-semibold mb-2">View Coverage</h3>
-              <p className="text-sm text-gray-400">See broadband availability by technology</p>
+              <h3 className="font-semibold mb-2">See Providers</h3>
+              <p className="text-sm text-gray-400">View all available internet providers</p>
             </div>
             <div className="p-6 bg-gray-900 rounded-xl border border-gray-800">
               <div className="text-3xl mb-3">3</div>
-              <h3 className="font-semibold mb-2">Find Providers</h3>
-              <p className="text-sm text-gray-400">Contact providers that serve your area</p>
+              <h3 className="font-semibold mb-2">Compare Coverage</h3>
+              <p className="text-sm text-gray-400">Check speeds and technology availability</p>
             </div>
           </div>
         )}
