@@ -140,6 +140,7 @@ export function ChatWindow({
   const inputRef = useRef<HTMLInputElement>(null)
   const [hasInteracted, setHasInteracted] = useState(false)
   const prevMessagesLength = useRef(messages.length)
+  const prevPathname = useRef(pathname)
 
   // Get page-specific context
   const pageInfo = getPageContext(pathname)
@@ -149,13 +150,19 @@ export function ChatWindow({
     setPageContext(pageInfo.context)
   }, [pathname, pageInfo.context, setPageContext])
 
-  // Only auto-scroll after user has interacted (sent a message)
+  // Auto-scroll when new messages arrive (either from interaction or navigation)
   useEffect(() => {
-    if (hasInteracted && messages.length > prevMessagesLength.current) {
+    const hasNewMessages = messages.length > prevMessagesLength.current
+    const pageChanged = pathname !== prevPathname.current
+
+    // Scroll if: user interacted, OR page changed and there are new messages
+    if (hasNewMessages && (hasInteracted || pageChanged)) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
+
     prevMessagesLength.current = messages.length
-  }, [messages, hasInteracted])
+    prevPathname.current = pathname
+  }, [messages, hasInteracted, pathname])
 
   // Initialize chat with welcome message when location is available
   useEffect(() => {
