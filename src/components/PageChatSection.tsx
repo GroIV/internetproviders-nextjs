@@ -82,6 +82,7 @@ export function PageChatSection() {
   const { setChatSectionVisible, sendProactiveMessage, hasWelcomed } = useChat()
   const sectionRef = useRef<HTMLDivElement>(null)
   const prevPathname = useRef<string | null>(null)
+  const observerRef = useRef<IntersectionObserver | null>(null)
 
   // Get page title
   const pageTitle = useMemo(() => getPageTitle(pathname), [pathname])
@@ -89,71 +90,66 @@ export function PageChatSection() {
   // Don't show on homepage (has its own embedded chat) or AI assistant page
   const isHomepage = pathname === '/'
   const isAiAssistantPage = pathname === '/tools/ai-assistant'
+  const shouldRender = !isHomepage && !isAiAssistantPage
 
   // Scroll to top when navigating to a new page (so user sees the chat)
   useEffect(() => {
+    if (!shouldRender) return
+
     // Only scroll on actual navigation (not initial load)
-    if (prevPathname.current !== null && pathname !== prevPathname.current && !isHomepage && !isAiAssistantPage) {
-      // Instant scroll to avoid intersection observer issues during animation
+    if (prevPathname.current !== null && pathname !== prevPathname.current) {
       window.scrollTo(0, 0)
     }
     prevPathname.current = pathname
-  }, [pathname, isHomepage, isAiAssistantPage])
+  }, [pathname, shouldRender])
 
   // Send proactive message when navigating to a new page (after welcome)
   useEffect(() => {
-    if (hasWelcomed && !isHomepage && !isAiAssistantPage) {
-      // Small delay to let the page render first
-      const timer = setTimeout(() => {
-        sendProactiveMessage(pathname)
-      }, 500)
-      return () => clearTimeout(timer)
-    }
-  }, [pathname, hasWelcomed, isHomepage, isAiAssistantPage, sendProactiveMessage])
+    if (!shouldRender || !hasWelcomed) return
 
+    const timer = setTimeout(() => {
+      sendProactiveMessage(pathname)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [pathname, hasWelcomed, shouldRender, sendProactiveMessage])
+
+  // Simple visibility tracking for floating button
   useEffect(() => {
-    // If we're not showing the section, mark as not visible
-    if (isHomepage || isAiAssistantPage) {
+    if (!shouldRender) {
       setChatSectionVisible(false)
       return
     }
 
-    // Set initially visible
+    // Always mark as visible initially
     setChatSectionVisible(true)
 
-    // Delay observer setup to avoid initial render issues
-    const timeoutId = setTimeout(() => {
-      if (!sectionRef.current) return
+    // Set up observer after a delay to avoid hydration issues
+    const setupObserver = () => {
+      if (!sectionRef.current || observerRef.current) return
 
-      const observer = new IntersectionObserver(
+      observerRef.current = new IntersectionObserver(
         ([entry]) => {
-          // When less than 10% of the chat is visible, show floating button
-          setChatSectionVisible(entry.intersectionRatio > 0.1)
+          setChatSectionVisible(entry.isIntersecting)
         },
-        {
-          threshold: [0, 0.1, 0.5, 1],
-          rootMargin: '-64px 0px 0px 0px' // Account for navbar height
-        }
+        { threshold: 0.1, rootMargin: '-64px 0px 0px 0px' }
       )
 
-      observer.observe(sectionRef.current)
+      observerRef.current.observe(sectionRef.current)
+    }
 
-      // Store observer for cleanup
-      ;(sectionRef as any).observer = observer
-    }, 100)
+    const timeoutId = setTimeout(setupObserver, 200)
 
     return () => {
       clearTimeout(timeoutId)
-      if ((sectionRef as any).observer) {
-        (sectionRef as any).observer.disconnect()
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+        observerRef.current = null
       }
-      // Don't set to false on cleanup - let the new effect handle it
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHomepage, isAiAssistantPage])
+  }, [shouldRender, setChatSectionVisible])
 
   // Don't render on homepage or AI assistant page
-  if (isHomepage || isAiAssistantPage) {
+  if (!shouldRender) {
     return null
   }
 
