@@ -4,7 +4,9 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { LocationProvider } from "@/contexts/LocationContext";
+import { ChatProvider } from "@/contexts/ChatContext";
 import { LocationBanner } from "@/components/LocationBanner";
+import { GlobalChat } from "@/components/GlobalChat";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { JsonLd, generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo";
 
@@ -86,13 +88,16 @@ export default function RootLayout({
       </head>
       <body className={`${outfit.variable} font-sans antialiased bg-gray-950 text-gray-100 min-h-screen flex flex-col`}>
         <LocationProvider>
-          <Navbar />
-          <LocationBanner />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <Footer />
-          <InstallPrompt />
+          <ChatProvider>
+            <Navbar />
+            <LocationBanner />
+            <main className="flex-grow">
+              {children}
+            </main>
+            <Footer />
+            <GlobalChat />
+            <InstallPrompt />
+          </ChatProvider>
         </LocationProvider>
       </body>
     </html>
