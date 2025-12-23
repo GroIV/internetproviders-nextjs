@@ -118,29 +118,39 @@ export function PageChatSection() {
       return
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // When less than 10% of the chat is visible, show floating button
-        setChatSectionVisible(entry.intersectionRatio > 0.1)
-      },
-      {
-        threshold: [0, 0.1, 0.5, 1],
-        rootMargin: '-64px 0px 0px 0px' // Account for navbar height
-      }
-    )
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current)
-    }
-
-    // Initially visible
+    // Set initially visible
     setChatSectionVisible(true)
 
+    // Delay observer setup to avoid initial render issues
+    const timeoutId = setTimeout(() => {
+      if (!sectionRef.current) return
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          // When less than 10% of the chat is visible, show floating button
+          setChatSectionVisible(entry.intersectionRatio > 0.1)
+        },
+        {
+          threshold: [0, 0.1, 0.5, 1],
+          rootMargin: '-64px 0px 0px 0px' // Account for navbar height
+        }
+      )
+
+      observer.observe(sectionRef.current)
+
+      // Store observer for cleanup
+      ;(sectionRef as any).observer = observer
+    }, 100)
+
     return () => {
-      observer.disconnect()
-      setChatSectionVisible(false)
+      clearTimeout(timeoutId)
+      if ((sectionRef as any).observer) {
+        (sectionRef as any).observer.disconnect()
+      }
+      // Don't set to false on cleanup - let the new effect handle it
     }
-  }, [isHomepage, isAiAssistantPage, setChatSectionVisible])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHomepage, isAiAssistantPage])
 
   // Don't render on homepage or AI assistant page
   if (isHomepage || isAiAssistantPage) {
