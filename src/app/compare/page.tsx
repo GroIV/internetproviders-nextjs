@@ -269,17 +269,30 @@ export default async function ComparePage({
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-4">
             {zipCode ? `Internet Providers in ${zipCode}` : 'Find Internet Providers'}
           </h1>
-          <p className="text-xl text-gray-400 mb-8">
+          <p className="text-xl text-gray-400 mb-6">
             {zipCode
               ? `Compare providers and coverage in your area`
               : `Enter your ZIP code to see available providers`}
           </p>
 
-          <ZipSearch />
+          {/* Only show full search when no ZIP, otherwise show compact change option */}
+          {!zipCode ? (
+            <ZipSearch />
+          ) : (
+            <a
+              href="/compare"
+              className="inline-flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Search different ZIP code
+            </a>
+          )}
         </div>
 
         {/* Results */}
