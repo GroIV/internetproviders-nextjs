@@ -14,14 +14,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get coverage records for this ZIP
+    // Get broadband coverage data for this ZIP from FCC data
     const { data: coverageData, error: coverageError } = await supabase
-      .from('coverage')
-      .select('provider_id')
+      .from('zip_broadband_coverage')
+      .select('*')
       .eq('zip_code', zipCode)
-      .eq('has_service', true)
+      .single()
 
-    if (coverageError) {
+    if (coverageError && coverageError.code !== 'PGRST116') {
       console.error('Coverage error:', coverageError)
       return NextResponse.json(
         { success: false, error: 'Failed to fetch coverage data' },
@@ -29,40 +29,54 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    if (!coverageData || coverageData.length === 0) {
+    if (!coverageData) {
       return NextResponse.json({
         success: true,
         data: {
           zipCode,
-          providers: [],
-          message: 'No providers found for this ZIP code'
+          city: null,
+          coverage: null,
+          message: 'No coverage data found for this ZIP code'
         }
       })
     }
 
-    // Get unique provider IDs
-    const providerIds = [...new Set(coverageData.map(c => c.provider_id))]
-
-    // Get provider details
-    const { data: providers, error: providerError } = await supabase
-      .from('providers')
-      .select('*')
-      .in('id', providerIds)
-
-    if (providerError) {
-      console.error('Provider error:', providerError)
-      return NextResponse.json(
-        { success: false, error: 'Failed to fetch provider data' },
-        { status: 500 }
-      )
-    }
+    // Format coverage percentages as human-readable
+    const formatPercent = (val: number | null) =>
+      val !== null ? Math.round(val * 100) : null
 
     return NextResponse.json({
       success: true,
       data: {
         zipCode,
-        providers: providers || [],
-        count: providers?.length || 0
+        city: coverageData.city,
+        totalHousingUnits: coverageData.total_housing_units,
+        coverage: {
+          // Any Technology (any broadband)
+          anyTechnology: {
+            speed25_3: formatPercent(coverageData.any_25_3),
+            speed100_20: formatPercent(coverageData.any_100_20),
+            speed1000_100: formatPercent(coverageData.any_1000_100),
+          },
+          // Fiber
+          fiber: {
+            speed25_3: formatPercent(coverageData.fiber_25_3),
+            speed100_20: formatPercent(coverageData.fiber_100_20),
+            speed1000_100: formatPercent(coverageData.fiber_1000_100),
+          },
+          // Cable
+          cable: {
+            speed25_3: formatPercent(coverageData.cable_25_3),
+            speed100_20: formatPercent(coverageData.cable_100_20),
+            speed1000_100: formatPercent(coverageData.cable_1000_100),
+          },
+          // Fixed Wireless
+          fixedWireless: {
+            speed25_3: formatPercent(coverageData.fixed_wireless_25_3),
+            speed100_20: formatPercent(coverageData.fixed_wireless_100_20),
+          },
+        },
+        dataSource: coverageData.data_source,
       }
     })
   } catch (error) {

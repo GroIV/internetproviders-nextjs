@@ -3,6 +3,8 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { LocationProvider } from "@/contexts/LocationContext";
+import { LocationBanner } from "@/components/LocationBanner";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -32,11 +34,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${outfit.variable} font-sans antialiased bg-gray-950 text-gray-100 min-h-screen flex flex-col`}>
-        <Navbar />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <Footer />
+        <LocationProvider>
+          <Navbar />
+          <LocationBanner />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+        </LocationProvider>
       </body>
     </html>
   );

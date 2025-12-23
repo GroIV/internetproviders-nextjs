@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Metadata } from 'next'
+import { GuidesClient } from './GuidesClient'
 
 export const metadata: Metadata = {
   title: 'Internet Guides',
@@ -23,7 +24,7 @@ const categoryColors: Record<string, string> = {
   'no-contracts': 'bg-orange-600/20 text-orange-400',
 }
 
-async function getGuides(page = 1, category?: string) {
+async function getGuides(page = 1, category?: string, zipCode?: string) {
   const supabase = createAdminClient()
   const limit = 24
   const offset = (page - 1) * limit
@@ -35,6 +36,10 @@ async function getGuides(page = 1, category?: string) {
 
   if (category) {
     query = query.eq('category', category)
+  }
+
+  if (zipCode) {
+    query = query.eq('zip_code', zipCode)
   }
 
   const { data, count, error } = await query
@@ -53,13 +58,19 @@ async function getGuides(page = 1, category?: string) {
   }
 }
 
-async function getCategoryCounts() {
+async function getCategoryCounts(zipCode?: string) {
   const supabase = createAdminClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('guides')
     .select('category')
     .eq('status', 'published')
+
+  if (zipCode) {
+    query = query.eq('zip_code', zipCode)
+  }
+
+  const { data, error } = await query
 
   if (error || !data) return {}
 
@@ -70,35 +81,85 @@ async function getCategoryCounts() {
   return counts
 }
 
+async function checkZipHasGuides(zipCode: string) {
+  const supabase = createAdminClient()
+  const { count } = await supabase
+    .from('guides')
+    .select('*', { count: 'exact', head: true })
+    .eq('zip_code', zipCode)
+    .eq('status', 'published')
+  return (count || 0) > 0
+}
+
 export default async function GuidesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; category?: string }>
+  searchParams: Promise<{ page?: string; category?: string; zip?: string }>
 }) {
   const params = await searchParams
   const page = parseInt(params.page || '1')
   const category = params.category
+  const zipCode = params.zip
+
+  // Check if the requested ZIP has guides
+  const zipHasGuides = zipCode ? await checkZipHasGuides(zipCode) : false
+
+  // Only filter by ZIP if it has guides
+  const effectiveZip = zipHasGuides ? zipCode : undefined
 
   const [{ guides, total, totalPages }, categoryCounts] = await Promise.all([
-    getGuides(page, category),
-    getCategoryCounts(),
+    getGuides(page, category, effectiveZip),
+    getCategoryCounts(effectiveZip),
   ])
 
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-4">Internet Guides</h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
             Expert guides to help you find the perfect internet service for your needs
           </p>
         </div>
 
+        {/* Location-aware message */}
+        <GuidesClient
+          zipCode={zipCode}
+          zipHasGuides={zipHasGuides}
+          categoryLabels={categoryLabels}
+          categoryColors={categoryColors}
+        />
+
+        {/* No local guides message */}
+        {zipCode && !zipHasGuides && (
+          <div className="mb-8 p-4 bg-yellow-900/20 border border-yellow-800/50 rounded-lg text-center">
+            <p className="text-yellow-200">
+              No guides available yet for ZIP code <span className="font-semibold">{zipCode}</span>.
+              Showing all guides below.
+            </p>
+            <Link href="/guides" className="text-sm text-yellow-400 hover:text-yellow-300 mt-1 inline-block">
+              Clear ZIP filter
+            </Link>
+          </div>
+        )}
+
+        {/* Local guides success message */}
+        {zipCode && zipHasGuides && (
+          <div className="mb-8 p-4 bg-green-900/20 border border-green-800/50 rounded-lg text-center">
+            <p className="text-green-200">
+              Showing guides for ZIP code <span className="font-semibold">{zipCode}</span>
+            </p>
+            <Link href="/guides" className="text-sm text-green-400 hover:text-green-300 mt-1 inline-block">
+              Show all guides
+            </Link>
+          </div>
+        )}
+
         {/* Category Filters */}
         <div className="flex flex-wrap justify-center gap-3 mb-12">
           <Link
-            href="/guides"
+            href={`/guides${zipCode ? `?zip=${zipCode}` : ''}`}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               !category
                 ? 'bg-blue-600 text-white'
@@ -110,7 +171,7 @@ export default async function GuidesPage({
           {Object.entries(categoryLabels).map(([key, label]) => (
             <Link
               key={key}
-              href={`/guides?category=${key}`}
+              href={`/guides?category=${key}${zipCode ? `&zip=${zipCode}` : ''}`}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 category === key
                   ? 'bg-blue-600 text-white'
@@ -137,7 +198,7 @@ export default async function GuidesPage({
                   <span className="text-xs text-gray-500">{guide.zip_code}</span>
                 </div>
                 <h2 className="text-lg font-semibold mb-2 line-clamp-2">
-                  <Link href={guide.url} className="hover:text-blue-400 transition-colors">
+                  <Link href={`/guides/${guide.slug}`} className="hover:text-blue-400 transition-colors">
                     {guide.title}
                   </Link>
                 </h2>
@@ -145,7 +206,7 @@ export default async function GuidesPage({
                   {guide.description}
                 </p>
                 <Link
-                  href={guide.url}
+                  href={`/guides/${guide.slug}`}
                   className="text-sm text-blue-400 hover:text-blue-300 font-medium inline-flex items-center gap-1"
                 >
                   Read Guide
@@ -163,7 +224,7 @@ export default async function GuidesPage({
           <div className="flex justify-center gap-2">
             {page > 1 && (
               <Link
-                href={`/guides?page=${page - 1}${category ? `&category=${category}` : ''}`}
+                href={`/guides?page=${page - 1}${category ? `&category=${category}` : ''}${zipCode ? `&zip=${zipCode}` : ''}`}
                 className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
               >
                 Previous
@@ -174,7 +235,7 @@ export default async function GuidesPage({
             </span>
             {page < totalPages && (
               <Link
-                href={`/guides?page=${page + 1}${category ? `&category=${category}` : ''}`}
+                href={`/guides?page=${page + 1}${category ? `&category=${category}` : ''}${zipCode ? `&zip=${zipCode}` : ''}`}
                 className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 transition-colors"
               >
                 Next
