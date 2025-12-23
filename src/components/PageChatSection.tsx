@@ -7,12 +7,23 @@ import { useChat } from '@/contexts/ChatContext'
 
 export function PageChatSection() {
   const pathname = usePathname()
-  const { setChatSectionVisible } = useChat()
+  const { setChatSectionVisible, sendProactiveMessage, hasWelcomed } = useChat()
   const sectionRef = useRef<HTMLDivElement>(null)
 
   // Don't show on homepage (has its own embedded chat) or AI assistant page
   const isHomepage = pathname === '/'
   const isAiAssistantPage = pathname === '/tools/ai-assistant'
+
+  // Send proactive message when navigating to a new page (after welcome)
+  useEffect(() => {
+    if (hasWelcomed && !isHomepage && !isAiAssistantPage) {
+      // Small delay to let the page render first
+      const timer = setTimeout(() => {
+        sendProactiveMessage(pathname)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [pathname, hasWelcomed, isHomepage, isAiAssistantPage, sendProactiveMessage])
 
   useEffect(() => {
     // If we're not showing the section, mark as not visible
