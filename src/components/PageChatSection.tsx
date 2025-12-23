@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useMemo, useState } from 'react'
+import { useRef, useEffect, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
 import { ChatWindow } from './ChatWindow'
 import { useChat } from '@/contexts/ChatContext'
@@ -81,13 +81,7 @@ export function PageChatSection() {
   const pathname = usePathname()
   const { setChatSectionVisible, sendProactiveMessage, hasWelcomed } = useChat()
   const sectionRef = useRef<HTMLDivElement>(null)
-  const [isMounted, setIsMounted] = useState(false)
-  const prevPathname = useRef(pathname)
-
-  // Handle mounting
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
+  const prevPathname = useRef<string | null>(null)
 
   // Get page title
   const pageTitle = useMemo(() => getPageTitle(pathname), [pathname])
@@ -98,12 +92,13 @@ export function PageChatSection() {
 
   // Scroll to top when navigating to a new page (so user sees the chat)
   useEffect(() => {
-    if (isMounted && pathname !== prevPathname.current && !isHomepage && !isAiAssistantPage) {
-      // Smooth scroll to top to show the chat section
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+    // Only scroll on actual navigation (not initial load)
+    if (prevPathname.current !== null && pathname !== prevPathname.current && !isHomepage && !isAiAssistantPage) {
+      // Instant scroll to avoid intersection observer issues during animation
+      window.scrollTo(0, 0)
     }
     prevPathname.current = pathname
-  }, [pathname, isMounted, isHomepage, isAiAssistantPage])
+  }, [pathname, isHomepage, isAiAssistantPage])
 
   // Send proactive message when navigating to a new page (after welcome)
   useEffect(() => {
