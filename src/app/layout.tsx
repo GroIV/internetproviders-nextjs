@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { LocationBanner } from "@/components/LocationBanner";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { JsonLd, generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo";
 
 const outfit = Outfit({
@@ -13,6 +14,15 @@ const outfit = Outfit({
 });
 
 const SITE_URL = "https://www.internetproviders.ai";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
+  themeColor: "#2563eb",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -24,6 +34,22 @@ export const metadata: Metadata = {
   keywords: ["internet providers", "ISP comparison", "fiber internet", "cable internet", "best internet service"],
   alternates: {
     canonical: "/",
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "ISP Compare",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/icons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   openGraph: {
     type: "website",
@@ -66,6 +92,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <InstallPrompt />
         </LocationProvider>
       </body>
     </html>
