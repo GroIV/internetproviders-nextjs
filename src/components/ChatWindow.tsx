@@ -136,12 +136,22 @@ export function ChatWindow({
   const { messages, isLoading, sendMessage, initializeChat, hasWelcomed, setPageContext } = useChat()
   const { location, isLoading: locationLoading } = useLocation()
   const [input, setInput] = useState('')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [hasInteracted, setHasInteracted] = useState(false)
   const prevMessagesLength = useRef(messages.length)
   const prevPathname = useRef(pathname)
   const shouldScrollOnNextMessage = useRef(false)
+
+  // Helper to scroll chat to bottom without affecting page scroll
+  const scrollChatToBottom = (smooth = true) => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: smooth ? 'smooth' : 'instant'
+      })
+    }
+  }
 
   // Get page-specific context
   const pageInfo = getPageContext(pathname)
@@ -159,9 +169,7 @@ export function ChatWindow({
 
       // Immediately scroll to bottom when page changes (to show existing messages)
       if (messages.length > 0) {
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-        }, 100)
+        setTimeout(() => scrollChatToBottom(), 100)
       }
     }
   }, [pathname, messages.length])
@@ -173,9 +181,7 @@ export function ChatWindow({
     // Scroll if: user interacted, OR we're expecting a scroll after navigation
     if (hasNewMessages && (hasInteracted || shouldScrollOnNextMessage.current)) {
       // Small delay to ensure DOM has updated after message render
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-      }, 50)
+      setTimeout(() => scrollChatToBottom(), 50)
       shouldScrollOnNextMessage.current = false // Reset after scrolling
     }
 
@@ -238,7 +244,7 @@ export function ChatWindow({
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && !isLoading ? (
           <div className="text-center py-8">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
@@ -295,7 +301,6 @@ export function ChatWindow({
           </div>
         )}
 
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Quick Actions */}
