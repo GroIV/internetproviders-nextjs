@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { getComparisonUrl } from '@/lib/affiliates'
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,8 +43,10 @@ export async function POST(request: NextRequest) {
             // Map provider IDs to names and clean up names
             const nameMap = new Map(providers.map((p: any) => [p.provider_id, p.name]))
 
+            // Satellite providers to deprioritize (they show 100% coverage everywhere)
+            const satelliteProviders = ['viasat', 'hughesnet', 'starlink', 'echostar', 'dish']
+
             providerNames = cbsaData
-              .slice(0, 5)
               .map((cp: any) => {
                 let name = nameMap.get(cp.provider_id) || ''
                 // Clean up corporate names to consumer-facing names
@@ -59,6 +62,9 @@ export async function POST(request: NextRequest) {
                 return name
               })
               .filter((n: string) => n && n !== 'Unknown')
+              // Filter out satellite providers for the welcome message
+              .filter((n: string) => !satelliteProviders.some(sat => n.toLowerCase().includes(sat)))
+              .slice(0, 5)
           }
         }
       }
@@ -82,7 +88,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Build the welcome message
+    // Build the welcome message - sales focused with order capability
+    const orderUrl = getComparisonUrl('welcome')
     let message = ''
 
     if (city && providerNames.length > 0) {
@@ -92,15 +99,15 @@ export async function POST(request: NextRequest) {
       if (coverageInfo) {
         message += `${coverageInfo}\n\n`
       }
-      message += `What are you looking for? Fast speeds for gaming? Budget-friendly options? Or help comparing plans?`
+      message += `I can help you compare plans, find the best deals, and [place your order online](${orderUrl}) when you're ready. What are you looking for today?`
     } else if (city) {
       message = `Hi! I'm your AI internet advisor.\n\n`
-      message += `I see you're in ${city}. I can help you find and compare internet providers in your area.\n\n`
-      message += `What matters most to you - speed, price, reliability, or something else?`
+      message += `I see you're in ${city}. I can help you find the best internet providers, compare plans, and [order service online](${orderUrl}) - all in one place.\n\n`
+      message += `What matters most to you - speed, price, or reliability?`
     } else {
       message = `Hi! I'm your AI internet advisor.\n\n`
-      message += `I can help you find the perfect internet provider. Tell me your ZIP code, or just ask me anything about internet service!\n\n`
-      message += `What can I help you with today?`
+      message += `I can help you find the perfect internet provider, compare plans, and [place your order online](${orderUrl}) when you're ready.\n\n`
+      message += `Tell me your ZIP code to get started, or ask me anything about internet service!`
     }
 
     return NextResponse.json({ message })
@@ -108,8 +115,9 @@ export async function POST(request: NextRequest) {
     console.error('Welcome API error:', error)
 
     // Return a fallback message
+    const fallbackOrderUrl = getComparisonUrl('welcome')
     return NextResponse.json({
-      message: "Hi! I'm your AI internet advisor. How can I help you find the perfect internet provider today?"
+      message: `Hi! I'm your AI internet advisor. I can help you compare providers, find the best deals, and [place your order online](${fallbackOrderUrl}). How can I help you today?`
     })
   }
 }

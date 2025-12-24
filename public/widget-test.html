@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Widget Test - Static HTML</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #333; }
+        h2 { color: #555; margin-top: 40px; }
+        .widget-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            min-height: 400px;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        code {
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Affiliate Link & Widget Test</h1>
+
+    <div class="info">
+        <strong>Note:</strong> This is a plain HTML page to test affiliate links and widgets.
+    </div>
+
+    <h2>Compare Provider Links (Direct Links)</h2>
+    <div class="info">
+        <p>These are direct affiliate links that should work immediately. Click to test:</p>
+    </div>
+    <div class="widget-container">
+        <p><strong>1. ZIP Detected Providers Interstitial</strong></p>
+        <p>Link ID: <code>26728665</code></p>
+        <p>
+            <a href="https://oc.brcclx.com/t?lid=26728665&s1=IPAItest"
+               target="_blank"
+               style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                Test ZIP Detected Link
+            </a>
+        </p>
+        <p style="margin-top: 10px; color: #666; font-size: 14px;">
+            Full URL: <code>https://oc.brcclx.com/t?lid=26728665&s1=IPAItest</code>
+        </p>
+    </div>
+
+    <div class="widget-container">
+        <p><strong>2. Full Page Interstitial</strong></p>
+        <p>Link ID: <code>26728747</code></p>
+        <p>
+            <a href="https://oc.brcclx.com/t?lid=26728747&s1=IPAItest"
+               target="_blank"
+               style="display: inline-block; padding: 12px 24px; background: #2563eb; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                Test Full Page Link
+            </a>
+        </p>
+        <p style="margin-top: 10px; color: #666; font-size: 14px;">
+            Full URL: <code>https://oc.brcclx.com/t?lid=26728747&s1=IPAItest</code>
+        </p>
+    </div>
+
+    <div class="info" style="background: #e8f5e9; margin-top: 30px;">
+        <strong>Sub ID Tracking:</strong> Replace <code>IPAItest</code> with your tracking source:
+        <ul style="margin: 10px 0;">
+            <li><code>IPAIhome</code> - From homepage</li>
+            <li><code>IPAIchat</code> - From AI chat</li>
+            <li><code>IPAIcompare</code> - From compare page</li>
+            <li><code>IPAIxfinity</code> - From Xfinity provider page</li>
+        </ul>
+    </div>
+
+    <hr style="margin: 40px 0; border: none; border-top: 2px solid #ddd;">
+
+    <h2>MyFinance Widgets (Blocked - Need Domain Whitelist)</h2>
+
+    <h2>Widget 1: ZIP with Questions</h2>
+    <div class="info">
+        <p>Campaign: <code>chameleon-konecteaze-zip-with-questions</code></p>
+        <p>Ad ID: <code>ae0ef877-d2fa-4bf4-948c-a337c3163f3c</code></p>
+        <p>Sub ID: <code>IPAIwidget-test</code></p>
+    </div>
+    <div class="widget-container">
+        <div class="myFinance-widget"
+             data-ad-id="ae0ef877-d2fa-4bf4-948c-a337c3163f3c"
+             data-campaign="chameleon-konecteaze-zip-with-questions"
+             data-sub-id="IPAIwidget-test">
+        </div>
+    </div>
+
+    <h2>Widget 2: Full Page</h2>
+    <div class="info">
+        <p>Campaign: <code>chameleon-konecteaze-full-page</code></p>
+        <p>Ad ID: <code>faecb400-90d0-490d-b0b8-56d7ab96f9fe</code></p>
+        <p>Sub ID: <code>IPAIwidget-test</code></p>
+    </div>
+    <div class="widget-container" style="min-height: 600px;">
+        <div class="myFinance-widget"
+             data-ad-id="faecb400-90d0-490d-b0b8-56d7ab96f9fe"
+             data-campaign="chameleon-konecteaze-full-page"
+             data-sub-id="IPAIwidget-test">
+        </div>
+    </div>
+
+    <!-- MyFinance Widget Script - loaded at the end of body -->
+    <script src="https://static.myfinance.com/widget/myfinance.js"></script>
+
+    <script>
+        // Debug: Check if widgets were found
+        window.addEventListener('load', function() {
+            var widgets = document.querySelectorAll('.myFinance-widget');
+            console.log('Found ' + widgets.length + ' widget containers');
+            widgets.forEach(function(w, i) {
+                console.log('Widget ' + (i+1) + ':', {
+                    adId: w.getAttribute('data-ad-id'),
+                    campaign: w.getAttribute('data-campaign'),
+                    subId: w.getAttribute('data-sub-id'),
+                    innerHTML: w.innerHTML.substring(0, 100)
+                });
+            });
+        });
+    </script>
+</body>
+</html>

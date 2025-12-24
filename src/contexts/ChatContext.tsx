@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react'
+import { getComparisonUrl } from '@/lib/affiliates'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -31,7 +32,7 @@ const WELCOMED_ZIP_KEY = 'chat_welcomed_zip'
 const PROACTIVE_PAGES_KEY = 'chat_proactive_pages'
 
 // Generate proactive message based on page type (no API call needed)
-function getProactiveMessage(pathname: string): string | null {
+function getProactiveMessage(pathname: string, knownZip?: string | null): string | null {
   // Provider comparison pages
   if (pathname.startsWith('/compare/') && pathname.includes('-vs-')) {
     const comparison = pathname.split('/compare/')[1]
@@ -106,11 +107,17 @@ function getProactiveMessage(pathname: string): string | null {
 
   // Compare main page (ZIP search)
   if (pathname === '/compare') {
+    if (knownZip) {
+      return `I've already got your location (${knownZip}). You should see providers for your area below. Want me to help you compare specific plans or find the best deal?`
+    }
     return `Enter your ZIP code above to see all providers available at your address! I can help you compare plans once you see your options.`
   }
 
   // Internet main page (all states)
   if (pathname === '/internet') {
+    if (knownZip) {
+      return `Browsing by state? I already have your ZIP (${knownZip}) if you want to jump straight to providers in your area!`
+    }
     return `Browse internet availability by state! Select your state to see providers and coverage in your area. Or just tell me your ZIP code and I'll find providers for you.`
   }
 
@@ -245,9 +252,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to initialize chat:', error)
       // Fallback welcome message
+      const orderUrl = getComparisonUrl('welcome')
       const fallbackMessage = city
-        ? `Hi! I'm your AI internet advisor. I see you're in ${city}. How can I help you find the perfect internet provider today?`
-        : "Hi! I'm your AI internet advisor. Tell me your ZIP code or ask any question about internet providers!"
+        ? `Hi! I'm your AI internet advisor. I see you're in ${city}. I can help you compare plans, find deals, and [place your order online](${orderUrl}). What are you looking for?`
+        : `Hi! I'm your AI internet advisor. I can help you compare providers and [place your order online](${orderUrl}). Tell me your ZIP code to get started!`
 
       setMessages([{ role: 'assistant', content: fallbackMessage }])
       setHasWelcomed(true)
@@ -321,10 +329,24 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    // DON'T interrupt active conversations!
+    // If user has sent a message in the last 4 messages, they're engaged - don't interrupt
+    const recentMessages = messages.slice(-4)
+    const userMessagedRecently = recentMessages.some(m => m.role === 'user')
+    if (userMessagedRecently) {
+      // Still mark page as visited so we don't try again
+      const newProactivePages = new Set(proactivePages)
+      newProactivePages.add(pathname)
+      setProactivePages(newProactivePages)
+      localStorage.setItem(PROACTIVE_PAGES_KEY, JSON.stringify([...newProactivePages]))
+      return
+    }
+
     // Track page visit count for "need help finding something?" message
     const visitCount = proactivePages.size
 
-    const message = getProactiveMessage(pathname)
+    // Pass welcomedZip to proactive message generator so it knows we have location
+    const message = getProactiveMessage(pathname, welcomedZip)
 
     // After visiting 4+ pages without user interaction, offer extra help
     const lastUserMessageIndex = [...messages].reverse().findIndex(m => m.role === 'user')
@@ -348,7 +370,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setProactivePages(newProactivePages)
       localStorage.setItem(PROACTIVE_PAGES_KEY, JSON.stringify([...newProactivePages]))
     }
-  }, [proactivePages, messages])
+  }, [proactivePages, messages, welcomedZip])
 
   return (
     <ChatContext.Provider

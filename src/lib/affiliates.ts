@@ -17,12 +17,45 @@ export interface AffiliateLink {
   providerId: string           // Internal ID (matches our provider slugs)
   providerName: string         // Display name
   baseUrl: string              // Base URL without sub_id
-  subIdParam: string           // Parameter name for sub_id (usually 'sub_id')
+  subIdParam: string           // Parameter name for sub_id (usually 'sub_id' or 's1')
   isActive: boolean            // Can disable links without removing
   notes?: string               // Internal notes about the link
 }
 
-// Master list of affiliate links - UPDATE HERE when links change
+// Fallback comparison link for providers without direct links
+// Full Page Interstitial - shows all available providers
+export const COMPARE_FALLBACK_LINK = {
+  baseUrl: 'https://oc.brcclx.com/t?lid=26728747',
+  subIdParam: 's1',
+}
+
+// Providers that can be sold via the comparison link (even without direct links)
+// These will show an "Order" button that goes to the full page comparison
+export const COMPARISON_ELIGIBLE_PROVIDERS = new Set([
+  'altafiber',
+  'att-internet',
+  'breezeline',
+  'brightspeed',
+  'buckeye-cable',
+  'centurylink',
+  'cox',
+  'dish',
+  'directv',
+  'earthlink',
+  'frontier',
+  'google-fiber',
+  'hughesnet',
+  'optimum',
+  'spectrum',
+  't-mobile',
+  'verizon-fios',
+  'windstream',
+  'wow',
+  'xfinity',
+])
+
+// Master list of DIRECT affiliate links - provider-specific landing pages
+// These are preferred over the comparison fallback when available
 export const affiliateLinks: AffiliateLink[] = [
   {
     providerId: 'xfinity',
@@ -113,18 +146,25 @@ export type OrderSource =
  * @returns Full URL with tracking sub_id, or null if provider not found/inactive
  */
 export function getAffiliateUrl(providerId: string, source: OrderSource): string | null {
-  const link = affiliateLinkMap.get(providerId)
-
-  if (!link || !link.isActive) {
-    return null
-  }
-
   // Build sub_id: IPAI + source
   const subId = `IPAI${source}`
 
-  // Construct full URL
-  const separator = link.baseUrl.includes('?') ? '&' : '?'
-  return `${link.baseUrl}${separator}${link.subIdParam}=${subId}`
+  // First, check for a direct provider-specific link
+  const link = affiliateLinkMap.get(providerId)
+
+  if (link && link.isActive) {
+    // Use the direct link
+    const separator = link.baseUrl.includes('?') ? '&' : '?'
+    return `${link.baseUrl}${separator}${link.subIdParam}=${subId}`
+  }
+
+  // Fall back to comparison link for eligible providers
+  if (COMPARISON_ELIGIBLE_PROVIDERS.has(providerId)) {
+    const separator = COMPARE_FALLBACK_LINK.baseUrl.includes('?') ? '&' : '?'
+    return `${COMPARE_FALLBACK_LINK.baseUrl}${separator}${COMPARE_FALLBACK_LINK.subIdParam}=${subId}`
+  }
+
+  return null
 }
 
 /**
@@ -149,18 +189,38 @@ export function getAffiliateInfo(providerId: string): AffiliateLink | null {
 }
 
 /**
- * Check if a provider has an active affiliate link
+ * Check if a provider has an active affiliate link (direct or via comparison)
  */
 export function hasAffiliateLink(providerId: string): boolean {
+  // Check for direct link first
   const link = affiliateLinkMap.get(providerId)
-  return link?.isActive ?? false
+  if (link?.isActive) return true
+
+  // Check if eligible for comparison fallback
+  return COMPARISON_ELIGIBLE_PROVIDERS.has(providerId)
 }
 
 /**
- * Get all active providers with affiliate links
+ * Get all active providers with direct affiliate links
  */
 export function getActiveAffiliateProviders(): AffiliateLink[] {
   return affiliateLinks.filter(link => link.isActive)
+}
+
+/**
+ * Get all providers that can be sold (direct + comparison eligible)
+ */
+export function getAllSellableProviders(): string[] {
+  return Array.from(COMPARISON_ELIGIBLE_PROVIDERS)
+}
+
+/**
+ * Get the comparison page URL with tracking
+ */
+export function getComparisonUrl(source: OrderSource): string {
+  const subId = `IPAI${source}`
+  const separator = COMPARE_FALLBACK_LINK.baseUrl.includes('?') ? '&' : '?'
+  return `${COMPARE_FALLBACK_LINK.baseUrl}${separator}${COMPARE_FALLBACK_LINK.subIdParam}=${subId}`
 }
 
 /**
@@ -192,20 +252,27 @@ export function getSourceFromPathname(pathname: string): OrderSource {
  * Maps our internal IDs to proper display names
  */
 export const providerDisplayNames: Record<string, string> = {
-  'xfinity': 'Xfinity',
+  'altafiber': 'altafiber',
+  'att-internet': 'AT&T Internet',
+  'breezeline': 'Breezeline',
+  'brightspeed': 'Brightspeed',
+  'buckeye-cable': 'Buckeye Broadband',
+  'centurylink': 'CenturyLink',
   'cox': 'Cox',
-  'verizon-fios': 'Verizon Fios',
+  'directv': 'DIRECTV',
+  'dish': 'DISH Network',
+  'earthlink': 'EarthLink',
   'frontier': 'Frontier',
   'google-fiber': 'Google Fiber',
-  't-mobile': 'T-Mobile 5G Home Internet',
   'hughesnet': 'HughesNet',
-  'att-internet': 'AT&T Internet',
-  'spectrum': 'Spectrum',
-  'centurylink': 'CenturyLink',
-  'optimum': 'Optimum',
-  'windstream': 'Windstream',
   'mediacom': 'Mediacom',
-  'earthlink': 'EarthLink',
+  'optimum': 'Optimum',
+  'spectrum': 'Spectrum',
   'starlink': 'Starlink',
+  't-mobile': 'T-Mobile 5G Home Internet',
+  'verizon-fios': 'Verizon Fios',
   'viasat': 'Viasat',
+  'windstream': 'Windstream',
+  'wow': 'WOW!',
+  'xfinity': 'Xfinity',
 }

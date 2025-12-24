@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
-import { getAffiliateUrl, getActiveAffiliateProviders } from '@/lib/affiliates'
+import { getAffiliateUrl, getActiveAffiliateProviders, COMPARISON_ELIGIBLE_PROVIDERS, providerDisplayNames, getComparisonUrl } from '@/lib/affiliates'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -9,30 +9,52 @@ const anthropic = new Anthropic({
 
 // Build dynamic order links section
 function buildOrderLinksSection(): string {
-  const activeProviders = getActiveAffiliateProviders()
-  if (activeProviders.length === 0) return ''
+  // Get all sellable providers
+  const sellableProviders = Array.from(COMPARISON_ELIGIBLE_PROVIDERS)
+  if (sellableProviders.length === 0) return ''
 
-  const orderLinks = activeProviders.map(p => {
-    const url = getAffiliateUrl(p.providerId, 'chat')
-    return `- ${p.providerName}: [Order ${p.providerName}](${url})`
+  const orderLinks = sellableProviders.map(providerId => {
+    const url = getAffiliateUrl(providerId, 'chat')
+    const displayName = providerDisplayNames[providerId] || providerId
+    return `- ${displayName}: [Order ${displayName}](${url})`
   }).join('\n')
+
+  // Also add a general comparison link
+  const comparisonUrl = getComparisonUrl('chat')
 
   return `
 
 ORDER LINKS - When users want to sign up or order service:
 If a user expresses interest in signing up, ordering, or getting service from one of these providers, include the order link. Use friendly call-to-action text.
+
+Providers we can help users order:
 ${orderLinks}
 
-Example responses with order links:
-- "Xfinity looks like a great fit! You can [sign up for Xfinity here](ORDER_URL) to get started."
-- "Ready to order? [Get AT&T Internet](ORDER_URL) - they have great speeds in your area."
-- "I'd recommend Verizon Fios for your needs. [Order Verizon Fios](ORDER_URL) to check current deals."
+General comparison page (use when user wants to compare multiple options):
+- Compare all providers: [Compare Internet Providers](${comparisonUrl})
 
-Only include order links when:
-1. User asks how to sign up, order, or get service
-2. You're making a strong recommendation they seem interested in
-3. User asks about pricing/deals and wants to proceed
-Do NOT spam order links in every response - only when contextually appropriate.`
+IMPORTANT - When a user says they want to ORDER:
+When a user expresses clear intent to order/sign up/buy (e.g., "I want to order AT&T", "Sign me up for Xfinity", "How do I get Spectrum"), this is a BUYING SIGNAL. Do NOT:
+- Suggest they wait or do more research
+- Recommend taking quizzes or speed tests first
+- List reasons to hesitate
+- Add friction to the purchase
+
+Instead, DO:
+- Enthusiastically provide the order link immediately
+- Keep the response short and action-focused
+- Express excitement about their choice
+- Only mention 1-2 quick positive points if relevant
+
+Example responses when user wants to ORDER:
+- "Excellent choice! [Order AT&T Internet here](ORDER_URL) to get started. They have great coverage in your area!"
+- "Let's get you connected! [Sign up for Xfinity here](ORDER_URL) - you'll love their speeds."
+- "[Order Verizon Fios](ORDER_URL) - great pick! They offer some of the fastest fiber speeds available."
+
+Example responses for general questions (not ordering yet):
+- "Want to see all your options? [Compare providers in your area](${comparisonUrl}) to find the best deal."
+
+Only include order links when contextually appropriate - but when someone wants to order, make it easy!`
 }
 
 const SYSTEM_PROMPT = `You are an expert internet service advisor for InternetProviders.ai. Your role is to help users find the best internet service for their needs.
