@@ -49,6 +49,11 @@ function getProactiveMessage(pathname: string): string | null {
     }
   }
 
+  // All providers listing page
+  if (pathname === '/providers') {
+    return `Here's our complete list of internet providers! You can browse by name or type. Want me to help narrow down which providers are available at your address?`
+  }
+
   // Individual provider pages
   if (pathname.startsWith('/providers/')) {
     const slug = pathname.split('/providers/')[1]
@@ -79,9 +84,34 @@ function getProactiveMessage(pathname: string): string | null {
     return `Welcome to our guides section! These articles will help you make informed decisions about your internet service. Have a specific question? I'm here to help!`
   }
 
+  // Individual guide pages
+  if (pathname.startsWith('/guides/')) {
+    return `I hope this guide is helpful! If you have questions about anything covered here, or need personalized advice, just ask me.`
+  }
+
+  // Tools main page
+  if (pathname === '/tools') {
+    return `Here are our helpful tools! Try the speed test to check your connection, or take the quiz to get personalized recommendations. Need help deciding which tool to use?`
+  }
+
   // Speed test page
   if (pathname === '/tools/speed-test') {
     return `Ready to test your internet speed? Run the test below and I can help you understand your results. If your speed seems slow, I can suggest ways to improve it!`
+  }
+
+  // ISP Quiz page
+  if (pathname === '/tools/quiz') {
+    return `This quiz will help find your perfect internet match! Answer a few questions about your usage and I'll recommend the best options. Need help with any questions?`
+  }
+
+  // Compare main page (ZIP search)
+  if (pathname === '/compare') {
+    return `Enter your ZIP code above to see all providers available at your address! I can help you compare plans once you see your options.`
+  }
+
+  // Internet main page (all states)
+  if (pathname === '/internet') {
+    return `Browse internet availability by state! Select your state to see providers and coverage in your area. Or just tell me your ZIP code and I'll find providers for you.`
   }
 
   // Best/cheapest/fastest pages
@@ -92,6 +122,21 @@ function getProactiveMessage(pathname: string): string | null {
   // Deals page
   if (pathname === '/deals') {
     return `Looking for a great deal? Below are current promotions from top providers. I can help you find which offers are available at your address!`
+  }
+
+  // FAQ page
+  if (pathname === '/faq') {
+    return `Got questions? You're in the right place! Browse our FAQs below, or ask me directly - I might be able to help faster!`
+  }
+
+  // Contact page
+  if (pathname === '/contact') {
+    return `Need to get in touch? You can also ask me questions directly - I'm here to help with anything about internet providers!`
+  }
+
+  // About page
+  if (pathname === '/about') {
+    return `Thanks for wanting to learn more about us! If you have questions about how we can help you find internet service, just ask.`
   }
 
   return null
