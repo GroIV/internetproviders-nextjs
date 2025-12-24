@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect, FormEvent } from 'react'
 import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useChat } from '@/contexts/ChatContext'
 import { useLocation } from '@/contexts/LocationContext'
+import { AIAvatar, ThinkingIndicator, TypewriterText, QuickActionButton } from './chat'
 
 interface QuickAction {
   label: string
@@ -119,8 +121,27 @@ function getPageContext(pathname: string): { context: string; quickActions?: Qui
   return { context: '' }
 }
 
+// Message animation variants
+const messageVariants = {
+  hidden: (isUser: boolean) => ({
+    opacity: 0,
+    x: isUser ? 30 : -30,
+    scale: 0.95,
+  }),
+  visible: {
+    opacity: 1,
+    x: 0,
+    scale: 1,
+    transition: {
+      type: "spring" as const,
+      stiffness: 400,
+      damping: 25,
+    }
+  }
+}
+
 interface ChatWindowProps {
-  embedded?: boolean // true for prominent display, false for floating panel
+  embedded?: boolean
   showQuickActions?: boolean
   onClose?: () => void
   className?: string
@@ -136,12 +157,15 @@ export function ChatWindow({
   const { messages, isLoading, sendMessage, initializeChat, hasWelcomed, setPageContext } = useChat()
   const { location, isLoading: locationLoading } = useLocation()
   const [input, setInput] = useState('')
+  const [isFocused, setIsFocused] = useState(false)
+  const [justSent, setJustSent] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [hasInteracted, setHasInteracted] = useState(false)
   const prevMessagesLength = useRef(messages.length)
   const prevPathname = useRef(pathname)
   const shouldScrollOnNextMessage = useRef(false)
+  const [revealedMessages, setRevealedMessages] = useState<Set<number>>(new Set())
 
   // Helper to scroll chat to bottom without affecting page scroll
   const scrollChatToBottom = (smooth = true) => {
@@ -167,7 +191,6 @@ export function ChatWindow({
       shouldScrollOnNextMessage.current = true
       prevPathname.current = pathname
 
-      // Immediately scroll to bottom when page changes (to show existing messages)
       if (messages.length > 0) {
         setTimeout(() => scrollChatToBottom(), 100)
       }
@@ -178,11 +201,9 @@ export function ChatWindow({
   useEffect(() => {
     const hasNewMessages = messages.length > prevMessagesLength.current
 
-    // Scroll if: user interacted, OR we're expecting a scroll after navigation
     if (hasNewMessages && (hasInteracted || shouldScrollOnNextMessage.current)) {
-      // Small delay to ensure DOM has updated after message render
       setTimeout(() => scrollChatToBottom(), 50)
-      shouldScrollOnNextMessage.current = false // Reset after scrolling
+      shouldScrollOnNextMessage.current = false
     }
 
     prevMessagesLength.current = messages.length
@@ -199,8 +220,10 @@ export function ChatWindow({
     e.preventDefault()
     if (input.trim() && !isLoading) {
       setHasInteracted(true)
+      setJustSent(true)
       sendMessage(input.trim(), location?.zipCode || undefined)
       setInput('')
+      setTimeout(() => setJustSent(false), 400)
     }
   }
 
@@ -209,140 +232,249 @@ export function ChatWindow({
     sendMessage(prompt, location?.zipCode || undefined)
   }
 
-  // Don't auto-focus to prevent scroll jump
-  // User can click to focus
+  const handleTypewriterComplete = (index: number) => {
+    setRevealedMessages(prev => new Set([...prev, index]))
+    scrollChatToBottom()
+  }
 
   const containerHeight = embedded ? 'h-[60vh] min-h-[400px]' : 'h-[500px]'
-
-  // Use page-specific quick actions if available, otherwise defaults
   const activeQuickActions = pageInfo.quickActions || defaultQuickActions
 
   return (
-    <div className={`flex flex-col bg-gray-900 border border-gray-800 rounded-xl overflow-hidden ${containerHeight} ${className}`}>
-      {/* Header (for floating panel) */}
-      {!embedded && (
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-gray-900/95">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-            </div>
-            <span className="font-medium text-white">AI Assistant</span>
-          </div>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="p-1 text-gray-400 hover:text-white transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
-      )}
+    <div className={`relative ${containerHeight} ${className}`}>
+      {/* Aurora background layer */}
+      <div className="absolute inset-0 aurora-bg rounded-2xl pointer-events-none" />
 
-      {/* Messages */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 && !isLoading ? (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-            </div>
-            {locationLoading ? (
-              <p className="text-gray-400">Detecting your location...</p>
-            ) : (
-              <>
-                <p className="text-gray-400 mb-2">
-                  {location?.city
-                    ? `Hello from ${location.city}!`
-                    : 'Welcome!'
-                  }
-                </p>
-                <p className="text-gray-500 text-sm">
-                  Loading your personalized assistant...
-                </p>
-              </>
-            )}
-          </div>
-        ) : (
-          messages.map((message, i) => (
-            <div
-              key={i}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[85%] rounded-lg px-4 py-2 ${
-                  message.role === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-800 text-gray-200'
-                }`}
-              >
-                <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                  {message.content}
+      {/* Main container with glassmorphism */}
+      <div
+        className={`
+          relative flex flex-col h-full
+          glass-container glow-border rounded-2xl overflow-hidden
+          ${isLoading ? 'chat-glow-thinking' : 'chat-glow'}
+        `}
+      >
+        {/* Header (for floating panel) */}
+        {!embedded && (
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700/50 bg-gray-900/50 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <AIAvatar mood={isLoading ? 'thinking' : 'neutral'} isThinking={isLoading} size="sm" />
+              <div>
+                <span className="font-medium text-white">AI Assistant</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  <span className="text-xs text-gray-400">Online</span>
                 </div>
               </div>
             </div>
-          ))
+            {onClose && (
+              <motion.button
+                onClick={onClose}
+                className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </motion.button>
+            )}
+          </div>
         )}
 
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-800 rounded-lg px-4 py-3">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        {/* Messages */}
+        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.length === 0 && !isLoading ? (
+            <motion.div
+              className="text-center py-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <AIAvatar mood="helpful" size="lg" className="mx-auto mb-4" />
+              {locationLoading ? (
+                <p className="text-gray-400">Detecting your location...</p>
+              ) : (
+                <>
+                  <p className="text-gray-300 mb-2 font-medium">
+                    {location?.city
+                      ? `Hello from ${location.city}!`
+                      : 'Welcome!'
+                    }
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    Loading your personalized assistant...
+                  </p>
+                </>
+              )}
+            </motion.div>
+          ) : (
+            <AnimatePresence initial={false}>
+              {messages.map((message, i) => {
+                const isUser = message.role === 'user'
+                const isNewMessage = i === messages.length - 1 && !revealedMessages.has(i)
+                const shouldTypewrite = !isUser && isNewMessage && message.content.length < 500
+
+                return (
+                  <motion.div
+                    key={i}
+                    custom={isUser}
+                    variants={messageVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {/* AI Avatar for assistant messages */}
+                    {!isUser && (
+                      <div className="flex-shrink-0 mr-2">
+                        <AIAvatar mood="neutral" size="sm" />
+                      </div>
+                    )}
+
+                    <div
+                      className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                        isUser
+                          ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/20'
+                          : 'bg-gray-800/80 backdrop-blur-sm text-gray-200 border border-gray-700/50'
+                      }`}
+                    >
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {shouldTypewrite ? (
+                          <TypewriterText
+                            content={message.content}
+                            speed={12}
+                            onComplete={() => handleTypewriterComplete(i)}
+                          />
+                        ) : (
+                          message.content
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </AnimatePresence>
+          )}
+
+          {/* Loading Indicator */}
+          <AnimatePresence>
+            {isLoading && <ThinkingIndicator />}
+          </AnimatePresence>
+        </div>
+
+        {/* Quick Actions */}
+        <AnimatePresence>
+          {showQuickActions && messages.length <= 1 && !isLoading && (
+            <motion.div
+              className="px-4 pb-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex flex-wrap gap-2">
+                {activeQuickActions.slice(0, 4).map((action, i) => (
+                  <QuickActionButton
+                    key={action.label}
+                    label={action.label}
+                    onClick={() => handleQuickAction(action.prompt)}
+                    index={i}
+                  />
+                ))}
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Input */}
+        <form onSubmit={handleSubmit} className="p-4 border-t border-gray-700/50">
+          <div className="relative">
+            {/* Focus glow effect */}
+            <motion.div
+              className="absolute -inset-0.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600"
+              initial={false}
+              animate={{
+                opacity: isFocused ? 0.3 : 0,
+              }}
+              transition={{ duration: 0.2 }}
+            />
+
+            <div className="relative flex gap-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                placeholder="Ask about internet providers..."
+                className={`
+                  flex-1 px-4 py-3
+                  bg-gray-800/80 backdrop-blur-sm
+                  border rounded-xl
+                  text-white placeholder-gray-500
+                  transition-all duration-200
+                  focus:outline-none
+                  ${isFocused ? 'border-blue-500/50 input-glow' : 'border-gray-700/50'}
+                `}
+                disabled={isLoading}
+              />
+
+              <motion.button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className={`
+                  relative px-4 py-3 rounded-xl font-medium overflow-hidden
+                  transition-all duration-200
+                  ${!input.trim() || isLoading
+                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40'
+                  }
+                `}
+                whileHover={input.trim() && !isLoading ? { scale: 1.02 } : {}}
+                whileTap={input.trim() && !isLoading ? { scale: 0.98 } : {}}
+              >
+                {/* Success ripple */}
+                <AnimatePresence>
+                  {justSent && (
+                    <motion.span
+                      className="absolute inset-0 bg-green-500/50 rounded-xl"
+                      initial={{ scale: 0, opacity: 0.6 }}
+                      animate={{ scale: 2.5, opacity: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                    />
+                  )}
+                </AnimatePresence>
+
+                <motion.svg
+                  className="w-5 h-5 relative z-10"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  animate={justSent ? { x: [0, 5, 0], y: [0, -5, 0] } : {}}
+                  transition={{ duration: 0.3 }}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </motion.svg>
+              </motion.button>
             </div>
           </div>
-        )}
 
-      </div>
-
-      {/* Quick Actions */}
-      {showQuickActions && messages.length <= 1 && !isLoading && (
-        <div className="px-4 pb-2">
-          <div className="flex flex-wrap gap-2">
-            {activeQuickActions.slice(0, 4).map((action, i) => (
-              <button
-                key={i}
-                onClick={() => handleQuickAction(action.prompt)}
-                className="px-3 py-1.5 text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-full transition-colors"
+          {/* Typing hint */}
+          <AnimatePresence>
+            {input.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-2 text-xs text-gray-500 text-center"
               >
-                {action.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-800">
-        <div className="flex gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about internet providers..."
-            className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 text-white placeholder-gray-500"
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className="px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          </button>
-        </div>
-      </form>
+                Press Enter to send
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </form>
+      </div>
     </div>
   )
 }
