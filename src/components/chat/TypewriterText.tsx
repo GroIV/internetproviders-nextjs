@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { MarkdownContent } from './MarkdownContent'
 
 interface TypewriterTextProps {
   content: string
@@ -9,26 +10,34 @@ interface TypewriterTextProps {
   className?: string
 }
 
+// Strip markdown link syntax for plain text display during animation
+function stripMarkdownLinks(text: string): string {
+  return text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+}
+
 export function TypewriterText({
   content,
   speed = 12,
   onComplete,
   className = ''
 }: TypewriterTextProps) {
-  const [displayedContent, setDisplayedContent] = useState('')
+  const [displayedIndex, setDisplayedIndex] = useState(0)
   const [isComplete, setIsComplete] = useState(false)
   const [isSkipped, setIsSkipped] = useState(false)
 
+  // Plain text version for typewriter animation
+  const plainContent = stripMarkdownLinks(content)
+
   const skipAnimation = useCallback(() => {
-    setDisplayedContent(content)
+    setDisplayedIndex(plainContent.length)
     setIsComplete(true)
     setIsSkipped(true)
     onComplete?.()
-  }, [content, onComplete])
+  }, [plainContent.length, onComplete])
 
   useEffect(() => {
     // Reset when content changes
-    setDisplayedContent('')
+    setDisplayedIndex(0)
     setIsComplete(false)
     setIsSkipped(false)
 
@@ -36,8 +45,8 @@ export function TypewriterText({
     let animationFrame: number
 
     const typeNextChar = () => {
-      if (index < content.length) {
-        setDisplayedContent(content.slice(0, index + 1))
+      if (index < plainContent.length) {
+        setDisplayedIndex(index + 1)
         index++
         animationFrame = window.setTimeout(typeNextChar, speed)
       } else {
@@ -52,24 +61,26 @@ export function TypewriterText({
     return () => {
       if (animationFrame) clearTimeout(animationFrame)
     }
-  }, [content, speed, onComplete])
+  }, [plainContent, speed, onComplete])
 
+  // Once complete, render with markdown links
+  if (isComplete) {
+    return <MarkdownContent content={content} className={className} />
+  }
+
+  // During animation, show plain text
   return (
     <span className={className}>
-      {displayedContent}
-      {!isComplete && (
-        <>
-          <span className="typewriter-cursor" />
-          {!isSkipped && displayedContent.length > 20 && (
-            <button
-              onClick={skipAnimation}
-              className="ml-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
-              aria-label="Skip animation"
-            >
-              Skip
-            </button>
-          )}
-        </>
+      {plainContent.slice(0, displayedIndex)}
+      <span className="typewriter-cursor" />
+      {!isSkipped && displayedIndex > 20 && (
+        <button
+          onClick={skipAnimation}
+          className="ml-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+          aria-label="Skip animation"
+        >
+          Skip
+        </button>
       )}
     </span>
   )

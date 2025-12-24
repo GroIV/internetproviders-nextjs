@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useChat } from '@/contexts/ChatContext'
 import { useLocation } from '@/contexts/LocationContext'
-import { AIAvatar, ThinkingIndicator, TypewriterText, QuickActionButton } from './chat'
+import { AIAvatar, ThinkingIndicator, TypewriterText, QuickActionButton, MarkdownContent } from './chat'
 
 interface QuickAction {
   label: string
@@ -345,7 +345,7 @@ export function ChatWindow({
                             onComplete={() => handleTypewriterComplete(i)}
                           />
                         ) : (
-                          message.content
+                          <MarkdownContent content={message.content} />
                         )}
                       </div>
                     </div>
