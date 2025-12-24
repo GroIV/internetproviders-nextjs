@@ -271,6 +271,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    // Don't stack AI messages - only send if last message was from user
+    // This prevents confusing multiple AI messages in a row
+    const lastMessage = messages[messages.length - 1]
+    if (lastMessage?.role === 'assistant') {
+      return
+    }
+
     const message = getProactiveMessage(pathname)
     if (message) {
       // Add the proactive message
@@ -282,7 +289,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setProactivePages(newProactivePages)
       localStorage.setItem(PROACTIVE_PAGES_KEY, JSON.stringify([...newProactivePages]))
     }
-  }, [proactivePages, messages.length])
+  }, [proactivePages, messages])
 
   return (
     <ChatContext.Provider
