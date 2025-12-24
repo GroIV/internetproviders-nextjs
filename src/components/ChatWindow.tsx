@@ -185,14 +185,16 @@ export function ChatWindow({
     setPageContext(pageInfo.context)
   }, [pathname, pageInfo.context, setPageContext])
 
-  // Track page changes - scroll to bottom immediately and set flag for next message
+  // Track page changes - scroll to bottom when navigating to new page
   useEffect(() => {
     if (pathname !== prevPathname.current) {
       shouldScrollOnNextMessage.current = true
       prevPathname.current = pathname
 
+      // Scroll immediately and after a delay to catch late-rendered content
       if (messages.length > 0) {
-        setTimeout(() => scrollChatToBottom(), 100)
+        scrollChatToBottom(false) // instant scroll first
+        setTimeout(() => scrollChatToBottom(true), 300) // smooth scroll after content settles
       }
     }
   }, [pathname, messages.length])
@@ -201,13 +203,17 @@ export function ChatWindow({
   useEffect(() => {
     const hasNewMessages = messages.length > prevMessagesLength.current
 
-    if (hasNewMessages && (hasInteracted || shouldScrollOnNextMessage.current)) {
-      setTimeout(() => scrollChatToBottom(), 50)
+    if (hasNewMessages) {
+      // Always scroll to bottom when new messages arrive
+      // Use multiple attempts to handle animation/render timing
+      scrollChatToBottom(false) // instant first
+      setTimeout(() => scrollChatToBottom(true), 100)
+      setTimeout(() => scrollChatToBottom(true), 400) // extra scroll for typewriter effect
       shouldScrollOnNextMessage.current = false
     }
 
     prevMessagesLength.current = messages.length
-  }, [messages, hasInteracted])
+  }, [messages.length])
 
   // Initialize chat with welcome message when location is available
   useEffect(() => {

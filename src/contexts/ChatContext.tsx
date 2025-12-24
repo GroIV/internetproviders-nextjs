@@ -271,17 +271,26 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // Don't stack AI messages - only send if last message was from user
-    // This prevents confusing multiple AI messages in a row
-    const lastMessage = messages[messages.length - 1]
-    if (lastMessage?.role === 'assistant') {
-      return
-    }
+    // Track page visit count for "need help finding something?" message
+    const visitCount = proactivePages.size
 
     const message = getProactiveMessage(pathname)
-    if (message) {
+
+    // After visiting 4+ pages without user interaction, offer extra help
+    const lastUserMessageIndex = [...messages].reverse().findIndex(m => m.role === 'user')
+    const messagesSinceLastUser = lastUserMessageIndex === -1 ? messages.length : lastUserMessageIndex
+    const shouldOfferHelp = visitCount >= 3 && messagesSinceLastUser >= 3
+
+    let finalMessage = message
+    if (shouldOfferHelp && message) {
+      finalMessage = message + "\n\nI notice you've been exploring a few pages. Need help finding something specific? I'm happy to point you in the right direction!"
+    } else if (shouldOfferHelp && !message) {
+      finalMessage = "I notice you've been exploring the site. Need help finding something specific? Whether it's comparing providers, checking availability, or finding the best deal - just ask!"
+    }
+
+    if (finalMessage) {
       // Add the proactive message
-      setMessages(prev => [...prev, { role: 'assistant', content: message }])
+      setMessages(prev => [...prev, { role: 'assistant', content: finalMessage }])
 
       // Mark this page as having sent a proactive message
       const newProactivePages = new Set(proactivePages)
