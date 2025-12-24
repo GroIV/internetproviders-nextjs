@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ChatWindow } from './ChatWindow'
 import { useChat } from '@/contexts/ChatContext'
 
@@ -176,12 +177,52 @@ export function PageChatSection() {
         <div className="max-w-3xl mx-auto">
           {/* Header with page context */}
           <div className="text-center mb-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-600/20 border border-blue-500/30 rounded-full text-blue-400 text-sm mb-3">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              {pageTitle}
-            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={pageTitle}
+                initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                transition={{
+                  type: "spring" as const,
+                  stiffness: 500,
+                  damping: 30,
+                }}
+                className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-blue-600/30 to-cyan-600/20 border border-blue-500/40 rounded-full text-sm mb-3 shadow-lg shadow-blue-500/10"
+              >
+                {/* Animated icon */}
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </motion.div>
+                {/* Animated text with gradient */}
+                <motion.span
+                  className="bg-gradient-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent font-medium"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  {pageTitle}
+                </motion.span>
+                {/* Pulse indicator */}
+                <motion.span
+                  className="w-2 h-2 rounded-full bg-cyan-400"
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    opacity: [1, 0.6, 1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                />
+              </motion.div>
+            </AnimatePresence>
             <h2 className="text-xl font-semibold text-white mb-1">
               AI Assistant
             </h2>
