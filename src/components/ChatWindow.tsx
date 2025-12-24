@@ -151,13 +151,20 @@ export function ChatWindow({
     setPageContext(pageInfo.context)
   }, [pathname, pageInfo.context, setPageContext])
 
-  // Track page changes - set flag to scroll on next message
+  // Track page changes - scroll to bottom immediately and set flag for next message
   useEffect(() => {
     if (pathname !== prevPathname.current) {
       shouldScrollOnNextMessage.current = true
       prevPathname.current = pathname
+
+      // Immediately scroll to bottom when page changes (to show existing messages)
+      if (messages.length > 0) {
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+        }, 100)
+      }
     }
-  }, [pathname])
+  }, [pathname, messages.length])
 
   // Auto-scroll when new messages arrive
   useEffect(() => {
@@ -165,7 +172,10 @@ export function ChatWindow({
 
     // Scroll if: user interacted, OR we're expecting a scroll after navigation
     if (hasNewMessages && (hasInteracted || shouldScrollOnNextMessage.current)) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      // Small delay to ensure DOM has updated after message render
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 50)
       shouldScrollOnNextMessage.current = false // Reset after scrolling
     }
 

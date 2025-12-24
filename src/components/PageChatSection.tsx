@@ -82,7 +82,6 @@ export function PageChatSection() {
   const { setChatSectionVisible, sendProactiveMessage, hasWelcomed } = useChat()
   const sectionRef = useRef<HTMLDivElement>(null)
   const prevPathname = useRef<string | null>(null)
-  const observerRef = useRef<IntersectionObserver | null>(null)
 
   // Get page title
   const pageTitle = useMemo(() => getPageTitle(pathname), [pathname])
@@ -113,7 +112,8 @@ export function PageChatSection() {
     return () => clearTimeout(timer)
   }, [pathname, hasWelcomed, shouldRender, sendProactiveMessage])
 
-  // Simple visibility tracking for floating button
+  // Visibility tracking using scroll position instead of IntersectionObserver
+  // This is more reliable during hydration and page transitions
   useEffect(() => {
     if (!shouldRender) {
       setChatSectionVisible(false)
@@ -123,28 +123,45 @@ export function PageChatSection() {
     // Always mark as visible initially
     setChatSectionVisible(true)
 
-    // Set up observer after a delay to avoid hydration issues
-    const setupObserver = () => {
-      if (!sectionRef.current || observerRef.current) return
+    let userHasScrolled = false
 
-      observerRef.current = new IntersectionObserver(
-        ([entry]) => {
-          setChatSectionVisible(entry.isIntersecting)
-        },
-        { threshold: 0.1, rootMargin: '-64px 0px 0px 0px' }
-      )
+    const checkVisibility = () => {
+      if (!sectionRef.current) return
 
-      observerRef.current.observe(sectionRef.current)
+      const rect = sectionRef.current.getBoundingClientRect()
+      const navbarHeight = 64
+
+      // Section is visible if its bottom is below the navbar
+      // We consider it visible if at least 50px of it is showing
+      const isVisible = rect.bottom > navbarHeight + 50
+
+      // Only allow hiding after user has scrolled past a threshold
+      // This prevents false negatives during hydration
+      if (!userHasScrolled && window.scrollY < 100) {
+        setChatSectionVisible(true)
+        return
+      }
+
+      if (window.scrollY >= 100) {
+        userHasScrolled = true
+      }
+
+      setChatSectionVisible(isVisible)
     }
 
-    const timeoutId = setTimeout(setupObserver, 200)
+    // Check visibility on scroll
+    const handleScroll = () => {
+      checkVisibility()
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    // Also check after a delay to handle any late layout shifts
+    const timeoutId = setTimeout(checkVisibility, 500)
 
     return () => {
       clearTimeout(timeoutId)
-      if (observerRef.current) {
-        observerRef.current.disconnect()
-        observerRef.current = null
-      }
+      window.removeEventListener('scroll', handleScroll)
     }
   }, [shouldRender, setChatSectionVisible])
 
