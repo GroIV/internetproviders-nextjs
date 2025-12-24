@@ -311,6 +311,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   // Send proactive message when navigating to certain pages
   const sendProactiveMessage = useCallback((pathname: string) => {
+    // NEVER send proactive messages for homepage or AI assistant page
+    if (pathname === '/' || pathname === '/tools/ai-assistant') {
+      return
+    }
+
     // Don't send if already sent for this page, or if no messages yet (wait for welcome)
     if (proactivePages.has(pathname) || messages.length === 0) {
       return

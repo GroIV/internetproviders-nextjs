@@ -104,11 +104,21 @@ export function PageChatSection() {
   }, [pathname, shouldRender])
 
   // Send proactive message when navigating to a new page (after welcome)
+  // Use ref to avoid stale closure issues with setTimeout
+  const currentPathnameRef = useRef(pathname)
+  currentPathnameRef.current = pathname
+
   useEffect(() => {
     if (!shouldRender || !hasWelcomed) return
 
+    // Capture pathname at effect time
+    const targetPathname = pathname
+
     const timer = setTimeout(() => {
-      sendProactiveMessage(pathname)
+      // Only send if we're still on the same page (no race condition)
+      if (currentPathnameRef.current === targetPathname) {
+        sendProactiveMessage(targetPathname)
+      }
     }, 500)
     return () => clearTimeout(timer)
   }, [pathname, hasWelcomed, shouldRender, sendProactiveMessage])
