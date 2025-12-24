@@ -1,10 +1,39 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { getAffiliateUrl, getActiveAffiliateProviders } from '@/lib/affiliates'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
+
+// Build dynamic order links section
+function buildOrderLinksSection(): string {
+  const activeProviders = getActiveAffiliateProviders()
+  if (activeProviders.length === 0) return ''
+
+  const orderLinks = activeProviders.map(p => {
+    const url = getAffiliateUrl(p.providerId, 'chat')
+    return `- ${p.providerName}: [Order ${p.providerName}](${url})`
+  }).join('\n')
+
+  return `
+
+ORDER LINKS - When users want to sign up or order service:
+If a user expresses interest in signing up, ordering, or getting service from one of these providers, include the order link. Use friendly call-to-action text.
+${orderLinks}
+
+Example responses with order links:
+- "Xfinity looks like a great fit! You can [sign up for Xfinity here](ORDER_URL) to get started."
+- "Ready to order? [Get AT&T Internet](ORDER_URL) - they have great speeds in your area."
+- "I'd recommend Verizon Fios for your needs. [Order Verizon Fios](ORDER_URL) to check current deals."
+
+Only include order links when:
+1. User asks how to sign up, order, or get service
+2. You're making a strong recommendation they seem interested in
+3. User asks about pricing/deals and wants to proceed
+Do NOT spam order links in every response - only when contextually appropriate.`
+}
 
 const SYSTEM_PROMPT = `You are an expert internet service advisor for InternetProviders.ai. Your role is to help users find the best internet service for their needs.
 
@@ -33,7 +62,7 @@ Keep responses concise, friendly, and helpful. Use bullet points for lists. If y
 Available tools on the site (always link these with markdown):
 - [Speed Test](/tools/speed-test) - Test current internet speed
 - [ISP Quiz](/tools/quiz) - Get personalized recommendations
-- [Compare Providers](/compare) - Search by ZIP code (add ?zip=XXXXX if you know their ZIP)`
+- [Compare Providers](/compare) - Search by ZIP code (add ?zip=XXXXX if you know their ZIP)` + buildOrderLinksSection()
 
 interface Message {
   role: 'user' | 'assistant'

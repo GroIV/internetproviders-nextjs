@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { LocationInfo } from '@/components/LocationInfo'
 import { getProviderCoverageCount } from '@/lib/getProvidersByLocation'
+import { OrderButton } from '@/components/OrderButton'
+import { hasAffiliateLink } from '@/lib/affiliates'
 import {
   JsonLd,
   generateBreadcrumbSchema,
@@ -105,8 +107,17 @@ export default async function ProviderPage({ params }: Props) {
               {provider.name.charAt(0)}
             </div>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">{provider.name}</h1>
-              <p className="text-gray-400 mb-4">{provider.category}</p>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <div>
+                  <h1 className="text-3xl font-bold mb-1">{provider.name}</h1>
+                  <p className="text-gray-400">{provider.category}</p>
+                </div>
+                <OrderButton
+                  providerId={slug}
+                  providerName={provider.name}
+                  size="lg"
+                />
+              </div>
 
               {technologies.length > 0 && (
                 <div className="flex flex-wrap gap-2">
@@ -232,13 +243,27 @@ export default async function ProviderPage({ params }: Props) {
         )}
 
         {/* CTA */}
-        <div className="text-center">
-          <Link
-            href={`/compare?zip=`}
-            className="inline-flex items-center justify-center px-8 py-4 bg-blue-600 text-white rounded-lg text-lg font-medium hover:bg-blue-700 transition-colors"
-          >
-            Check Availability in Your Area
-          </Link>
+        <div className="bg-gradient-to-r from-gray-900 to-gray-800 border border-gray-700 rounded-xl p-8 text-center">
+          <h2 className="text-2xl font-bold mb-2">Ready to Get Started?</h2>
+          <p className="text-gray-400 mb-6">
+            {hasAffiliateLink(slug)
+              ? `Order ${provider.name} today or check availability in your area`
+              : `Check if ${provider.name} is available at your address`
+            }
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <OrderButton
+              providerId={slug}
+              providerName={provider.name}
+              size="lg"
+            />
+            <Link
+              href={`/compare`}
+              className="inline-flex items-center justify-center px-6 py-3 bg-gray-700 text-white rounded-lg text-lg font-medium hover:bg-gray-600 transition-colors"
+            >
+              Compare All Providers
+            </Link>
+          </div>
         </div>
         </div>
       </div>
