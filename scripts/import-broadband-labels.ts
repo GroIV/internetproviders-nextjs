@@ -29,6 +29,9 @@ const VIASAT_CSV = resolve(EXTERNAL_DATA_DIR, 'Viasat/Archived-BNL.csv')
 const STARLINK_DIR = resolve(EXTERNAL_DATA_DIR, 'starlink')
 const XFINITY_CSV = resolve(EXTERNAL_DATA_DIR, 'Xfinity/xfinity_broadband_labels.csv')
 const METRONET_CSV = resolve(EXTERNAL_DATA_DIR, 'Metronet/metronet_broadband_labels.csv')
+const COX_JSON = resolve(EXTERNAL_DATA_DIR, 'cox_broadband_labels/cox_extracted_plans.json')
+const VERIZON_JSON = resolve(EXTERNAL_DATA_DIR, 'verizon_fios_broadband_labels/verizon_extracted_plans.json')
+const CENTURYLINK_JSON = resolve(EXTERNAL_DATA_DIR, 'centurylink_broadband_labels/centurylink_extracted_plans.json')
 
 interface BroadbandPlanRecord {
   fcc_plan_id: string
@@ -1512,6 +1515,255 @@ async function importMetronetCSV(csvPath: string, fileName: string): Promise<Bro
   return records
 }
 
+// ============================================
+// Cox - Import from OCR-extracted JSON
+// ============================================
+
+interface CoxExtractedPlan {
+  filename: string
+  provider_name: string
+  plan_name: string | null
+  monthly_price: number | null
+  download_speed: number | null
+  upload_speed: number | null
+  latency: number | null
+  data_cap_gb: number | null
+  connection_type: string
+  service_type: string
+}
+
+function importCoxJSON(jsonPath: string): BroadbandPlanRecord[] {
+  if (!existsSync(jsonPath)) {
+    console.log(`  ⚠️ Cox JSON not found: ${jsonPath}`)
+    return []
+  }
+
+  const content = readFileSync(jsonPath, 'utf-8')
+  const plans: CoxExtractedPlan[] = JSON.parse(content)
+  const records: BroadbandPlanRecord[] = []
+
+  for (const plan of plans) {
+    // Skip invalid plans
+    if (!plan.monthly_price || !plan.download_speed || !plan.plan_name) {
+      continue
+    }
+
+    // Generate unique FCC plan ID from filename
+    const fccPlanId = `COX-OCR-${plan.filename.replace('.png', '').replace(/[^a-zA-Z0-9]/g, '-')}`
+
+    // Clean up plan name - remove location prefix for cleaner display
+    let planName = plan.plan_name
+    // Extract core plan name (e.g., "Go Super Fast Internet" from "Tucson AZ Go Super Fast Internet")
+    const planMatch = planName.match(/(ConnectAssist|Go\s+(?:Fast|Faster|Even Faster|Super Fast|Beyond Fast|BeyondFast)|Fiber.*)/i)
+    const corePlanName = planMatch ? planMatch[1] : planName
+
+    const record: BroadbandPlanRecord = {
+      fcc_plan_id: fccPlanId,
+      provider_name: 'Cox',
+      provider_id: null,
+      service_plan_name: corePlanName,
+      tier_plan_name: planName, // Full name with location
+      connection_type: plan.connection_type,
+      service_type: plan.service_type || 'residential',
+      monthly_price: plan.monthly_price,
+      has_intro_rate: false,
+      intro_rate_price: null,
+      intro_rate_months: null,
+      contract_required: false,
+      contract_months: null,
+      contract_terms_url: null,
+      early_termination_fee: 0,
+      one_time_fees: [],
+      monthly_fees: [{ name: 'Panoramic WiFi', amount: 15 }],
+      tax_info: 'Varies by location',
+      typical_download_speed: plan.download_speed,
+      typical_upload_speed: plan.upload_speed,
+      typical_latency: plan.latency,
+      monthly_data_gb: plan.data_cap_gb,
+      overage_price_per_gb: plan.data_cap_gb ? 10 : null, // Cox charges $10/50GB overage
+      overage_increment_gb: plan.data_cap_gb ? 50 : null,
+      bundle_discounts_url: null,
+      data_allowance_policy_url: 'https://www.cox.com/residential/support/data-usage-policy.html',
+      network_management_url: 'https://www.cox.com/aboutus/policies/network-management.html',
+      privacy_policy_url: 'https://www.cox.com/aboutus/policies/privacy-policy.html',
+      support_phone: '1-800-234-3993',
+      support_url: 'https://www.cox.com/residential/support.html',
+      data_source: 'ocr_extraction',
+      source_file: plan.filename,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    records.push(record)
+  }
+
+  const cableCount = records.filter(r => r.connection_type === 'Cable').length
+  const fiberCount = records.filter(r => r.connection_type === 'Fiber').length
+
+  console.log(`  ✅ Parsed ${records.length} Cox plans from OCR extraction`)
+  console.log(`     - ${cableCount} cable plans`)
+  console.log(`     - ${fiberCount} fiber plans`)
+  return records
+}
+
+// ============================================
+// Verizon Fios - Import from manually extracted JSON
+// ============================================
+
+function importVerizonJSON(jsonPath: string): BroadbandPlanRecord[] {
+  if (!existsSync(jsonPath)) {
+    console.log(`  ⚠️ Verizon JSON not found: ${jsonPath}`)
+    return []
+  }
+
+  const content = readFileSync(jsonPath, 'utf-8')
+  const plans: CoxExtractedPlan[] = JSON.parse(content) // Same structure as Cox
+  const records: BroadbandPlanRecord[] = []
+
+  for (const plan of plans) {
+    if (!plan.monthly_price || !plan.download_speed || !plan.plan_name) {
+      continue
+    }
+
+    const fccPlanId = `VERIZON-${plan.filename.replace('.png', '').replace(/[^a-zA-Z0-9]/g, '-')}`
+
+    const record: BroadbandPlanRecord = {
+      fcc_plan_id: fccPlanId,
+      provider_name: 'Verizon Fios',
+      provider_id: null,
+      service_plan_name: plan.plan_name,
+      tier_plan_name: null,
+      connection_type: 'Fiber',
+      service_type: 'residential',
+      monthly_price: plan.monthly_price,
+      has_intro_rate: false,
+      intro_rate_price: null,
+      intro_rate_months: null,
+      contract_required: false,
+      contract_months: null,
+      contract_terms_url: null,
+      early_termination_fee: 0,
+      one_time_fees: [{ name: 'Professional Installation', amount: 99 }],
+      monthly_fees: [],
+      tax_info: 'Included',
+      typical_download_speed: plan.download_speed,
+      typical_upload_speed: plan.upload_speed,
+      typical_latency: plan.latency ? Math.round(plan.latency) : null,
+      monthly_data_gb: null, // Unlimited
+      overage_price_per_gb: null,
+      overage_increment_gb: null,
+      bundle_discounts_url: 'https://www.verizon.com/home/bundles/',
+      data_allowance_policy_url: null,
+      network_management_url: 'https://www.verizon.com/about/our-company/open-internet',
+      privacy_policy_url: 'https://www.verizon.com/about/privacy/',
+      support_phone: '800-837-4966',
+      support_url: 'https://www.verizon.com/support/contact-us/',
+      data_source: 'manual_extraction',
+      source_file: plan.filename,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    records.push(record)
+  }
+
+  console.log(`  ✅ Parsed ${records.length} Verizon Fios plans`)
+  return records
+}
+
+// ============================================
+// CenturyLink - Import from OCR-extracted JSON
+// ============================================
+
+interface CenturyLinkExtractedPlan {
+  filename: string
+  provider_name: string
+  plan_name: string | null
+  monthly_price: number | null
+  download_speed: number | null
+  upload_speed: number | null
+  latency: number | null
+  data_cap_gb: number | null
+  connection_type: string
+  service_type: string
+  location?: string
+}
+
+function importCenturyLinkJSON(jsonPath: string): BroadbandPlanRecord[] {
+  if (!existsSync(jsonPath)) {
+    console.log(`  ⚠️ CenturyLink JSON not found: ${jsonPath}`)
+    return []
+  }
+
+  const content = readFileSync(jsonPath, 'utf-8')
+  const plans: CenturyLinkExtractedPlan[] = JSON.parse(content)
+  const records: BroadbandPlanRecord[] = []
+
+  for (const plan of plans) {
+    // Skip invalid plans - need price AND download speed
+    if (!plan.monthly_price || !plan.download_speed || !plan.plan_name) {
+      continue
+    }
+
+    // Skip obviously wrong prices (OCR errors like $7 instead of $75)
+    if (plan.monthly_price < 20) {
+      continue
+    }
+
+    const fccPlanId = `CENTURYLINK-${plan.filename.replace('.png', '').replace(/[^a-zA-Z0-9]/g, '-')}`
+
+    const record: BroadbandPlanRecord = {
+      fcc_plan_id: fccPlanId,
+      provider_name: 'CenturyLink',
+      provider_id: null,
+      service_plan_name: plan.plan_name,
+      tier_plan_name: plan.location ? `${plan.plan_name} (${plan.location})` : plan.plan_name,
+      connection_type: plan.connection_type,
+      service_type: 'residential',
+      monthly_price: plan.monthly_price,
+      has_intro_rate: false,
+      intro_rate_price: null,
+      intro_rate_months: null,
+      contract_required: false,
+      contract_months: null,
+      contract_terms_url: null,
+      early_termination_fee: 0,
+      one_time_fees: [],
+      monthly_fees: [],
+      tax_info: 'Varies by location',
+      typical_download_speed: plan.download_speed,
+      typical_upload_speed: plan.upload_speed,
+      typical_latency: plan.latency ? Math.round(plan.latency) : null,
+      monthly_data_gb: null, // Unlimited
+      overage_price_per_gb: null,
+      overage_increment_gb: null,
+      bundle_discounts_url: null,
+      data_allowance_policy_url: null,
+      network_management_url: 'https://www.centurylink.com/aboutus/legal/internet-service-management.html',
+      privacy_policy_url: 'https://www.centurylink.com/aboutus/legal/privacy-policy.html',
+      support_phone: '1-800-244-1111',
+      support_url: 'https://www.centurylink.com/home/help.html',
+      data_source: 'ocr_extraction',
+      source_file: plan.filename,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    records.push(record)
+  }
+
+  const dslCount = records.filter(r => r.connection_type === 'DSL').length
+  const fiberCount = records.filter(r => r.connection_type === 'Fiber').length
+
+  console.log(`  ✅ Parsed ${records.length} CenturyLink plans from OCR extraction`)
+  console.log(`     - ${dslCount} DSL plans`)
+  console.log(`     - ${fiberCount} fiber plans`)
+  return records
+}
+
 async function matchProvidersIds(records: BroadbandPlanRecord[]): Promise<void> {
   console.log('\n🔗 Matching provider IDs...')
 
@@ -1725,6 +1977,21 @@ async function main() {
   console.log('\n📁 Processing Metronet...')
   const metronet = await importMetronetCSV(METRONET_CSV, 'metronet_broadband_labels.csv')
   allRecords.push(...metronet)
+
+  // Import Cox (from OCR-extracted images)
+  console.log('\n📁 Processing Cox...')
+  const cox = importCoxJSON(COX_JSON)
+  allRecords.push(...cox)
+
+  // Import Verizon Fios (from manually extracted images)
+  console.log('\n📁 Processing Verizon Fios...')
+  const verizon = importVerizonJSON(VERIZON_JSON)
+  allRecords.push(...verizon)
+
+  // Import CenturyLink (from OCR-extracted images)
+  console.log('\n📁 Processing CenturyLink...')
+  const centurylink = importCenturyLinkJSON(CENTURYLINK_JSON)
+  allRecords.push(...centurylink)
 
   // Match provider IDs
   await matchProvidersIds(allRecords)
