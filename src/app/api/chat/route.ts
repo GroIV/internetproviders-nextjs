@@ -2,7 +2,86 @@ import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getAffiliateUrl, getActiveAffiliateProviders, COMPARISON_ELIGIBLE_PROVIDERS, providerDisplayNames, getComparisonUrl } from '@/lib/affiliates'
-import { featuredPlans, getBestValuePlans } from '@/lib/featuredPlans'
+import { featuredPlans, getBestValuePlans, getAllFeaturedPlans, type FeaturedPlan } from '@/lib/featuredPlans'
+
+// Plan with provider info for suggestions
+interface SuggestedPlan extends FeaturedPlan {
+  providerName: string
+  providerSlug: string
+}
+
+// Keywords that indicate user is asking about plans/pricing
+const PLAN_KEYWORDS = [
+  'plan', 'plans', 'pricing', 'price', 'cost', 'how much',
+  'recommend', 'recommendation', 'best', 'cheapest', 'fastest',
+  'what should i get', 'which one', 'compare', 'options',
+  'fiber', 'cable', '5g', 'internet service', 'package', 'packages',
+  'value', 'budget', 'premium', 'speed', 'mbps', 'gbps',
+  'frontier', 'at&t', 'att', 'spectrum', 't-mobile', 'tmobile'
+]
+
+// Detect if user message is asking about plans
+function isPlanQuery(message: string): boolean {
+  const lowerMessage = message.toLowerCase()
+  return PLAN_KEYWORDS.some(keyword => lowerMessage.includes(keyword))
+}
+
+// Get relevant plans based on user query
+function getSuggestedPlans(message: string, providerNames?: string[]): SuggestedPlan[] {
+  const lowerMessage = message.toLowerCase()
+  const allPlans = getAllFeaturedPlans()
+
+  // Check for specific provider mentions
+  const mentionedProviders: string[] = []
+  if (lowerMessage.includes('frontier')) mentionedProviders.push('frontier-fiber')
+  if (lowerMessage.includes('at&t') || lowerMessage.includes('att')) mentionedProviders.push('att-internet')
+  if (lowerMessage.includes('spectrum')) mentionedProviders.push('spectrum')
+  if (lowerMessage.includes('t-mobile') || lowerMessage.includes('tmobile')) mentionedProviders.push('t-mobile')
+
+  // Check for tier preferences
+  const wantsBudget = lowerMessage.includes('cheap') || lowerMessage.includes('budget') || lowerMessage.includes('affordable')
+  const wantsPremium = lowerMessage.includes('fast') || lowerMessage.includes('premium') || lowerMessage.includes('best speed') || lowerMessage.includes('gaming')
+  const wantsValue = lowerMessage.includes('value') || lowerMessage.includes('recommend') || lowerMessage.includes('best')
+
+  // Check for technology preferences
+  const wantsFiber = lowerMessage.includes('fiber')
+  const wants5G = lowerMessage.includes('5g') || lowerMessage.includes('wireless')
+  const wantsCable = lowerMessage.includes('cable')
+
+  let filteredPlans = allPlans
+
+  // Filter by mentioned providers
+  if (mentionedProviders.length > 0) {
+    filteredPlans = filteredPlans.filter(p => mentionedProviders.includes(p.providerSlug))
+  }
+
+  // Filter by technology
+  if (wantsFiber) {
+    filteredPlans = filteredPlans.filter(p => p.technology === 'Fiber')
+  } else if (wants5G) {
+    filteredPlans = filteredPlans.filter(p => p.technology === '5G')
+  } else if (wantsCable) {
+    filteredPlans = filteredPlans.filter(p => p.technology === 'Cable')
+  }
+
+  // Filter by tier preference
+  if (wantsBudget) {
+    filteredPlans = filteredPlans.filter(p => p.tier === 'budget')
+  } else if (wantsPremium) {
+    filteredPlans = filteredPlans.filter(p => p.tier === 'premium')
+  } else if (wantsValue && !mentionedProviders.length) {
+    // For general "best" queries, show value tier plans
+    filteredPlans = filteredPlans.filter(p => p.tier === 'value')
+  }
+
+  // If no specific filters applied or too few results, get best value plans
+  if (filteredPlans.length === 0) {
+    filteredPlans = getBestValuePlans().slice(0, 4)
+  }
+
+  // Limit to 4 plans max for display
+  return filteredPlans.slice(0, 4) as SuggestedPlan[]
+}
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -290,8 +369,16 @@ export async function POST(request: NextRequest) {
       ? response.content[0].text
       : ''
 
+    // Get the last user message to check for plan queries
+    const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || ''
+
+    // Determine if we should show suggested plans
+    const shouldShowPlans = isPlanQuery(lastUserMessage)
+    const suggestedPlans = shouldShowPlans ? getSuggestedPlans(lastUserMessage) : []
+
     return NextResponse.json({
       message: assistantMessage,
+      suggestedPlans: suggestedPlans.length > 0 ? suggestedPlans : undefined,
     })
   } catch (error) {
     console.error('Chat API error:', error)

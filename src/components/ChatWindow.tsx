@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useChat } from '@/contexts/ChatContext'
 import { useLocation } from '@/contexts/LocationContext'
 import { AIAvatar, ThinkingIndicator, TypewriterText, QuickActionButton, MarkdownContent } from './chat'
+import { SuggestedPlansRow } from './plans/SuggestedPlansRow'
 
 interface QuickAction {
   label: string
@@ -393,6 +394,17 @@ export function ChatWindow({
                             <MarkdownContent content={message.content} />
                           )}
                         </div>
+
+                        {/* Suggested Plans - show after AI message with plans */}
+                        {!isUser && message.suggestedPlans && message.suggestedPlans.length > 0 && (
+                          <SuggestedPlansRow
+                            plans={message.suggestedPlans}
+                            title="Suggested Plans"
+                            onAskAI={(planName, providerName) => {
+                              handleQuickAction(`Tell me more about ${providerName} ${planName}`)
+                            }}
+                          />
+                        )}
                       </div>
                     </div>
                   </motion.div>

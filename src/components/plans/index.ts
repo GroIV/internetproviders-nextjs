@@ -1,3 +1,6 @@
 export { SpeedGauge } from './SpeedGauge'
 export { PlanCard } from './PlanCard'
+export { MiniPlanCard } from './MiniPlanCard'
+export { SuggestedPlansRow } from './SuggestedPlansRow'
 export { FeaturedPlansDisplay } from './FeaturedPlansDisplay'
+export type { SuggestedPlan } from './SuggestedPlansRow'

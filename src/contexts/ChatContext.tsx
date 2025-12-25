@@ -2,10 +2,18 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react'
 import { getComparisonUrl, getSourceFromPathname } from '@/lib/affiliates'
+import type { FeaturedPlan } from '@/lib/featuredPlans'
+
+// Suggested plan type from API
+export interface SuggestedPlan extends FeaturedPlan {
+  providerName: string
+  providerSlug: string
+}
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
+  suggestedPlans?: SuggestedPlan[]
 }
 
 interface ChatContextType {
@@ -303,7 +311,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         throw new Error(data.error)
       }
 
-      setMessages(prev => [...prev, { role: 'assistant', content: data.message }])
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: data.message,
+        suggestedPlans: data.suggestedPlans,
+      }
+      setMessages(prev => [...prev, assistantMessage])
     } catch (error) {
       console.error('Chat error:', error)
       setMessages(prev => [...prev, {
