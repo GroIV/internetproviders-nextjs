@@ -161,15 +161,15 @@ export function FeaturedPlansDisplay({
               <button
                 onClick={() => setShowOnlyAvailable(!showOnlyAvailable)}
                 disabled={!location?.zipCode}
-                className={`relative w-14 h-7 rounded-full transition-colors ${
+                className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
                   showOnlyAvailable && location?.zipCode
                     ? 'bg-cyan-600'
                     : 'bg-gray-700'
                 } ${!location?.zipCode ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <span
-                  className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                    showOnlyAvailable && location?.zipCode ? 'translate-x-8' : 'translate-x-1'
+                  className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${
+                    showOnlyAvailable && location?.zipCode ? 'translate-x-6' : 'translate-x-0'
                   }`}
                 />
               </button>
