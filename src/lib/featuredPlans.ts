@@ -482,6 +482,642 @@ export const featuredPlans: ProviderFeaturedPlans[] = [
       'Whole-home WiFi add-on: $9.95/month',
       'Also offers 2 Gig for $99.95/month in select areas'
     ]
+  },
+  {
+    providerId: 'cox',
+    providerName: 'Cox',
+    slug: 'cox',
+    plans: [
+      {
+        planName: 'Go Fast',
+        price: 50,
+        downloadSpeed: 250,
+        uploadSpeed: 10,
+        latency: 14,
+        technology: 'Cable',
+        features: ['No contract', '1.25 TB data cap', 'Free installation'],
+        bestFor: 'Budget-friendly cable option',
+        tier: 'budget'
+      },
+      {
+        planName: 'Go Even Faster',
+        price: 70,
+        downloadSpeed: 500,
+        uploadSpeed: 10,
+        latency: 13,
+        technology: 'Cable',
+        features: ['No contract', '1.25 TB data cap', 'Panoramic WiFi available'],
+        bestFor: 'Best value for most homes',
+        tier: 'value'
+      },
+      {
+        planName: 'Go Beyond Fast',
+        price: 100,
+        downloadSpeed: 1000,
+        uploadSpeed: 35,
+        latency: 13,
+        technology: 'Cable',
+        features: ['No contract', 'Unlimited data option', 'Gigabit speeds'],
+        bestFor: 'Power users & large households',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Major cable provider in 19 states',
+      '1.25 TB data cap applies, unlimited add-on available',
+      'Panoramic WiFi equipment rental: ~$14/month',
+      'Bundle discounts with TV and phone'
+    ]
+  },
+  {
+    providerId: 'breezeline',
+    providerName: 'Breezeline',
+    slug: 'breezeline',
+    plans: [
+      {
+        planName: 'Internet 200',
+        price: 55,
+        downloadSpeed: 200,
+        uploadSpeed: 10,
+        latency: 16,
+        technology: 'Cable',
+        features: ['No data caps', 'No contract', 'Free modem'],
+        bestFor: 'Budget cable option',
+        tier: 'budget'
+      },
+      {
+        planName: 'Internet 500',
+        price: 75,
+        downloadSpeed: 500,
+        uploadSpeed: 20,
+        latency: 15,
+        technology: 'Cable',
+        features: ['No data caps', 'No contract', 'WiFi included'],
+        bestFor: 'Best value for streaming',
+        tier: 'value'
+      },
+      {
+        planName: 'Fiber 2 Gig',
+        price: 80,
+        downloadSpeed: 2000,
+        uploadSpeed: 2000,
+        latency: 2,
+        technology: 'Fiber',
+        features: ['No data caps', 'Symmetric speeds', 'Ultra-low latency', 'Fiber optic'],
+        bestFor: 'Power users needing top speeds',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Formerly Atlantic Broadband and WOW Cable',
+      'No data caps on any residential plan',
+      'Fiber available in select markets',
+      'Whole-home WiFi system available'
+    ]
+  },
+  {
+    providerId: 'astound-broadband',
+    providerName: 'Astound Broadband',
+    slug: 'astound-broadband',
+    plans: [
+      {
+        planName: 'Internet 300',
+        price: 30,
+        downloadSpeed: 300,
+        uploadSpeed: 20,
+        latency: 18,
+        technology: 'Cable',
+        features: ['No data caps', 'No contract', 'Price lock guarantee'],
+        bestFor: 'Great entry-level value',
+        tier: 'budget'
+      },
+      {
+        planName: 'Internet 600',
+        price: 50,
+        downloadSpeed: 600,
+        uploadSpeed: 35,
+        latency: 11,
+        technology: 'Cable',
+        features: ['No data caps', 'No contract', 'Whole-home WiFi available'],
+        bestFor: 'Best value for families',
+        tier: 'value'
+      },
+      {
+        planName: 'Internet 1 Gig',
+        price: 65,
+        downloadSpeed: 1000,
+        uploadSpeed: 50,
+        latency: 12,
+        technology: 'Cable',
+        features: ['No data caps', 'Gigabit speeds', 'eero WiFi included'],
+        bestFor: 'Large households & power users',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Operates as RCN, Grande, and Wave brands',
+      'No data caps in any market',
+      'Price lock guarantee for 2 years',
+      'eero whole-home WiFi included with higher tiers'
+    ]
+  },
+  {
+    providerId: 'consolidated-communications',
+    providerName: 'Consolidated / Fidium',
+    slug: 'consolidated-communications',
+    plans: [
+      {
+        planName: 'Fidium 250',
+        price: 45,
+        downloadSpeed: 250,
+        uploadSpeed: 250,
+        latency: 8,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'No contract', 'Fiber optic'],
+        bestFor: 'Entry-level fiber option',
+        tier: 'budget'
+      },
+      {
+        planName: 'Fidium 500',
+        price: 55,
+        downloadSpeed: 500,
+        uploadSpeed: 500,
+        latency: 8,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'Whole-home WiFi', 'Fiber optic'],
+        bestFor: 'Best value symmetric fiber',
+        tier: 'value'
+      },
+      {
+        planName: 'Fidium 1 Gig',
+        price: 70,
+        downloadSpeed: 1000,
+        uploadSpeed: 1000,
+        latency: 8,
+        technology: 'Fiber',
+        features: ['Symmetric gigabit', 'No data caps', 'Premium WiFi included', 'Low latency'],
+        bestFor: 'Power users & professionals',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Fidium Fiber brand expanding rapidly',
+      'Symmetric upload speeds on all plans',
+      'No contracts or data caps',
+      'Also offers legacy DSL in some areas'
+    ]
+  },
+  {
+    providerId: 'buckeye-cable',
+    providerName: 'Buckeye Broadband',
+    slug: 'buckeye-cable',
+    plans: [
+      {
+        planName: 'Starter 100',
+        price: 50,
+        downloadSpeed: 100,
+        uploadSpeed: 10,
+        latency: 20,
+        technology: 'Cable',
+        features: ['No contract', 'Free installation', 'Local customer service'],
+        bestFor: 'Light internet users',
+        tier: 'budget'
+      },
+      {
+        planName: 'Fiber 600',
+        price: 70,
+        downloadSpeed: 600,
+        uploadSpeed: 600,
+        latency: 15,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'Fiber optic', 'No contract'],
+        bestFor: 'Best value fiber option',
+        tier: 'value'
+      },
+      {
+        planName: 'Fiber 6 Gig',
+        price: 200,
+        downloadSpeed: 6000,
+        uploadSpeed: 6000,
+        latency: 15,
+        technology: 'Fiber',
+        features: ['6 Gbps symmetric', 'No data caps', 'Multi-gig speeds', 'Future-proof'],
+        bestFor: 'Power users & professionals',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Regional provider in Northwest Ohio',
+      'Fiber network expanding',
+      'Local customer service and support',
+      'Cable plans have data caps, fiber does not'
+    ]
+  },
+  {
+    providerId: 'brightspeed',
+    providerName: 'Brightspeed',
+    slug: 'brightspeed',
+    plans: [
+      {
+        planName: 'Fiber 200',
+        price: 49,
+        downloadSpeed: 200,
+        uploadSpeed: 200,
+        latency: 5,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'No contract', 'Fiber optic'],
+        bestFor: 'Entry-level fiber',
+        tier: 'budget'
+      },
+      {
+        planName: 'Fiber 500',
+        price: 59,
+        downloadSpeed: 500,
+        uploadSpeed: 500,
+        latency: 5,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'Low latency', 'Fiber optic'],
+        bestFor: 'Best value for most homes',
+        tier: 'value'
+      },
+      {
+        planName: 'Fiber 1 Gig',
+        price: 65,
+        downloadSpeed: 1000,
+        uploadSpeed: 1000,
+        latency: 3,
+        technology: 'Fiber',
+        features: ['Symmetric gigabit', 'No data caps', 'Ultra-low latency', 'Fiber optic'],
+        bestFor: 'Power users & gamers',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Spun off from Lumen/CenturyLink in 2022',
+      'Rapidly building new fiber network',
+      'No data caps or contracts',
+      'Legacy DSL service in some areas'
+    ]
+  },
+  {
+    providerId: 'centurylink',
+    providerName: 'CenturyLink',
+    slug: 'centurylink',
+    plans: [
+      {
+        planName: 'Simply Unlimited 100',
+        price: 50,
+        downloadSpeed: 100,
+        uploadSpeed: 10,
+        latency: 18,
+        technology: 'DSL',
+        features: ['No data caps', 'No contract', 'Price for life guarantee'],
+        bestFor: 'Basic internet needs',
+        tier: 'budget'
+      },
+      {
+        planName: 'Fiber 200',
+        price: 50,
+        downloadSpeed: 200,
+        uploadSpeed: 200,
+        latency: 12,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'No contract', 'Fiber optic'],
+        bestFor: 'Entry-level fiber value',
+        tier: 'value'
+      },
+      {
+        planName: 'Fiber Gigabit',
+        price: 70,
+        downloadSpeed: 940,
+        uploadSpeed: 940,
+        latency: 10,
+        technology: 'Fiber',
+        features: ['Symmetric gigabit', 'No data caps', 'No contract', 'Price for life'],
+        bestFor: 'Power users & large households',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Now part of Lumen Technologies',
+      'Price for Life guarantee on fiber plans',
+      'DSL available where fiber is not',
+      'No data caps or long-term contracts'
+    ]
+  },
+  {
+    providerId: 'altafiber',
+    providerName: 'altafiber',
+    slug: 'altafiber',
+    plans: [
+      {
+        planName: 'Fioptics 250',
+        price: 45,
+        downloadSpeed: 250,
+        uploadSpeed: 250,
+        latency: 8,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'No contract', 'Fiber optic'],
+        bestFor: 'Entry-level fiber',
+        tier: 'budget'
+      },
+      {
+        planName: 'Fioptics 500',
+        price: 55,
+        downloadSpeed: 500,
+        uploadSpeed: 500,
+        latency: 8,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'WiFi included', 'Fiber optic'],
+        bestFor: 'Best value for families',
+        tier: 'value'
+      },
+      {
+        planName: 'Fioptics 2 Gig',
+        price: 85,
+        downloadSpeed: 2000,
+        uploadSpeed: 2000,
+        latency: 6,
+        technology: 'Fiber',
+        features: ['2 Gbps symmetric', 'No data caps', 'Premium WiFi', 'Low latency'],
+        bestFor: 'Power users & professionals',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Formerly Cincinnati Bell Fioptics',
+      'Fiber network across Ohio, Kentucky, Indiana',
+      'No data caps or contracts',
+      'Whole-home WiFi included on higher tiers'
+    ]
+  },
+  {
+    providerId: 'verizon-fios',
+    providerName: 'Verizon Fios',
+    slug: 'verizon-fios',
+    plans: [
+      {
+        planName: 'Fios 300 Mbps',
+        price: 59.99,
+        downloadSpeed: 307,
+        uploadSpeed: 324,
+        latency: 7,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'No contract', 'Low latency'],
+        bestFor: 'Budget-friendly fiber option',
+        tier: 'budget'
+      },
+      {
+        planName: 'Fios 500 Mbps',
+        price: 84.99,
+        downloadSpeed: 517,
+        uploadSpeed: 552,
+        latency: 10,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'No contract', 'Great for gaming'],
+        bestFor: 'Best value for most homes',
+        tier: 'value'
+      },
+      {
+        planName: 'Fios 2 Gig',
+        price: 119.99,
+        downloadSpeed: 2315,
+        uploadSpeed: 2017,
+        latency: 6,
+        technology: 'Fiber',
+        features: ['Multi-gig speeds', 'No data caps', 'Ultra-low latency', 'Future-proof'],
+        bestFor: 'Power users & large households',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Available in East Coast metro areas',
+      'All plans have symmetric upload speeds',
+      'No data caps or annual contracts',
+      'Also offers 1 Gig for $99.99/mo'
+    ]
+  },
+  {
+    providerId: 'optimum',
+    providerName: 'Optimum',
+    slug: 'optimum',
+    plans: [
+      {
+        planName: '300 Mbps Fiber',
+        price: 45,
+        downloadSpeed: 365,
+        uploadSpeed: 323,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'No contract', 'Fiber optic'],
+        bestFor: 'Entry-level fiber option',
+        tier: 'budget'
+      },
+      {
+        planName: '1 Gig Fiber',
+        price: 65,
+        downloadSpeed: 1217,
+        uploadSpeed: 1078,
+        technology: 'Fiber',
+        features: ['Gigabit speeds', 'No data caps', 'Near-symmetric upload', 'Low latency'],
+        bestFor: 'Best value for most homes',
+        tier: 'value'
+      },
+      {
+        planName: '2 Gig Fiber',
+        price: 125,
+        downloadSpeed: 2262,
+        uploadSpeed: 2268,
+        technology: 'Fiber',
+        features: ['Multi-gig symmetric', 'No data caps', 'Ultra-fast uploads', 'Future-proof'],
+        bestFor: 'Power users & professionals',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Available in NY, NJ, CT metro areas',
+      'Fiber and cable options available',
+      'No data caps on fiber plans',
+      'Also offers 5 Gig ($185) and 8 Gig ($285) tiers'
+    ]
+  },
+  {
+    providerId: 'windstream',
+    providerName: 'Windstream',
+    slug: 'windstream',
+    plans: [
+      {
+        planName: 'Kinetic 300 Mbps',
+        price: 44.99,
+        downloadSpeed: 300,
+        uploadSpeed: 300,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'No contract', 'Fiber optic'],
+        bestFor: 'Budget-friendly fiber',
+        tier: 'budget'
+      },
+      {
+        planName: 'Kinetic 1 Gig',
+        price: 44.99,
+        downloadSpeed: 1000,
+        uploadSpeed: 1000,
+        technology: 'Fiber',
+        features: ['Symmetric gigabit', 'No data caps', 'No contract', 'Same price as 300!'],
+        bestFor: 'Best value - gigabit at budget price',
+        tier: 'value'
+      },
+      {
+        planName: 'Kinetic 2 Gig',
+        price: 104.99,
+        downloadSpeed: 2000,
+        uploadSpeed: 2000,
+        technology: 'Fiber',
+        features: ['2 Gbps symmetric', 'No data caps', 'Ultra-fast', 'Future-proof'],
+        bestFor: 'Power users & large households',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Kinetic fiber expanding in 18 states',
+      'All fiber plans have symmetric speeds',
+      'DSL available where fiber is not',
+      'No data caps or contracts on any plan'
+    ]
+  },
+  {
+    providerId: 'ziply-fiber',
+    providerName: 'Ziply Fiber',
+    slug: 'ziply-fiber',
+    plans: [
+      {
+        planName: 'Fiber 100',
+        price: 20,
+        downloadSpeed: 103,
+        uploadSpeed: 103,
+        latency: 4,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'No contract', 'Ultra-low latency'],
+        bestFor: 'Budget fiber with amazing latency',
+        tier: 'budget'
+      },
+      {
+        planName: 'Fiber Gig',
+        price: 60,
+        downloadSpeed: 1145,
+        uploadSpeed: 1143,
+        technology: 'Fiber',
+        features: ['Symmetric gigabit', 'No data caps', 'No contract', 'Low latency'],
+        bestFor: 'Best value gigabit fiber',
+        tier: 'value'
+      },
+      {
+        planName: 'Fiber 5 Gig',
+        price: 80,
+        downloadSpeed: 5568,
+        uploadSpeed: 5667,
+        technology: 'Fiber',
+        features: ['5+ Gbps symmetric', 'No data caps', 'Ultra-fast', 'Future-proof'],
+        bestFor: 'Power users & professionals',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Serves Pacific Northwest (WA, OR, ID, MT)',
+      'Fiber 100 at $20/mo is one of the cheapest fiber options',
+      'Symmetric speeds on all fiber plans',
+      'Also offers 2 Gig ($70) and 10 Gig ($300) tiers'
+    ]
+  },
+  {
+    providerId: 'tds-telecom',
+    providerName: 'TDS Telecom',
+    slug: 'tds-telecom',
+    plans: [
+      {
+        planName: 'Extreme 300',
+        price: 49.95,
+        downloadSpeed: 331,
+        uploadSpeed: 332,
+        latency: 9,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'No contract', 'Low latency'],
+        bestFor: 'Entry-level fiber',
+        tier: 'budget'
+      },
+      {
+        planName: 'Extreme 600',
+        price: 69.95,
+        downloadSpeed: 638,
+        uploadSpeed: 631,
+        latency: 9,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'Great for streaming', 'Low latency'],
+        bestFor: 'Best value for families',
+        tier: 'value'
+      },
+      {
+        planName: 'Extreme 1 Gig',
+        price: 89.95,
+        downloadSpeed: 948,
+        uploadSpeed: 937,
+        latency: 9,
+        technology: 'Fiber',
+        features: ['Symmetric gigabit', 'No data caps', 'Low latency', 'Professional grade'],
+        bestFor: 'Power users & large households',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Fiber network in 30+ states',
+      'All fiber plans have symmetric speeds',
+      'No data caps or contracts',
+      'DSL available in some rural areas'
+    ]
+  },
+  {
+    providerId: 'hughesnet',
+    providerName: 'HughesNet',
+    slug: 'hughesnet',
+    plans: [
+      {
+        planName: 'Select',
+        price: 49.99,
+        downloadSpeed: 25,
+        uploadSpeed: 3,
+        latency: 600,
+        technology: 'Satellite',
+        features: ['15 GB data', 'Available anywhere', 'No wiring needed', 'Bonus zone data'],
+        bestFor: 'Basic rural internet',
+        tier: 'budget'
+      },
+      {
+        planName: 'Elite',
+        price: 64.99,
+        downloadSpeed: 25,
+        uploadSpeed: 3,
+        latency: 600,
+        technology: 'Satellite',
+        features: ['50 GB data', 'Video Data Saver', 'Available anywhere', 'Bonus zone data'],
+        bestFor: 'Standard rural satellite',
+        tier: 'value'
+      },
+      {
+        planName: 'Fusion',
+        price: 94.99,
+        downloadSpeed: 100,
+        uploadSpeed: 10,
+        latency: 150,
+        technology: 'Satellite',
+        features: ['Hybrid satellite/LTE', '100 GB data', 'Lower latency', 'Better for calls'],
+        bestFor: 'Best HughesNet experience',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Geostationary satellite covers entire US',
+      'Best for rural areas without other options',
+      'Higher latency than Starlink (600ms vs 38ms)',
+      'Data caps apply but continue at reduced speeds after'
+    ]
   }
 ]
 

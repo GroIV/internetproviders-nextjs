@@ -39,10 +39,13 @@ export default async function ProvidersPage() {
   const fiberProviders = providers.filter(p => p.technologies?.includes('Fiber'))
   const cableProviders = providers.filter(p => p.technologies?.includes('Cable'))
   const satelliteProviders = providers.filter(p => p.technologies?.includes('Satellite'))
+  const tvProviders = providers.filter(p => p.category === 'TV' || p.category === 'Satellite TV')
   const otherProviders = providers.filter(p =>
     !p.technologies?.includes('Fiber') &&
     !p.technologies?.includes('Cable') &&
-    !p.technologies?.includes('Satellite')
+    !p.technologies?.includes('Satellite') &&
+    p.category !== 'TV' &&
+    p.category !== 'Satellite TV'
   )
 
   return (
@@ -57,7 +60,7 @@ export default async function ProvidersPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-blue-400">{providers.length}</div>
             <div className="text-sm text-gray-400">Total Providers</div>
@@ -74,7 +77,46 @@ export default async function ProvidersPage() {
             <div className="text-2xl font-bold text-orange-400">{satelliteProviders.length}</div>
             <div className="text-sm text-gray-400">Satellite Providers</div>
           </div>
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-purple-400">{tvProviders.length}</div>
+            <div className="text-sm text-gray-400">TV Providers</div>
+          </div>
         </div>
+
+        {/* TV Providers Section */}
+        {tvProviders.length > 0 && (
+          <>
+            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
+              TV Providers
+              <span className="px-2 py-1 bg-purple-600/20 text-purple-400 text-sm rounded">Satellite TV</span>
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {tvProviders.map((provider) => (
+                <Link
+                  key={provider.id}
+                  href={`/providers/${provider.slug}`}
+                  className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-purple-600/50 transition-colors group"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-purple-900/30 flex items-center justify-center text-xl font-bold text-purple-400 group-hover:text-purple-300 transition-colors">
+                      {provider.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold group-hover:text-purple-400 transition-colors">
+                        {provider.name}
+                      </h3>
+                      <p className="text-sm text-gray-400">{provider.category}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {provider.name === 'DIRECTV' && 'Satellite TV packages with 175+ channels'}
+                    {provider.name === 'DISH Network' && 'Satellite TV packages starting at $83.99/mo'}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* All Providers Grid */}
         <h2 className="text-2xl font-semibold mb-6">All Providers</h2>

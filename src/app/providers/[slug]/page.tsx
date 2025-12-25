@@ -6,7 +6,7 @@ import { LocationInfo } from '@/components/LocationInfo'
 import { getProviderCoverageCount } from '@/lib/getProvidersByLocation'
 import { OrderButton } from '@/components/OrderButton'
 import { hasAffiliateLink } from '@/lib/affiliates'
-import { ProviderPlansSection } from '@/components/plans'
+import { ProviderPlansSection, TVPlansSection } from '@/components/plans'
 import { getFeaturedPlansForProvider } from '@/lib/featuredPlans'
 import {
   JsonLd,
@@ -37,6 +37,63 @@ async function getProvider(slug: string) {
   return { ...provider, coverageCount }
 }
 
+// Get related providers based on technology or category
+async function getRelatedProviders(currentSlug: string, technologies: string[], category: string) {
+  const supabase = createAdminClient()
+
+  const { data: providers } = await supabase
+    .from('providers')
+    .select('slug, name, technologies, category')
+    .neq('slug', currentSlug)
+    .limit(6)
+
+  if (!providers) return []
+
+  // Score providers by relevance
+  const scored = providers.map(p => {
+    let score = 0
+    // Same category (e.g., both TV providers)
+    if (p.category === category) score += 3
+    // Shared technologies
+    const sharedTechs = (p.technologies || []).filter((t: string) => technologies.includes(t))
+    score += sharedTechs.length * 2
+    return { ...p, score }
+  })
+
+  // Sort by score and return top 4
+  return scored.sort((a, b) => b.score - a.score).slice(0, 4)
+}
+
+// Define popular comparison pairs
+const comparisonPairs: Record<string, string[]> = {
+  'xfinity': ['spectrum', 'att-internet', 'verizon-fios'],
+  'spectrum': ['xfinity', 'att-internet', 'cox'],
+  'att-internet': ['xfinity', 'spectrum', 'verizon-fios'],
+  'verizon-fios': ['xfinity', 'att-internet', 'frontier'],
+  'cox': ['xfinity', 'spectrum', 'att-internet'],
+  'frontier': ['att-internet', 'centurylink', 'verizon-fios'],
+  'google-fiber': ['att-internet', 'verizon-fios', 'frontier'],
+  't-mobile': ['verizon-fios', 'xfinity', 'starlink'],
+  'directv': ['dish', 'xfinity', 'spectrum'],
+  'dish': ['directv', 'xfinity', 'spectrum'],
+  'starlink': ['hughesnet', 'viasat', 't-mobile'],
+  'hughesnet': ['starlink', 'viasat', 'dish'],
+  'viasat': ['starlink', 'hughesnet', 'dish'],
+  'breezeline': ['xfinity', 'spectrum', 'cox'],
+  'astound-broadband': ['xfinity', 'spectrum', 'cox'],
+  'centurylink': ['frontier', 'att-internet', 'brightspeed'],
+  'brightspeed': ['centurylink', 'frontier', 'att-internet'],
+  'altafiber': ['att-internet', 'spectrum', 'frontier'],
+  'buckeye-cable': ['spectrum', 'att-internet', 'wow'],
+  'consolidated-communications': ['frontier', 'centurylink', 'att-internet'],
+  'metronet': ['google-fiber', 'att-internet', 'frontier'],
+  'wow': ['spectrum', 'xfinity', 'breezeline'],
+  'optimum': ['xfinity', 'verizon-fios', 'spectrum'],
+  'windstream': ['centurylink', 'frontier', 'att-internet'],
+  'ziply-fiber': ['centurylink', 'frontier', 'xfinity'],
+  'tds-telecom': ['centurylink', 'frontier', 'windstream'],
+}
+
 // Map database provider slugs to featured plans slugs
 function getFeaturedPlanSlug(dbSlug: string): string {
   const slugMap: Record<string, string> = {
@@ -49,6 +106,22 @@ function getFeaturedPlanSlug(dbSlug: string): string {
     'google-fiber': 'google-fiber',
     'starlink': 'starlink',
     'viasat': 'viasat',
+    'xfinity': 'xfinity',
+    'cox': 'cox',
+    'breezeline': 'breezeline',
+    'astound-broadband': 'astound-broadband',
+    'consolidated-communications': 'consolidated-communications',
+    'buckeye-cable': 'buckeye-cable',
+    'brightspeed': 'brightspeed',
+    'centurylink': 'centurylink',
+    'altafiber': 'altafiber',
+    'metronet': 'metronet',
+    'verizon-fios': 'verizon-fios',
+    'optimum': 'optimum',
+    'windstream': 'windstream',
+    'ziply-fiber': 'ziply-fiber',
+    'tds-telecom': 'tds-telecom',
+    'hughesnet': 'hughesnet',
   }
   return slugMap[dbSlug] || dbSlug
 }
@@ -92,6 +165,10 @@ export default async function ProviderPage({ params }: Props) {
   // Get featured plans data for this provider
   const featuredPlanSlug = getFeaturedPlanSlug(slug)
   const providerPlans = getFeaturedPlansForProvider(featuredPlanSlug)
+
+  // Get related providers for internal linking
+  const relatedProviders = await getRelatedProviders(slug, technologies, provider.category || '')
+  const comparisonSlugs = comparisonPairs[slug] || []
 
   // Calculate stats from featured plans
   const startingPrice = providerPlans?.plans.length
@@ -215,6 +292,12 @@ export default async function ProviderPage({ params }: Props) {
           providerName={provider.name}
         />
 
+        {/* TV Plans Section (for TV providers like DIRECTV, DISH) */}
+        <TVPlansSection
+          providerName={provider.name}
+          providerSlug={slug}
+        />
+
         {/* About Section */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">
           <h2 className="text-2xl font-bold mb-4">About {provider.name}</h2>
@@ -284,6 +367,59 @@ export default async function ProviderPage({ params }: Props) {
                     </p>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Compare With Section */}
+        {comparisonSlugs.length > 0 && (
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">
+            <h2 className="text-2xl font-bold mb-4">Compare {provider.name}</h2>
+            <p className="text-gray-400 mb-6">See how {provider.name} stacks up against other providers</p>
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {comparisonSlugs.map((compSlug) => {
+                const displayName = compSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+                  .replace('Att', 'AT&T').replace('Directv', 'DIRECTV').replace('Verizon Fios', 'Verizon Fios')
+                return (
+                  <Link
+                    key={compSlug}
+                    href={`/compare/${slug}-vs-${compSlug}`}
+                    className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors group"
+                  >
+                    <span className="font-medium group-hover:text-blue-400 transition-colors">
+                      {provider.name} vs {displayName}
+                    </span>
+                    <svg className="w-5 h-5 text-gray-500 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Related Providers */}
+        {relatedProviders.length > 0 && (
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">
+            <h2 className="text-2xl font-bold mb-4">Similar Providers</h2>
+            <p className="text-gray-400 mb-6">Other providers you might want to consider</p>
+            <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {relatedProviders.map((p) => (
+                <Link
+                  key={p.slug}
+                  href={`/providers/${p.slug}`}
+                  className="p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors group text-center"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center text-xl font-bold text-gray-400 group-hover:text-blue-400 transition-colors mx-auto mb-3">
+                    {p.name.charAt(0)}
+                  </div>
+                  <h3 className="font-medium group-hover:text-blue-400 transition-colors">{p.name}</h3>
+                  {p.technologies && p.technologies.length > 0 && (
+                    <p className="text-sm text-gray-500 mt-1">{p.technologies.slice(0, 2).join(', ')}</p>
+                  )}
+                </Link>
               ))}
             </div>
           </div>
