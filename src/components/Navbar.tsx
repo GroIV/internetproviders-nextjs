@@ -243,6 +243,10 @@ export function Navbar() {
             Providers
           </Link>
 
+          <Link href="/plans" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+            Plans
+          </Link>
+
           <Link href="/guides" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
             Guides
           </Link>
