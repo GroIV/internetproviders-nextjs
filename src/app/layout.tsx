@@ -10,6 +10,7 @@ import { PageChatSection } from "@/components/PageChatSection";
 import { FloatingChatButton } from "@/components/FloatingChatButton";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { JsonLd, generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo";
+import { GlobalBackground } from "@/components/effects/GlobalBackground";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -88,19 +89,25 @@ export default function RootLayout({
         <JsonLd data={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       </head>
       <body className={`${outfit.variable} font-sans antialiased bg-gray-950 text-gray-100 min-h-screen flex flex-col`}>
-        <LocationProvider>
-          <ChatProvider>
-            <Navbar />
-            <LocationBanner />
-            <PageChatSection />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <Footer />
-            <FloatingChatButton />
-            <InstallPrompt />
-          </ChatProvider>
-        </LocationProvider>
+        {/* Global animated background - fixed, behind all content */}
+        <GlobalBackground />
+
+        {/* Content wrapper - above background */}
+        <div className="relative z-10 flex flex-col min-h-screen">
+          <LocationProvider>
+            <ChatProvider>
+              <Navbar />
+              <LocationBanner />
+              <PageChatSection />
+              <main className="flex-grow">
+                {children}
+              </main>
+              <Footer />
+              <FloatingChatButton />
+              <InstallPrompt />
+            </ChatProvider>
+          </LocationProvider>
+        </div>
       </body>
     </html>
   );

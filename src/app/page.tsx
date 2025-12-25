@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, useInView, useScroll, useTransform } from 'framer-motion'
 import { ChatWindow } from '@/components/ChatWindow'
 import { useLocation } from '@/contexts/LocationContext'
-import { ParticleBackground, CircuitPattern } from '@/components/effects'
 import Link from 'next/link'
 
 interface Provider {
@@ -83,17 +82,11 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       {/* Hero Section with Chat */}
       <section ref={heroRef} className="relative py-8 md:py-12 flex-1 overflow-hidden">
-        {/* Parallax Layered backgrounds */}
+        {/* Parallax gradient overlay (particles/circuit now global) */}
         <motion.div
-          className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-gray-950 to-cyan-900/20"
+          className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-cyan-900/20"
           style={{ y: backgroundY }}
         />
-        <motion.div
-          className="absolute inset-0 data-grid opacity-50"
-          style={{ y: backgroundY }}
-        />
-        <CircuitPattern opacity={0.06} />
-        <ParticleBackground particleCount={40} connectionDistance={120} />
 
         {/* Parallax Glowing orbs */}
         <motion.div

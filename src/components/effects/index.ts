@@ -1,3 +1,5 @@
 export { ParticleBackground } from './ParticleBackground'
 export { GlowingBorder } from './GlowingBorder'
 export { CircuitPattern } from './CircuitPattern'
+export { AuroraBlobs } from './AuroraBlobs'
+export { GlobalBackground } from './GlobalBackground'

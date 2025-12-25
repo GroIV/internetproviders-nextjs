@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 
 interface Particle {
   x: number
@@ -11,12 +11,64 @@ interface Particle {
   opacity: number
 }
 
+// Color palette for shifting mode (HSL values)
+const COLOR_PALETTE = [
+  { h: 180, s: 100, l: 43 }, // Cyan
+  { h: 217, s: 91, l: 60 },  // Blue
+  { h: 262, s: 83, l: 58 },  // Purple
+]
+
+// Interpolate between two HSL colors
+function lerpHSL(
+  color1: { h: number; s: number; l: number },
+  color2: { h: number; s: number; l: number },
+  t: number
+): { h: number; s: number; l: number } {
+  // Handle hue wrapping for smooth transitions
+  let h1 = color1.h
+  let h2 = color2.h
+  const diff = h2 - h1
+
+  if (Math.abs(diff) > 180) {
+    if (diff > 0) {
+      h1 += 360
+    } else {
+      h2 += 360
+    }
+  }
+
+  return {
+    h: ((h1 + (h2 - h1) * t) % 360 + 360) % 360,
+    s: color1.s + (color2.s - color1.s) * t,
+    l: color1.l + (color2.l - color1.l) * t,
+  }
+}
+
+// Get current color based on time for shifting mode
+function getShiftingColor(timeMs: number, cycleDuration: number = 30000): string {
+  const progress = (timeMs % cycleDuration) / cycleDuration
+  const numColors = COLOR_PALETTE.length
+  const scaledProgress = progress * numColors
+  const colorIndex = Math.floor(scaledProgress)
+  const t = scaledProgress - colorIndex
+
+  const currentColor = COLOR_PALETTE[colorIndex % numColors]
+  const nextColor = COLOR_PALETTE[(colorIndex + 1) % numColors]
+  const interpolated = lerpHSL(currentColor, nextColor, t)
+
+  return `${Math.round(interpolated.h)}, ${Math.round(interpolated.s)}%, ${Math.round(interpolated.l)}%`
+}
+
+type ColorMode = 'static' | 'shift'
+
 interface ParticleBackgroundProps {
   particleCount?: number
   connectionDistance?: number
   particleColor?: string
   lineColor?: string
   className?: string
+  colorMode?: ColorMode
+  colorCycleDuration?: number // Duration in ms for one complete color cycle
 }
 
 export function ParticleBackground({
@@ -25,11 +77,14 @@ export function ParticleBackground({
   particleColor = '6, 182, 212',
   lineColor = '6, 182, 212',
   className = '',
+  colorMode = 'static',
+  colorCycleDuration = 30000,
 }: ParticleBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const particlesRef = useRef<Particle[]>([])
   const animationRef = useRef<number>(0)
   const mouseRef = useRef({ x: 0, y: 0 })
+  const startTimeRef = useRef<number>(Date.now())
 
   const initParticles = useCallback((width: number, height: number) => {
     const particles: Particle[] = []
@@ -52,6 +107,22 @@ export function ParticleBackground({
     const particles = particlesRef.current
     const mouse = mouseRef.current
 
+    // Get current color based on mode
+    let currentParticleColor = particleColor
+    let currentLineColor = lineColor
+
+    if (colorMode === 'shift') {
+      const elapsed = Date.now() - startTimeRef.current
+      const hslColor = getShiftingColor(elapsed, colorCycleDuration)
+      // Convert HSL to format usable in hsla()
+      currentParticleColor = hslColor
+      currentLineColor = hslColor
+    }
+
+    // Determine if we're using HSL (shift mode) or RGB (static mode)
+    const isHSL = colorMode === 'shift'
+    const colorPrefix = isHSL ? 'hsla' : 'rgba'
+
     // Update and draw particles
     particles.forEach((particle, i) => {
       // Update position
@@ -69,7 +140,7 @@ export function ParticleBackground({
       // Draw particle
       ctx.beginPath()
       ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(${particleColor}, ${particle.opacity})`
+      ctx.fillStyle = `${colorPrefix}(${currentParticleColor}, ${particle.opacity})`
       ctx.fill()
 
       // Draw glow
@@ -77,8 +148,8 @@ export function ParticleBackground({
         particle.x, particle.y, 0,
         particle.x, particle.y, particle.size * 3
       )
-      gradient.addColorStop(0, `rgba(${particleColor}, ${particle.opacity * 0.5})`)
-      gradient.addColorStop(1, `rgba(${particleColor}, 0)`)
+      gradient.addColorStop(0, `${colorPrefix}(${currentParticleColor}, ${particle.opacity * 0.5})`)
+      gradient.addColorStop(1, `${colorPrefix}(${currentParticleColor}, 0)`)
       ctx.beginPath()
       ctx.arc(particle.x, particle.y, particle.size * 3, 0, Math.PI * 2)
       ctx.fillStyle = gradient
@@ -96,7 +167,7 @@ export function ParticleBackground({
           ctx.beginPath()
           ctx.moveTo(particle.x, particle.y)
           ctx.lineTo(other.x, other.y)
-          ctx.strokeStyle = `rgba(${lineColor}, ${opacity})`
+          ctx.strokeStyle = `${colorPrefix}(${currentLineColor}, ${opacity})`
           ctx.lineWidth = 1
           ctx.stroke()
         }
@@ -122,7 +193,7 @@ export function ParticleBackground({
     })
 
     animationRef.current = requestAnimationFrame(() => animate(ctx, width, height))
-  }, [particleColor, lineColor, connectionDistance])
+  }, [particleColor, lineColor, connectionDistance, colorMode, colorCycleDuration])
 
   useEffect(() => {
     const canvas = canvasRef.current
