@@ -154,7 +154,7 @@ export function ChatWindow({
   className = ''
 }: ChatWindowProps) {
   const pathname = usePathname()
-  const { messages, isLoading, sendMessage, initializeChat, hasWelcomed, setPageContext, clearHistory } = useChat()
+  const { messages, isLoading, sendMessage, initializeChat, hasWelcomed, setPageContext, clearHistory, updateCurrentZip } = useChat()
   const { location, isLoading: locationLoading } = useLocation()
   const [input, setInput] = useState('')
   const [isFocused, setIsFocused] = useState(false)
@@ -221,6 +221,13 @@ export function ChatWindow({
       initializeChat(location.zipCode, location.city)
     }
   }, [location, hasWelcomed, locationLoading, initializeChat])
+
+  // Keep current ZIP updated when location changes (e.g., GPS upgrade from IP)
+  useEffect(() => {
+    if (location?.zipCode) {
+      updateCurrentZip(location.zipCode)
+    }
+  }, [location?.zipCode, updateCurrentZip])
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -348,28 +355,44 @@ export function ChatWindow({
                   >
                     {/* AI Avatar for assistant messages */}
                     {!isUser && (
-                      <div className="flex-shrink-0 mr-2">
+                      <div className="flex-shrink-0 mr-3">
                         <AIAvatar mood="neutral" size="sm" />
                       </div>
                     )}
 
                     <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                      className={`max-w-[80%] rounded-2xl ${
                         isUser
-                          ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/20'
-                          : 'bg-gray-800/80 backdrop-blur-sm text-gray-200 border border-gray-700/50'
+                          ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/20 px-4 py-3'
+                          : 'relative overflow-hidden'
                       }`}
                     >
-                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {shouldTypewrite ? (
-                          <TypewriterText
-                            content={message.content}
-                            speed={12}
-                            onComplete={() => handleTypewriterComplete(i)}
-                          />
-                        ) : (
-                          <MarkdownContent content={message.content} />
-                        )}
+                      {/* AI Response Card Enhancement */}
+                      {!isUser && (
+                        <>
+                          {/* Card background with subtle glow */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm" />
+                          <div className="absolute inset-0 border border-cyan-500/10 rounded-2xl" />
+                          {/* Top accent line */}
+                          <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
+                          {/* Corner accents */}
+                          <div className="absolute top-2 left-2 w-2 h-2 border-l border-t border-cyan-500/20" />
+                          <div className="absolute top-2 right-2 w-2 h-2 border-r border-t border-cyan-500/20" />
+                        </>
+                      )}
+
+                      <div className={`relative ${!isUser ? 'px-4 py-3' : ''}`}>
+                        <div className={`whitespace-pre-wrap text-sm leading-relaxed ${!isUser ? 'text-gray-200' : ''}`}>
+                          {shouldTypewrite ? (
+                            <TypewriterText
+                              content={message.content}
+                              speed={12}
+                              onComplete={() => handleTypewriterComplete(i)}
+                            />
+                          ) : (
+                            <MarkdownContent content={message.content} />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </motion.div>

@@ -777,6 +777,201 @@ body {
   border-radius: 0 0 8px 0;
 }
 
+/* ========================================
+   FUTURISTIC THEME - NOISE TEXTURE
+   ======================================== */
+
+.noise-overlay {
+  position: relative;
+}
+
+.noise-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* ========================================
+   FUTURISTIC THEME - BUTTON RIPPLE
+   ======================================== */
+
+.ripple-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-button .ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: ripple-effect 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes ripple-effect {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ========================================
+   FUTURISTIC THEME - TECH TYPE BADGES
+   ======================================== */
+
+.tech-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.tech-badge-fiber {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.tech-badge-fiber:hover {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+  border-color: rgba(16, 185, 129, 0.6);
+}
+
+.tech-badge-cable {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #3b82f6;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+.tech-badge-cable:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+.tech-badge-5g {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  color: #8b5cf6;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
+}
+
+.tech-badge-5g:hover {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  border-color: rgba(139, 92, 246, 0.6);
+}
+
+.tech-badge-dsl {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+}
+
+.tech-badge-dsl:hover {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+  border-color: rgba(245, 158, 11, 0.6);
+}
+
+.tech-badge-satellite {
+  background: rgba(107, 114, 128, 0.15);
+  border: 1px solid rgba(107, 114, 128, 0.4);
+  color: #9ca3af;
+  box-shadow: 0 0 10px rgba(107, 114, 128, 0.2);
+}
+
+.tech-badge-fixed-wireless {
+  background: rgba(6, 182, 212, 0.15);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  color: #06b6d4;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+}
+
+.tech-badge-fixed-wireless:hover {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+  border-color: rgba(6, 182, 212, 0.6);
+}
+
+/* ========================================
+   FUTURISTIC THEME - ENHANCED THINKING
+   ======================================== */
+
+@keyframes thinking-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes thinking-orbit {
+  0% {
+    transform: rotate(0deg) translateX(12px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(12px) rotate(-360deg);
+  }
+}
+
+.thinking-enhanced {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.thinking-enhanced .core {
+  position: absolute;
+  inset: 12px;
+  background: linear-gradient(135deg, #3b82f6, #06b6d4);
+  border-radius: 50%;
+  animation: thinking-pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+}
+
+.thinking-enhanced .orbit {
+  position: absolute;
+  inset: 0;
+  animation: thinking-orbit 2s linear infinite;
+}
+
+.thinking-enhanced .orbit::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  background: #06b6d4;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 0 10px #06b6d4;
+}
+
+.thinking-enhanced .orbit:nth-child(2) {
+  animation-delay: -0.5s;
+  animation-duration: 2.5s;
+}
+
+.thinking-enhanced .orbit:nth-child(3) {
+  animation-delay: -1s;
+  animation-duration: 3s;
+}
+
 .corner-accent:hover::before,
 .corner-accent:hover::after {
   opacity: 1;

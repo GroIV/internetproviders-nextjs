@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react'
-import { getComparisonUrl } from '@/lib/affiliates'
+import { getComparisonUrl, getSourceFromPathname } from '@/lib/affiliates'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -15,13 +15,15 @@ interface ChatContextType {
   hasWelcomed: boolean
   pageContext: string
   chatSectionVisible: boolean
+  currentZip: string | null
   sendMessage: (content: string, zipCode?: string) => Promise<void>
   initializeChat: (zipCode: string, city: string, providerCount?: number) => Promise<void>
   clearHistory: () => void
   setIsOpen: (open: boolean) => void
   setPageContext: (context: string) => void
   setChatSectionVisible: (visible: boolean) => void
-  sendProactiveMessage: (pathname: string) => void
+  sendProactiveMessage: (pathname: string, freshZipCode?: string) => void
+  updateCurrentZip: (zipCode: string) => void
 }
 
 const ChatContext = createContext<ChatContextType | null>(null)
@@ -32,7 +34,12 @@ const WELCOMED_ZIP_KEY = 'chat_welcomed_zip'
 const PROACTIVE_PAGES_KEY = 'chat_proactive_pages'
 
 // Generate proactive message based on page type (no API call needed)
+// Uses affiliate order URLs so customers can check their actual address availability
 function getProactiveMessage(pathname: string, knownZip?: string | null): string | null {
+  // Get the affiliate order URL for this page context
+  const source = getSourceFromPathname(pathname)
+  const orderUrl = getComparisonUrl(source)
+
   // Provider comparison pages
   if (pathname.startsWith('/compare/') && pathname.includes('-vs-')) {
     const comparison = pathname.split('/compare/')[1]
@@ -44,15 +51,15 @@ function getProactiveMessage(pathname: string, knownZip?: string | null): string
       const provider2 = parts[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 
       if (istech) {
-        return `I see you're comparing ${provider1} vs ${provider2}! Below you'll find a detailed breakdown of each technology. Let me know if you have questions about which one is right for your needs.`
+        return `Comparing ${provider1} vs ${provider2} - smart move! Check out the breakdown below. Ready to see what's actually available? [Check your address here](${orderUrl}) for real options and pricing!`
       }
-      return `Great choice comparing ${provider1} and ${provider2}! Below you'll see a side-by-side comparison. I can help you decide which provider is better for your specific situation - just ask!`
+      return `${provider1} vs ${provider2} - both solid choices! The comparison below shows general differences. Leaning toward one? [Check if they serve your address](${orderUrl}) to see actual plans and pricing!`
     }
   }
 
   // All providers listing page
   if (pathname === '/providers') {
-    return `Here's our complete list of internet providers! You can browse by name or type. Want me to help narrow down which providers are available at your address?`
+    return `All the major providers are listed below! Instead of scrolling through everything, [check what's available at your exact address](${orderUrl}) - that's the fastest way to see real options and pricing!`
   }
 
   // Individual provider pages
@@ -65,7 +72,7 @@ function getProactiveMessage(pathname: string, knownZip?: string | null): string
     if (slug === 'spectrum') providerName = 'Spectrum'
     if (slug === 'xfinity') providerName = 'Xfinity'
 
-    return `You're viewing ${providerName}'s page. Below you'll find their plans, pricing, and coverage info. Want me to help you compare them to other providers in your area?`
+    return `Looking at ${providerName}? Good choice! The info below is general - to see **exactly** what plans and speeds are available at YOUR address, [check availability here](${orderUrl}). Takes 30 seconds and shows you real pricing!`
   }
 
   // State/City pages
@@ -73,10 +80,10 @@ function getProactiveMessage(pathname: string, knownZip?: string | null): string
     const parts = pathname.split('/internet/')[1]?.split('/')
     if (parts?.length === 2) {
       const city = parts[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-      return `Looking for internet in ${city}? Below you'll see providers available in your area. Let me know if you need help choosing the best option for your needs!`
+      return `Looking at providers in ${city}! This shows what's generally available, but availability varies by street. [Check your exact address here](${orderUrl}) to see real plans and pricing in seconds!`
     } else if (parts?.length === 1) {
       const state = parts[0].toUpperCase()
-      return `Exploring internet options in ${state}? I can help you find the best providers and deals. What matters most to you - speed, price, or reliability?`
+      return `Exploring internet in ${state}? These are the major providers here. The real question is which ones serve YOUR address - [check availability now](${orderUrl}) to find out instantly!`
     }
   }
 
@@ -108,27 +115,27 @@ function getProactiveMessage(pathname: string, knownZip?: string | null): string
   // Compare main page (ZIP search)
   if (pathname === '/compare') {
     if (knownZip) {
-      return `I've already got your location (${knownZip}). You should see providers for your area below. Want me to help you compare specific plans or find the best deal?`
+      return `I've got your ZIP (${knownZip}) - you should see providers for your area below. **Pro tip:** [Check availability at your exact address](${orderUrl}) to see real pricing and plans. That's the only way to know 100% what you can get! Which provider catches your eye?`
     }
-    return `Enter your ZIP code above to see all providers available at your address! I can help you compare plans once you see your options.`
+    return `Enter your ZIP code above to see providers in your area! Once you find one you like, [check your exact address](${orderUrl}) - that's where you'll see real plans and pricing.`
   }
 
   // Internet main page (all states)
   if (pathname === '/internet') {
     if (knownZip) {
-      return `Browsing by state? I already have your ZIP (${knownZip}) if you want to jump straight to providers in your area!`
+      return `Browsing by state? I already have your ZIP (${knownZip}) - [check what's available at your address](${orderUrl}) to skip straight to real options and pricing!`
     }
-    return `Browse internet availability by state! Select your state to see providers and coverage in your area. Or just tell me your ZIP code and I'll find providers for you.`
+    return `Browse internet availability by state! Or better yet, [check what's available at your exact address](${orderUrl}) to see real pricing and plans.`
   }
 
   // Best/cheapest/fastest pages
   if (pathname.startsWith('/best/') || pathname.startsWith('/cheapest/') || pathname.startsWith('/fastest/')) {
-    return `Below you'll find our top picks based on real data and customer reviews. Want personalized recommendations based on your location and needs? Just ask!`
+    return `Here are our top picks! These rankings are based on general performance, but the real question is what's available at YOUR address. [Check availability now](${orderUrl}) to see actual options and pricing for your location!`
   }
 
   // Deals page
   if (pathname === '/deals') {
-    return `Looking for a great deal? Below are current promotions from top providers. I can help you find which offers are available at your address!`
+    return `Hot deals below! These promotions look great, but availability varies by address. [Check what's available at your address](${orderUrl}) to see which deals you can actually get!`
   }
 
   // FAQ page
@@ -155,6 +162,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [hasWelcomed, setHasWelcomed] = useState(false)
   const [welcomedZip, setWelcomedZip] = useState<string | null>(null)
+  const [currentZip, setCurrentZip] = useState<string | null>(null) // Tracks the CURRENT location ZIP (may differ from welcomedZip)
   const [pageContext, setPageContext] = useState('')
   const [chatSectionVisible, setChatSectionVisible] = useState(true)
   const [proactivePages, setProactivePages] = useState<Set<string>>(new Set())
@@ -246,6 +254,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setMessages([{ role: 'assistant', content: data.message }])
         setHasWelcomed(true)
         setWelcomedZip(zipCode)
+        setCurrentZip(zipCode) // Also set current ZIP
         localStorage.setItem(WELCOMED_KEY, 'true')
         localStorage.setItem(WELCOMED_ZIP_KEY, zipCode)
       }
@@ -260,6 +269,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setMessages([{ role: 'assistant', content: fallbackMessage }])
       setHasWelcomed(true)
       setWelcomedZip(zipCode)
+      setCurrentZip(zipCode) // Also set current ZIP
       localStorage.setItem(WELCOMED_KEY, 'true')
       localStorage.setItem(WELCOMED_ZIP_KEY, zipCode)
     } finally {
@@ -310,6 +320,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setMessages([])
     setHasWelcomed(false)
     setWelcomedZip(null)
+    setCurrentZip(null)
     setProactivePages(new Set())
     localStorage.removeItem(STORAGE_KEY)
     localStorage.removeItem(WELCOMED_KEY)
@@ -317,8 +328,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(PROACTIVE_PAGES_KEY)
   }, [])
 
+  // Update current ZIP when location changes (e.g., GPS upgrade from IP)
+  const updateCurrentZip = useCallback((zipCode: string) => {
+    if (zipCode !== currentZip) {
+      setCurrentZip(zipCode)
+    }
+  }, [currentZip])
+
   // Send proactive message when navigating to certain pages
-  const sendProactiveMessage = useCallback((pathname: string) => {
+  // freshZipCode: Pass the current location ZIP directly to avoid stale state issues
+  const sendProactiveMessage = useCallback((pathname: string, freshZipCode?: string) => {
     // NEVER send proactive messages for homepage or AI assistant page
     if (pathname === '/' || pathname === '/tools/ai-assistant') {
       return
@@ -345,19 +364,35 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     // Track page visit count for "need help finding something?" message
     const visitCount = proactivePages.size
 
-    // Pass welcomedZip to proactive message generator so it knows we have location
-    const message = getProactiveMessage(pathname, welcomedZip)
+    // Priority: freshZipCode (passed directly) > currentZip > welcomedZip
+    // This ensures we always use the most up-to-date location
+    const zipForMessage = freshZipCode || currentZip || welcomedZip
+    const message = getProactiveMessage(pathname, zipForMessage)
 
-    // After visiting 4+ pages without user interaction, offer extra help
+    // After visiting 3+ pages without user interaction, push toward action
     const lastUserMessageIndex = [...messages].reverse().findIndex(m => m.role === 'user')
     const messagesSinceLastUser = lastUserMessageIndex === -1 ? messages.length : lastUserMessageIndex
-    const shouldOfferHelp = visitCount >= 3 && messagesSinceLastUser >= 3
+    const shouldPushAction = visitCount >= 2 && messagesSinceLastUser >= 2
+
+    // Get the affiliate order URL for push action messages
+    const actionSource = getSourceFromPathname(pathname)
+    const actionOrderUrl = getComparisonUrl(actionSource)
 
     let finalMessage = message
-    if (shouldOfferHelp && message) {
-      finalMessage = message + "\n\nI notice you've been exploring a few pages. Need help finding something specific? I'm happy to point you in the right direction!"
-    } else if (shouldOfferHelp && !message) {
-      finalMessage = "I notice you've been exploring the site. Need help finding something specific? Whether it's comparing providers, checking availability, or finding the best deal - just ask!"
+    if (shouldPushAction && message) {
+      // After 3 pages, add a direct CTA
+      if (visitCount >= 3) {
+        finalMessage = message + `\n\n**Quick tip:** You've been checking out a few pages. The fastest way to get real answers is to [check what's available at your exact address](${actionOrderUrl}) - it takes 30 seconds and shows you actual plans and pricing. Want me to help you pick the best option?`
+      } else {
+        finalMessage = message + `\n\nReady to see what's actually available at your address? [Check availability now](${actionOrderUrl}) - it only takes a minute!`
+      }
+    } else if (shouldPushAction && !message) {
+      // No page-specific message but they're bouncing around
+      if (visitCount >= 4) {
+        finalMessage = `Hey, I notice you've been doing some research. Let me cut to the chase - the only way to see exactly what's available at YOUR address with real pricing is to [check directly with providers](${actionOrderUrl}). It's free, takes 30 seconds, and you'll get actual answers instead of general info. Want me to recommend which provider to check first?`
+      } else {
+        finalMessage = `Looks like you're exploring your options! Instead of hunting around, [check what providers serve your exact address](${actionOrderUrl}) - you'll see real plans and pricing in seconds. I can help you compare once you know what's available!`
+      }
     }
 
     if (finalMessage) {
@@ -370,7 +405,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setProactivePages(newProactivePages)
       localStorage.setItem(PROACTIVE_PAGES_KEY, JSON.stringify([...newProactivePages]))
     }
-  }, [proactivePages, messages, welcomedZip])
+  }, [proactivePages, messages, welcomedZip, currentZip])
 
   return (
     <ChatContext.Provider
@@ -381,6 +416,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         hasWelcomed,
         pageContext,
         chatSectionVisible,
+        currentZip,
         sendMessage,
         initializeChat,
         clearHistory,
@@ -388,6 +424,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setPageContext,
         setChatSectionVisible,
         sendProactiveMessage,
+        updateCurrentZip,
       }}
     >
       {children}

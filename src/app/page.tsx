@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { motion, useInView, useScroll, useTransform } from 'framer-motion'
 import { ChatWindow } from '@/components/ChatWindow'
 import { useLocation } from '@/contexts/LocationContext'
 import { ParticleBackground, CircuitPattern } from '@/components/effects'
@@ -52,6 +52,16 @@ export default function Home() {
   const { location, isLoading: locationLoading } = useLocation()
   const [providers, setProviders] = useState<Provider[]>([])
   const [loadingProviders, setLoadingProviders] = useState(false)
+  const heroRef = useRef<HTMLElement>(null)
+
+  // Parallax effect for hero section
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  })
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"])
+  const orbsY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0.8])
 
   // Fetch providers when location is available
   useEffect(() => {
@@ -72,18 +82,33 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section with Chat */}
-      <section className="relative py-8 md:py-12 flex-1 overflow-hidden">
-        {/* Layered backgrounds */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-gray-950 to-cyan-900/20" />
-        <div className="absolute inset-0 data-grid opacity-50" />
+      <section ref={heroRef} className="relative py-8 md:py-12 flex-1 overflow-hidden">
+        {/* Parallax Layered backgrounds */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-gray-950 to-cyan-900/20"
+          style={{ y: backgroundY }}
+        />
+        <motion.div
+          className="absolute inset-0 data-grid opacity-50"
+          style={{ y: backgroundY }}
+        />
         <CircuitPattern opacity={0.06} />
         <ParticleBackground particleCount={40} connectionDistance={120} />
 
-        {/* Glowing orbs */}
-        <div className="absolute top-20 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl" />
+        {/* Parallax Glowing orbs */}
+        <motion.div
+          className="absolute top-20 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"
+          style={{ y: orbsY }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl"
+          style={{ y: orbsY }}
+        />
 
-        <div className="container mx-auto px-4 relative z-10">
+        <motion.div
+          className="container mx-auto px-4 relative z-10"
+          style={{ opacity: contentOpacity }}
+        >
           <div className="max-w-3xl mx-auto">
             {/* Header */}
             <motion.div
@@ -103,40 +128,6 @@ export default function Home() {
                 AI-powered recommendations based on your location and needs
               </p>
             </motion.div>
-
-            {/* Location Bar */}
-            <div className="mb-4 flex items-center justify-center gap-2 text-sm">
-              {locationLoading ? (
-                <div className="flex items-center gap-2 text-gray-400">
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Detecting location...
-                </div>
-              ) : location?.zipCode ? (
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span className="text-gray-300">
-                    {location.city ? `${location.city}, ${location.regionCode}` : `ZIP ${location.zipCode}`}
-                  </span>
-                  {location.source === 'ip' && (
-                    <span className="text-gray-500 text-xs">(approximate)</span>
-                  )}
-                  <Link
-                    href="/compare"
-                    className="text-blue-400 hover:text-blue-300 text-xs underline"
-                  >
-                    Change
-                  </Link>
-                </div>
-              ) : (
-                <span className="text-gray-400">Location not detected</span>
-              )}
-            </div>
 
             {/* Main Chat Window */}
             <ChatWindow embedded={true} showQuickActions={true} />
@@ -177,7 +168,7 @@ export default function Home() {
               </Link>
             </motion.div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Top Providers Section */}

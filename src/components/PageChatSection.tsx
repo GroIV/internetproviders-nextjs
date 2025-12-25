@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChatWindow } from './ChatWindow'
 import { useChat } from '@/contexts/ChatContext'
+import { useLocation } from '@/contexts/LocationContext'
 
 // Generate a readable page title from pathname
 function getPageTitle(pathname: string): string {
@@ -81,6 +82,7 @@ function getPageTitle(pathname: string): string {
 export function PageChatSection() {
   const pathname = usePathname()
   const { setChatSectionVisible, sendProactiveMessage, hasWelcomed } = useChat()
+  const { location } = useLocation()
   const sectionRef = useRef<HTMLDivElement>(null)
   const prevPathname = useRef<string | null>(null)
 
@@ -107,6 +109,8 @@ export function PageChatSection() {
   // Use ref to avoid stale closure issues with setTimeout
   const currentPathnameRef = useRef(pathname)
   currentPathnameRef.current = pathname
+  const currentLocationRef = useRef(location)
+  currentLocationRef.current = location
 
   useEffect(() => {
     if (!shouldRender || !hasWelcomed) return
@@ -117,11 +121,13 @@ export function PageChatSection() {
     const timer = setTimeout(() => {
       // Only send if we're still on the same page (no race condition)
       if (currentPathnameRef.current === targetPathname) {
-        sendProactiveMessage(targetPathname)
+        // Pass the CURRENT location ZIP directly to avoid using stale state
+        const freshZipCode = currentLocationRef.current?.zipCode || undefined
+        sendProactiveMessage(targetPathname, freshZipCode)
       }
     }, 500)
     return () => clearTimeout(timer)
-  }, [pathname, hasWelcomed, shouldRender, sendProactiveMessage])
+  }, [pathname, hasWelcomed, shouldRender, sendProactiveMessage, location?.zipCode])
 
   // Visibility tracking using scroll position instead of IntersectionObserver
   // This is more reliable during hydration and page transitions
