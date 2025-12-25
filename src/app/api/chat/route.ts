@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getAffiliateUrl, getActiveAffiliateProviders, COMPARISON_ELIGIBLE_PROVIDERS, providerDisplayNames, getComparisonUrl } from '@/lib/affiliates'
+import { featuredPlans, getBestValuePlans } from '@/lib/featuredPlans'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -55,6 +56,41 @@ Example responses for general questions (not ordering yet):
 - "Want to see all your options? [Compare providers in your area](${comparisonUrl}) to find the best deal."
 
 Only include order links when contextually appropriate - but when someone wants to order, make it easy!`
+}
+
+// Build featured plans section with real pricing data
+function buildFeaturedPlansSection(): string {
+  const lines = [
+    '\n\nFEATURED RESIDENTIAL INTERNET PLANS (Real FCC-Verified Pricing):',
+    'When users ask about plans, pricing, or recommendations, use this accurate data:\n'
+  ]
+
+  for (const provider of featuredPlans) {
+    lines.push(`**${provider.providerName}** (${provider.plans[0].technology}):`)
+    for (const plan of provider.plans) {
+      const speedStr = plan.uploadSpeed === plan.downloadSpeed
+        ? `${plan.downloadSpeed}/${plan.uploadSpeed} Mbps symmetric`
+        : `${plan.downloadSpeed}/${plan.uploadSpeed} Mbps`
+      const tierLabel = plan.tier === 'budget' ? 'Budget' : plan.tier === 'value' ? 'Best Value' : 'Premium'
+      lines.push(`  - ${plan.planName}: $${plan.price}/mo - ${speedStr} [${tierLabel}]`)
+    }
+    lines.push('')
+  }
+
+  // Add best value rankings
+  const valueRanked = getBestValuePlans()
+  lines.push('BEST VALUE RANKINGS (by speed per dollar):')
+  valueRanked.slice(0, 4).forEach((plan, i) => {
+    lines.push(`${i + 1}. ${plan.providerName} ${plan.planName} - $${plan.price}/mo for ${plan.downloadSpeed} Mbps`)
+  })
+
+  lines.push('\nWhen recommending plans:')
+  lines.push('- Always mention specific plan names and accurate prices')
+  lines.push('- Highlight symmetric upload speeds for fiber plans (great for video calls, uploads)')
+  lines.push('- Frontier Fiber 500 at $54.99 is the best value in most markets')
+  lines.push('- Include the order link for the provider when suggesting a plan')
+
+  return lines.join('\n')
 }
 
 const SYSTEM_PROMPT = `You are an expert internet service advisor for InternetProviders.ai. Your role is to help users find the best internet service for their needs AND convert them into customers by directing them to order links.
@@ -116,7 +152,7 @@ Keep responses concise and action-oriented. Use bullet points for lists. Always 
 Available tools on the site (always link these with markdown):
 - [Speed Test](/tools/speed-test) - Test current internet speed
 - [ISP Quiz](/tools/quiz) - Get personalized recommendations
-- [Compare Providers](/compare) - Search by ZIP code (add ?zip=XXXXX if you know their ZIP)` + buildOrderLinksSection()
+- [Compare Providers](/compare) - Search by ZIP code (add ?zip=XXXXX if you know their ZIP)` + buildOrderLinksSection() + buildFeaturedPlansSection()
 
 interface Message {
   role: 'user' | 'assistant'
