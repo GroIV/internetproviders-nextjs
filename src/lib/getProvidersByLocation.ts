@@ -127,6 +127,41 @@ export async function getProvidersByZip(
     })
   }
 
+  // Smart sorting: prioritize by technology quality, then by coverage
+  // Fiber/Cable/5G should appear before Satellite/DSL in metro areas
+  const getTechnologyScore = (techs: string[]): number => {
+    // Higher score = better technology (appears first)
+    if (techs.includes('Fiber')) return 100
+    if (techs.includes('Cable')) return 80
+    if (techs.includes('5G')) return 70
+    if (techs.includes('Fixed Wireless')) return 50
+    if (techs.includes('DSL')) return 30
+    if (techs.includes('Satellite')) return 10  // Satellite last - only good for rural
+    return 0
+  }
+
+  // Check if this is a metro area (has fiber/cable options)
+  const hasGoodOptions = results.some(p =>
+    p.technologies.includes('Fiber') || p.technologies.includes('Cable')
+  )
+
+  // If metro area with good options, deprioritize satellite
+  // If rural (no fiber/cable), keep original coverage-based sorting
+  if (hasGoodOptions) {
+    results.sort((a, b) => {
+      const scoreA = getTechnologyScore(a.technologies)
+      const scoreB = getTechnologyScore(b.technologies)
+
+      // If same technology tier, sort by coverage
+      if (scoreA === scoreB) {
+        return b.coveragePercent - a.coveragePercent
+      }
+
+      return scoreB - scoreA
+    })
+  }
+  // If rural, keep original order (sorted by coverage_pct from DB)
+
   return results
 }
 

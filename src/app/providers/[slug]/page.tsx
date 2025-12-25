@@ -76,9 +76,8 @@ const comparisonPairs: Record<string, string[]> = {
   't-mobile': ['verizon-fios', 'xfinity', 'starlink'],
   'directv': ['dish', 'xfinity', 'spectrum'],
   'dish': ['directv', 'xfinity', 'spectrum'],
-  'starlink': ['hughesnet', 'viasat', 't-mobile'],
-  'hughesnet': ['starlink', 'viasat', 'dish'],
-  'viasat': ['starlink', 'hughesnet', 'dish'],
+  'starlink': ['viasat', 't-mobile', 'dish'],
+  'viasat': ['starlink', 'dish', 't-mobile'],
   'breezeline': ['xfinity', 'spectrum', 'cox'],
   'astound-broadband': ['xfinity', 'spectrum', 'cox'],
   'centurylink': ['frontier', 'att-internet', 'brightspeed'],
@@ -121,7 +120,6 @@ function getFeaturedPlanSlug(dbSlug: string): string {
     'windstream': 'windstream',
     'ziply-fiber': 'ziply-fiber',
     'tds-telecom': 'tds-telecom',
-    'hughesnet': 'hughesnet',
   }
   return slugMap[dbSlug] || dbSlug
 }

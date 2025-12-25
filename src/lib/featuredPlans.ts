@@ -1072,52 +1072,6 @@ export const featuredPlans: ProviderFeaturedPlans[] = [
       'No data caps or contracts',
       'DSL available in some rural areas'
     ]
-  },
-  {
-    providerId: 'hughesnet',
-    providerName: 'HughesNet',
-    slug: 'hughesnet',
-    plans: [
-      {
-        planName: 'Select',
-        price: 49.99,
-        downloadSpeed: 25,
-        uploadSpeed: 3,
-        latency: 600,
-        technology: 'Satellite',
-        features: ['15 GB data', 'Available anywhere', 'No wiring needed', 'Bonus zone data'],
-        bestFor: 'Basic rural internet',
-        tier: 'budget'
-      },
-      {
-        planName: 'Elite',
-        price: 64.99,
-        downloadSpeed: 25,
-        uploadSpeed: 3,
-        latency: 600,
-        technology: 'Satellite',
-        features: ['50 GB data', 'Video Data Saver', 'Available anywhere', 'Bonus zone data'],
-        bestFor: 'Standard rural satellite',
-        tier: 'value'
-      },
-      {
-        planName: 'Fusion',
-        price: 94.99,
-        downloadSpeed: 100,
-        uploadSpeed: 10,
-        latency: 150,
-        technology: 'Satellite',
-        features: ['Hybrid satellite/LTE', '100 GB data', 'Lower latency', 'Better for calls'],
-        bestFor: 'Best HughesNet experience',
-        tier: 'premium'
-      }
-    ],
-    notes: [
-      'Geostationary satellite covers entire US',
-      'Best for rural areas without other options',
-      'Higher latency than Starlink (600ms vs 38ms)',
-      'Data caps apply but continue at reduced speeds after'
-    ]
   }
 ]
 

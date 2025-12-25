@@ -45,7 +45,6 @@ export const COMPARISON_ELIGIBLE_PROVIDERS = new Set([
   'frontier',
   'frontier-fiber',  // Database slug
   'google-fiber',
-  'hughesnet',
   'optimum',
   'spectrum',
   't-mobile',
@@ -104,13 +103,6 @@ export const affiliateLinks: AffiliateLink[] = [
     providerId: 't-mobile',
     providerName: 'T-Mobile',
     baseUrl: 'https://www.myfinance.com/reporting/32346944/?utm_campaign=chameleon-konecteaze-tmobile-dl',
-    subIdParam: 'sub_id',
-    isActive: true,
-  },
-  {
-    providerId: 'hughesnet',
-    providerName: 'HughesNet',
-    baseUrl: 'https://www.myfinance.com/reporting/32346946/?utm_campaign=chameleon-konecteaze-hughesnet-dl',
     subIdParam: 'sub_id',
     isActive: true,
   },
