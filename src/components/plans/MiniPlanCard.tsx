@@ -38,7 +38,8 @@ const techColors: Record<string, string> = {
   Cable: 'text-blue-400',
   '5G': 'text-purple-400',
   'Fixed Wireless': 'text-cyan-400',
-  DSL: 'text-yellow-400'
+  DSL: 'text-yellow-400',
+  Satellite: 'text-orange-400'
 }
 
 export function MiniPlanCard({ plan, index = 0, onAskAI }: MiniPlanCardProps) {
@@ -50,7 +51,11 @@ export function MiniPlanCard({ plan, index = 0, onAskAI }: MiniPlanCardProps) {
     'frontier-fiber': 'frontier',
     'att-internet': 'att',
     'spectrum': 'spectrum',
-    't-mobile': 'tmobile'
+    't-mobile': 'tmobile',
+    'wow': 'wow',
+    'google-fiber': 'google-fiber',
+    'starlink': 'starlink',
+    'viasat': 'viasat'
   }
   const affiliateProviderId = providerIdMap[plan.providerSlug]
   const orderUrl = affiliateProviderId ? getAffiliateUrl(affiliateProviderId, 'chat') : null

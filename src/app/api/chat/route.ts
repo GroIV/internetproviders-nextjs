@@ -17,7 +17,9 @@ const PLAN_KEYWORDS = [
   'what should i get', 'which one', 'compare', 'options',
   'fiber', 'cable', '5g', 'internet service', 'package', 'packages',
   'value', 'budget', 'premium', 'speed', 'mbps', 'gbps',
-  'frontier', 'at&t', 'att', 'spectrum', 't-mobile', 'tmobile'
+  'frontier', 'at&t', 'att', 'spectrum', 't-mobile', 'tmobile',
+  'wow', 'google fiber', 'starlink', 'viasat', 'satellite', 'rural',
+  'xfinity', 'comcast', 'metronet'
 ]
 
 // Detect if user message is asking about plans
@@ -33,6 +35,12 @@ function mapProviderNameToSlug(providerName: string): string | null {
   if (nameLower.includes('spectrum') || nameLower.includes('charter')) return 'spectrum'
   if (nameLower.includes('frontier')) return 'frontier-fiber'
   if (nameLower.includes('t-mobile')) return 't-mobile'
+  if (nameLower.includes('wow')) return 'wow'
+  if (nameLower.includes('google fiber') || nameLower.includes('gfiber')) return 'google-fiber'
+  if (nameLower.includes('starlink')) return 'starlink'
+  if (nameLower.includes('viasat')) return 'viasat'
+  if (nameLower.includes('xfinity') || nameLower.includes('comcast')) return 'xfinity'
+  if (nameLower.includes('metronet')) return 'metronet'
   return null
 }
 
@@ -63,6 +71,12 @@ function getSuggestedPlans(message: string, availableProviderNames?: string[]): 
   if (lowerMessage.includes('at&t') || lowerMessage.includes('att')) mentionedProviders.push('att-internet')
   if (lowerMessage.includes('spectrum')) mentionedProviders.push('spectrum')
   if (lowerMessage.includes('t-mobile') || lowerMessage.includes('tmobile')) mentionedProviders.push('t-mobile')
+  if (lowerMessage.includes('wow')) mentionedProviders.push('wow')
+  if (lowerMessage.includes('google fiber') || lowerMessage.includes('gfiber')) mentionedProviders.push('google-fiber')
+  if (lowerMessage.includes('starlink')) mentionedProviders.push('starlink')
+  if (lowerMessage.includes('viasat')) mentionedProviders.push('viasat')
+  if (lowerMessage.includes('xfinity') || lowerMessage.includes('comcast')) mentionedProviders.push('xfinity')
+  if (lowerMessage.includes('metronet')) mentionedProviders.push('metronet')
 
   // Check for tier preferences
   const wantsBudget = lowerMessage.includes('cheap') || lowerMessage.includes('budget') || lowerMessage.includes('affordable')
@@ -73,6 +87,8 @@ function getSuggestedPlans(message: string, availableProviderNames?: string[]): 
   const wantsFiber = lowerMessage.includes('fiber')
   const wants5G = lowerMessage.includes('5g') || lowerMessage.includes('wireless')
   const wantsCable = lowerMessage.includes('cable')
+  const wantsSatellite = lowerMessage.includes('satellite') || lowerMessage.includes('rural') ||
+                         lowerMessage.includes('starlink') || lowerMessage.includes('viasat')
 
   let filteredPlans = allPlans
 
@@ -95,6 +111,9 @@ function getSuggestedPlans(message: string, availableProviderNames?: string[]): 
   } else if (wantsCable) {
     const cablePlans = filteredPlans.filter(p => p.technology === 'Cable')
     if (cablePlans.length > 0) filteredPlans = cablePlans
+  } else if (wantsSatellite) {
+    const satellitePlans = filteredPlans.filter(p => p.technology === 'Satellite')
+    if (satellitePlans.length > 0) filteredPlans = satellitePlans
   }
 
   // Filter by tier preference

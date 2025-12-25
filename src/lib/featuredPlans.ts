@@ -10,7 +10,7 @@ export interface FeaturedPlan {
   downloadSpeed: number
   uploadSpeed: number
   latency?: number
-  technology: 'Fiber' | 'Cable' | '5G' | 'Fixed Wireless' | 'DSL'
+  technology: 'Fiber' | 'Cable' | '5G' | 'Fixed Wireless' | 'DSL' | 'Satellite'
   features: string[]
   bestFor: string
   tier: 'budget' | 'value' | 'premium'
@@ -203,6 +203,284 @@ export const featuredPlans: ProviderFeaturedPlans[] = [
       'Great alternative where cable/fiber unavailable',
       'Check coverage at t-mobile.com before ordering',
       'Typical speeds: 100-400+ Mbps where 5G Ultra Capacity available'
+    ]
+  },
+  {
+    providerId: 'wow',
+    providerName: 'WOW!',
+    slug: 'wow',
+    plans: [
+      {
+        planName: 'Internet 200',
+        price: 40,
+        downloadSpeed: 210,
+        uploadSpeed: 10,
+        latency: 21,
+        technology: 'Cable',
+        features: ['No data caps', 'No contracts', 'Self-install option', 'Price lock available'],
+        bestFor: 'Budget-friendly cable for light users',
+        tier: 'budget'
+      },
+      {
+        planName: 'Fiber 1Gbps',
+        price: 60,
+        priceNote: 'Limited availability',
+        downloadSpeed: 1060,
+        uploadSpeed: 1005,
+        latency: 3,
+        technology: 'Fiber',
+        features: ['Symmetric gigabit', 'No data caps', '3ms latency', 'Best-in-class fiber'],
+        bestFor: 'Best value fiber where available',
+        tier: 'value'
+      },
+      {
+        planName: 'Fiber 5Gbps',
+        price: 190,
+        downloadSpeed: 5271,
+        uploadSpeed: 4192,
+        latency: 4,
+        technology: 'Fiber',
+        features: ['5+ Gbps speeds', 'Ultra-low latency', 'Near-symmetric uploads', 'Future-proof'],
+        bestFor: 'Power users in WOW! fiber areas',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Available in Midwest and Southeast markets',
+      'Fiber service expanding to more areas',
+      'Price lock plans available at slightly higher prices',
+      'Known for excellent customer service'
+    ]
+  },
+  {
+    providerId: 'google-fiber',
+    providerName: 'Google Fiber',
+    slug: 'google-fiber',
+    plans: [
+      {
+        planName: '1 Gig',
+        price: 70,
+        downloadSpeed: 1140,
+        uploadSpeed: 1137,
+        latency: 13,
+        technology: 'Fiber',
+        features: ['True symmetric gigabit', 'Unlimited data', 'No contract', 'No equipment fees'],
+        bestFor: 'Best overall fiber value',
+        tier: 'budget'
+      },
+      {
+        planName: '2 Gig',
+        price: 100,
+        downloadSpeed: 2250,
+        uploadSpeed: 1137,
+        latency: 13,
+        technology: 'Fiber',
+        features: ['2+ Gbps download', 'Gigabit upload', 'No contracts', 'Included mesh WiFi'],
+        bestFor: 'Multi-user households',
+        tier: 'value'
+      },
+      {
+        planName: '8 Gig',
+        price: 150,
+        downloadSpeed: 8086,
+        uploadSpeed: 8119,
+        latency: 13,
+        technology: 'Fiber',
+        features: ['8+ Gbps symmetric', '13ms latency', 'Future-proof', 'Professional grade'],
+        bestFor: 'Fastest residential fiber available',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Available in select cities (Austin, Nashville, Kansas City, etc.)',
+      'No hidden fees or annual contracts',
+      'Known for transparent pricing',
+      'Expanding to new markets'
+    ]
+  },
+  {
+    providerId: 'starlink',
+    providerName: 'Starlink',
+    slug: 'starlink',
+    plans: [
+      {
+        planName: 'Residential Lite',
+        price: 79,
+        downloadSpeed: 75,
+        uploadSpeed: 10,
+        latency: 38,
+        technology: 'Satellite',
+        features: ['No contracts', 'Global coverage potential', 'Easy self-install', 'Portable option'],
+        bestFor: 'Budget satellite for rural areas',
+        tier: 'budget'
+      },
+      {
+        planName: 'Residential',
+        price: 120,
+        downloadSpeed: 100,
+        uploadSpeed: 15,
+        latency: 38,
+        technology: 'Satellite',
+        features: ['Unlimited data', 'Priority bandwidth', 'Low latency for satellite', 'Wide coverage'],
+        bestFor: 'Best satellite internet available',
+        tier: 'value'
+      },
+      {
+        planName: 'Priority',
+        price: 250,
+        priceNote: 'Business/priority tier',
+        downloadSpeed: 220,
+        uploadSpeed: 25,
+        latency: 38,
+        technology: 'Satellite',
+        features: ['Priority data', 'Faster speeds', 'Business support', 'SLA available'],
+        bestFor: 'Business or demanding users in rural areas',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Best option for rural/remote areas without other broadband',
+      'One-time equipment cost: $349+ (standard kit)',
+      'Speeds vary by location and network congestion',
+      'Low-earth orbit provides much lower latency than traditional satellite'
+    ]
+  },
+  {
+    providerId: 'viasat',
+    providerName: 'Viasat',
+    slug: 'viasat',
+    plans: [
+      {
+        planName: 'Unleashed',
+        price: 99.99,
+        downloadSpeed: 40,
+        uploadSpeed: 7,
+        latency: 620,
+        technology: 'Satellite',
+        features: ['Unlimited data', 'No hard data caps', 'Wide availability', 'Month-to-month option'],
+        bestFor: 'Budget unlimited satellite',
+        tier: 'budget'
+      },
+      {
+        planName: 'Business Choice 50',
+        price: 99.99,
+        downloadSpeed: 50,
+        uploadSpeed: 4,
+        latency: 651,
+        technology: 'Satellite',
+        features: ['300 GB priority data', 'Business support', 'Static IP available', 'SLA options'],
+        bestFor: 'Small business in rural areas',
+        tier: 'value'
+      },
+      {
+        planName: 'Business Choice 100',
+        price: 149.99,
+        downloadSpeed: 84,
+        uploadSpeed: 4,
+        latency: 654,
+        technology: 'Satellite',
+        features: ['300 GB priority data', 'Higher speeds', 'Business features', 'Priority support'],
+        bestFor: 'Business needing faster satellite',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Traditional geostationary satellite with higher latency',
+      'Good option where Starlink unavailable or waitlisted',
+      'Equipment lease fee: $9.99-$15/month',
+      'Not ideal for video calls or gaming due to latency'
+    ]
+  },
+  {
+    providerId: 'xfinity',
+    providerName: 'Xfinity',
+    slug: 'xfinity',
+    plans: [
+      {
+        planName: 'Connect More',
+        price: 55,
+        downloadSpeed: 400,
+        uploadSpeed: 20,
+        latency: 19,
+        technology: 'Cable',
+        features: ['No data caps in most areas', 'xFi Gateway included', 'Peacock Premium included', 'Flex streaming box'],
+        bestFor: 'Budget option for light users',
+        tier: 'budget'
+      },
+      {
+        planName: 'Gigabit',
+        price: 80,
+        downloadSpeed: 1000,
+        uploadSpeed: 35,
+        latency: 14,
+        technology: 'Cable',
+        features: ['1 Gbps download speeds', 'xFi Gateway included', 'Advanced security', 'Unlimited data (some areas)'],
+        bestFor: 'Best value for most households',
+        tier: 'value'
+      },
+      {
+        planName: 'Gigabit Extra',
+        price: 100,
+        downloadSpeed: 1200,
+        uploadSpeed: 35,
+        latency: 14,
+        technology: 'Cable',
+        features: ['1.2 Gbps download speeds', 'Premium WiFi equipment', 'Wall-to-wall coverage', 'Priority support'],
+        bestFor: 'Large homes needing extra speed',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Largest cable internet provider in the US',
+      'Data caps vary by market (1.2 TB in most areas)',
+      'Equipment rental fee: ~$14/month or BYO modem',
+      'Bundle discounts available with TV/phone'
+    ]
+  },
+  {
+    providerId: 'metronet',
+    providerName: 'Metronet',
+    slug: 'metronet',
+    plans: [
+      {
+        planName: '100 Mbps',
+        price: 49.95,
+        downloadSpeed: 100,
+        uploadSpeed: 100,
+        latency: 13,
+        technology: 'Fiber',
+        features: ['Symmetric speeds', 'No data caps', 'No contracts', 'Free standard installation'],
+        bestFor: 'Budget fiber for light users',
+        tier: 'budget'
+      },
+      {
+        planName: '500 Mbps',
+        price: 59.95,
+        downloadSpeed: 500,
+        uploadSpeed: 500,
+        latency: 13,
+        technology: 'Fiber',
+        features: ['Symmetric 500 Mbps', 'No data caps', 'Whole-home WiFi available', 'Low latency'],
+        bestFor: 'Best value for streaming and gaming',
+        tier: 'value'
+      },
+      {
+        planName: '1 Gig',
+        price: 69.95,
+        downloadSpeed: 1000,
+        uploadSpeed: 1000,
+        latency: 13,
+        technology: 'Fiber',
+        features: ['Symmetric gigabit', 'No data caps', 'Excellent for remote work', 'Multiple 4K streams'],
+        bestFor: 'Power users and large households',
+        tier: 'premium'
+      }
+    ],
+    notes: [
+      'Expanding fiber network in Midwest and Southeast',
+      'No contracts required',
+      'Whole-home WiFi add-on: $9.95/month',
+      'Also offers 2 Gig for $99.95/month in select areas'
     ]
   }
 ]

@@ -6,6 +6,8 @@ import { LocationInfo } from '@/components/LocationInfo'
 import { getProviderCoverageCount } from '@/lib/getProvidersByLocation'
 import { OrderButton } from '@/components/OrderButton'
 import { hasAffiliateLink } from '@/lib/affiliates'
+import { ProviderPlansSection } from '@/components/plans'
+import { getFeaturedPlansForProvider } from '@/lib/featuredPlans'
 import {
   JsonLd,
   generateBreadcrumbSchema,
@@ -33,6 +35,22 @@ async function getProvider(slug: string) {
   const coverageCount = await getProviderCoverageCount(provider.name)
 
   return { ...provider, coverageCount }
+}
+
+// Map database provider slugs to featured plans slugs
+function getFeaturedPlanSlug(dbSlug: string): string {
+  const slugMap: Record<string, string> = {
+    'frontier': 'frontier-fiber',
+    'att': 'att-internet',
+    'spectrum': 'spectrum',
+    't-mobile': 't-mobile',
+    'tmobile': 't-mobile',
+    'wow': 'wow',
+    'google-fiber': 'google-fiber',
+    'starlink': 'starlink',
+    'viasat': 'viasat',
+  }
+  return slugMap[dbSlug] || dbSlug
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -70,6 +88,25 @@ export default async function ProviderPage({ params }: Props) {
   }
 
   const technologies = provider.technologies || []
+
+  // Get featured plans data for this provider
+  const featuredPlanSlug = getFeaturedPlanSlug(slug)
+  const providerPlans = getFeaturedPlansForProvider(featuredPlanSlug)
+
+  // Calculate stats from featured plans
+  const startingPrice = providerPlans?.plans.length
+    ? Math.min(...providerPlans.plans.map(p => p.price))
+    : null
+  const maxSpeed = providerPlans?.plans.length
+    ? Math.max(...providerPlans.plans.map(p => p.downloadSpeed))
+    : null
+
+  // Format max speed display
+  const formatMaxSpeed = (speed: number | null) => {
+    if (!speed) return technologies.includes('Fiber') ? '5 Gbps' : '1 Gbps'
+    if (speed >= 1000) return `${(speed / 1000).toFixed(speed >= 10000 ? 0 : 1)} Gbps`
+    return `${speed} Mbps`
+  }
 
   // Generate structured data
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -144,18 +181,22 @@ export default async function ProviderPage({ params }: Props) {
             <div className="text-sm text-gray-400">ZIP Codes</div>
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">$30</div>
+            <div className="text-2xl font-bold text-green-400">
+              {startingPrice ? `$${startingPrice}` : '$30'}
+            </div>
             <div className="text-sm text-gray-400">Starting Price*</div>
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-cyan-400">
-              {technologies.includes('Fiber') ? '5 Gbps' : '1 Gbps'}
+              {formatMaxSpeed(maxSpeed)}
             </div>
             <div className="text-sm text-gray-400">Max Speed</div>
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-purple-400">4.2</div>
-            <div className="text-sm text-gray-400">Avg Rating</div>
+            <div className="text-2xl font-bold text-purple-400">
+              {providerPlans ? providerPlans.plans.length : '-'}
+            </div>
+            <div className="text-sm text-gray-400">Featured Plans</div>
           </div>
         </div>
 
@@ -167,6 +208,12 @@ export default async function ProviderPage({ params }: Props) {
           </p>
           <LocationInfo message={`Checking ${provider.name} availability`} />
         </div>
+
+        {/* Featured Plans Section */}
+        <ProviderPlansSection
+          providerSlug={getFeaturedPlanSlug(slug)}
+          providerName={provider.name}
+        />
 
         {/* About Section */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">
