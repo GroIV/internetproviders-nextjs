@@ -5,7 +5,7 @@ import json
 
 api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvZ2ZobG9tcHZmenR5bXhyeGZtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjQ1Mjc1NiwiZXhwIjoyMDgyMDI4NzU2fQ.51pXr4w2JykDIpFPaIwKwoGeC2r5uEu6QVFm2WAW-yA"
 
-providers = ["Xfinity", "Metronet", "Cox", "Verizon Fios", "CenturyLink", "Spectrum", "AT&T", "T-Mobile", "Frontier", "WOW!", "Starlink", "Viasat", "Google Fiber", "Optimum", "Windstream", "Brightspeed", "Astound", "Consolidated", "TDS Telecom", "Ziply Fiber", "Breezeline"]
+providers = ["Xfinity", "Metronet", "Cox", "Verizon Fios", "CenturyLink", "Spectrum", "AT&T", "T-Mobile", "Frontier", "WOW!", "Starlink", "Viasat", "Google Fiber", "Optimum", "Windstream", "Brightspeed", "Astound", "Consolidated", "TDS Telecom", "Ziply Fiber", "Breezeline", "altafiber", "Buckeye", "HughesNet"]
 
 print("=== PROVIDERS WITH BROADBAND LABELS ===")
 total = 0

@@ -40,6 +40,9 @@ const CONSOLIDATED_JSON = resolve(EXTERNAL_DATA_DIR, 'consolidated_broadband_lab
 const TDS_JSON = resolve(EXTERNAL_DATA_DIR, 'tds_telecom_broadband_labels/tds_extracted_plans.json')
 const ZIPLY_JSON = resolve(EXTERNAL_DATA_DIR, 'ziply_fiber_broadband_labels/ziply_extracted_plans.json')
 const BREEZELINE_CSV = resolve(EXTERNAL_DATA_DIR, 'breezline/broadband-labels-2025-12-25_20-11-28.csv')
+const ALTAFIBER_JSON = resolve(EXTERNAL_DATA_DIR, 'altafiber_broadband_labels/altafiber_extracted_plans.json')
+const BUCKEYE_JSON = resolve(EXTERNAL_DATA_DIR, 'buckeye_broadband_labels/buckeye_extracted_plans.json')
+const HUGHESNET_JSON = resolve(EXTERNAL_DATA_DIR, 'hughesnet_broadband_labels/hughesnet_extracted_plans.json')
 
 interface BroadbandPlanRecord {
   fcc_plan_id: string
@@ -2241,6 +2244,21 @@ async function main() {
   console.log('\n📁 Processing Breezeline...')
   const breezeline = await importBreezlineCSV(BREEZELINE_CSV, 'broadband-labels-2025-12-25_20-11-28.csv')
   allRecords.push(...breezeline)
+
+  // Import AltaFiber
+  console.log('\n📁 Processing AltaFiber...')
+  const altafiber = importGenericOCRJSON(ALTAFIBER_JSON, 'altafiber', 'https://www.altafiber.com/support', '513-565-2210')
+  allRecords.push(...altafiber)
+
+  // Import Buckeye
+  console.log('\n📁 Processing Buckeye...')
+  const buckeye = importGenericOCRJSON(BUCKEYE_JSON, 'Buckeye', 'https://www.buckeyebroadband.com/support', '419-724-9800')
+  allRecords.push(...buckeye)
+
+  // Import HughesNet
+  console.log('\n📁 Processing HughesNet...')
+  const hughesnet = importGenericOCRJSON(HUGHESNET_JSON, 'HughesNet', 'https://www.hughesnet.com/support', '866-347-3292')
+  allRecords.push(...hughesnet)
 
   // Match provider IDs
   await matchProvidersIds(allRecords)
