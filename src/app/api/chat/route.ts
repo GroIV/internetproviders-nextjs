@@ -26,10 +26,36 @@ function isPlanQuery(message: string): boolean {
   return PLAN_KEYWORDS.some(keyword => lowerMessage.includes(keyword))
 }
 
-// Get relevant plans based on user query
-function getSuggestedPlans(message: string, providerNames?: string[]): SuggestedPlan[] {
+// Map database provider names to featured plan slugs
+function mapProviderNameToSlug(providerName: string): string | null {
+  const nameLower = providerName.toLowerCase()
+  if (nameLower.includes('at&t')) return 'att-internet'
+  if (nameLower.includes('spectrum') || nameLower.includes('charter')) return 'spectrum'
+  if (nameLower.includes('frontier')) return 'frontier-fiber'
+  if (nameLower.includes('t-mobile')) return 't-mobile'
+  return null
+}
+
+// Get relevant plans based on user query and available providers
+function getSuggestedPlans(message: string, availableProviderNames?: string[]): SuggestedPlan[] {
   const lowerMessage = message.toLowerCase()
-  const allPlans = getAllFeaturedPlans()
+  let allPlans = getAllFeaturedPlans()
+
+  // FIRST: Filter by available providers in user's ZIP (if we have that data)
+  if (availableProviderNames && availableProviderNames.length > 0) {
+    const availableSlugs = availableProviderNames
+      .map(name => mapProviderNameToSlug(name))
+      .filter((slug): slug is string => slug !== null)
+
+    if (availableSlugs.length > 0) {
+      allPlans = allPlans.filter(p => availableSlugs.includes(p.providerSlug))
+    }
+  }
+
+  // If no plans available after ZIP filtering, return empty (don't show irrelevant plans)
+  if (allPlans.length === 0) {
+    return []
+  }
 
   // Check for specific provider mentions
   const mentionedProviders: string[] = []
@@ -50,34 +76,44 @@ function getSuggestedPlans(message: string, providerNames?: string[]): Suggested
 
   let filteredPlans = allPlans
 
-  // Filter by mentioned providers
+  // Filter by mentioned providers (only if they're available in user's area)
   if (mentionedProviders.length > 0) {
-    filteredPlans = filteredPlans.filter(p => mentionedProviders.includes(p.providerSlug))
+    const availableMentioned = filteredPlans.filter(p => mentionedProviders.includes(p.providerSlug))
+    if (availableMentioned.length > 0) {
+      filteredPlans = availableMentioned
+    }
+    // If mentioned provider not available, we'll show what IS available
   }
 
   // Filter by technology
   if (wantsFiber) {
-    filteredPlans = filteredPlans.filter(p => p.technology === 'Fiber')
+    const fiberPlans = filteredPlans.filter(p => p.technology === 'Fiber')
+    if (fiberPlans.length > 0) filteredPlans = fiberPlans
   } else if (wants5G) {
-    filteredPlans = filteredPlans.filter(p => p.technology === '5G')
+    const fiveGPlans = filteredPlans.filter(p => p.technology === '5G')
+    if (fiveGPlans.length > 0) filteredPlans = fiveGPlans
   } else if (wantsCable) {
-    filteredPlans = filteredPlans.filter(p => p.technology === 'Cable')
+    const cablePlans = filteredPlans.filter(p => p.technology === 'Cable')
+    if (cablePlans.length > 0) filteredPlans = cablePlans
   }
 
   // Filter by tier preference
   if (wantsBudget) {
-    filteredPlans = filteredPlans.filter(p => p.tier === 'budget')
+    const budgetPlans = filteredPlans.filter(p => p.tier === 'budget')
+    if (budgetPlans.length > 0) filteredPlans = budgetPlans
   } else if (wantsPremium) {
-    filteredPlans = filteredPlans.filter(p => p.tier === 'premium')
-  } else if (wantsValue && !mentionedProviders.length) {
-    // For general "best" queries, show value tier plans
-    filteredPlans = filteredPlans.filter(p => p.tier === 'value')
+    const premiumPlans = filteredPlans.filter(p => p.tier === 'premium')
+    if (premiumPlans.length > 0) filteredPlans = premiumPlans
+  } else if (wantsValue) {
+    // For general "best" queries, prioritize value tier but include others
+    const valuePlans = filteredPlans.filter(p => p.tier === 'value')
+    if (valuePlans.length > 0) {
+      filteredPlans = valuePlans
+    }
   }
 
-  // If no specific filters applied or too few results, get best value plans
-  if (filteredPlans.length === 0) {
-    filteredPlans = getBestValuePlans().slice(0, 4)
-  }
+  // Sort by value score (speed per dollar)
+  filteredPlans.sort((a, b) => (b.downloadSpeed / b.price) - (a.downloadSpeed / a.price))
 
   // Limit to 4 plans max for display
   return filteredPlans.slice(0, 4) as SuggestedPlan[]
@@ -255,6 +291,7 @@ export async function POST(request: NextRequest) {
 
     // If ZIP code provided, get provider context from database
     let providerContext = ''
+    let availableProviderNames: string[] = [] // Track providers available in user's ZIP
 
     // Add page context if provided
     if (pageContext) {
@@ -326,6 +363,9 @@ export async function POST(request: NextRequest) {
               : allProviders
 
             if (providers.length > 0) {
+              // Store provider names for plan filtering
+              availableProviderNames = providers.map((p: any) => p.name)
+
               providerContext = `\n\nThe user is in ZIP code ${zipCode}. Here are the internet providers available in their area:\n${providers.map((p: any) =>
                 `- ${p.name} (${p.coverage}% area coverage)`
               ).join('\n')}\n\nUse this information to give personalized recommendations. Focus on fiber and cable options first. You can reference specific providers and their coverage when answering questions.`
@@ -372,9 +412,9 @@ export async function POST(request: NextRequest) {
     // Get the last user message to check for plan queries
     const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || ''
 
-    // Determine if we should show suggested plans
+    // Determine if we should show suggested plans (only if we have ZIP-based availability data)
     const shouldShowPlans = isPlanQuery(lastUserMessage)
-    const suggestedPlans = shouldShowPlans ? getSuggestedPlans(lastUserMessage) : []
+    const suggestedPlans = shouldShowPlans ? getSuggestedPlans(lastUserMessage, availableProviderNames) : []
 
     return NextResponse.json({
       message: assistantMessage,
