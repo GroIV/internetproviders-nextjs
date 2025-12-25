@@ -32,6 +32,14 @@ const METRONET_CSV = resolve(EXTERNAL_DATA_DIR, 'Metronet/metronet_broadband_lab
 const COX_JSON = resolve(EXTERNAL_DATA_DIR, 'cox_broadband_labels/cox_extracted_plans.json')
 const VERIZON_JSON = resolve(EXTERNAL_DATA_DIR, 'verizon_fios_broadband_labels/verizon_extracted_plans.json')
 const CENTURYLINK_JSON = resolve(EXTERNAL_DATA_DIR, 'centurylink_broadband_labels/centurylink_extracted_plans.json')
+const OPTIMUM_JSON = resolve(EXTERNAL_DATA_DIR, 'optimum_broadband_labels/optimum_extracted_plans.json')
+const WINDSTREAM_JSON = resolve(EXTERNAL_DATA_DIR, 'windstream_broadband_labels/windstream_extracted_plans.json')
+const BRIGHTSPEED_JSON = resolve(EXTERNAL_DATA_DIR, 'brightspeed_broadband_labels/brightspeed_extracted_plans.json')
+const ASTOUND_JSON = resolve(EXTERNAL_DATA_DIR, 'astound_rcn_grande_broadband_labels/astound_extracted_plans.json')
+const CONSOLIDATED_JSON = resolve(EXTERNAL_DATA_DIR, 'consolidated_broadband_labels/consolidated_extracted_plans.json')
+const TDS_JSON = resolve(EXTERNAL_DATA_DIR, 'tds_telecom_broadband_labels/tds_extracted_plans.json')
+const ZIPLY_JSON = resolve(EXTERNAL_DATA_DIR, 'ziply_fiber_broadband_labels/ziply_extracted_plans.json')
+const BREEZELINE_CSV = resolve(EXTERNAL_DATA_DIR, 'breezline/broadband-labels-2025-12-25_20-11-28.csv')
 
 interface BroadbandPlanRecord {
   fcc_plan_id: string
@@ -1764,6 +1772,207 @@ function importCenturyLinkJSON(jsonPath: string): BroadbandPlanRecord[] {
   return records
 }
 
+// ============================================
+// Generic OCR Import Function for New Providers
+// ============================================
+
+interface GenericOCRPlan {
+  filename: string
+  provider_name: string
+  plan_name: string | null
+  monthly_price: number | null
+  download_speed: number | null
+  upload_speed: number | null
+  latency: number | null
+  data_cap_gb: number | null
+  connection_type: string
+  service_type: string
+}
+
+function importGenericOCRJSON(jsonPath: string, providerName: string, supportUrl?: string, supportPhone?: string): BroadbandPlanRecord[] {
+  if (!existsSync(jsonPath)) {
+    console.log(`  ⚠️ ${providerName} JSON not found: ${jsonPath}`)
+    return []
+  }
+
+  const content = readFileSync(jsonPath, 'utf-8')
+  const plans: GenericOCRPlan[] = JSON.parse(content)
+  const records: BroadbandPlanRecord[] = []
+
+  for (const plan of plans) {
+    // Skip invalid plans
+    if (!plan.monthly_price || !plan.download_speed || !plan.plan_name) {
+      continue
+    }
+
+    // Skip obviously wrong prices (OCR errors)
+    if (plan.monthly_price < 15 || plan.monthly_price > 500) {
+      continue
+    }
+
+    const fccPlanId = `${providerName.toUpperCase().replace(/\s+/g, '-')}-OCR-${plan.filename.replace('.png', '').replace('.PNG', '').replace(/[^a-zA-Z0-9]/g, '-')}`
+
+    const record: BroadbandPlanRecord = {
+      fcc_plan_id: fccPlanId,
+      provider_name: providerName,
+      provider_id: null,
+      service_plan_name: plan.plan_name,
+      tier_plan_name: null,
+      connection_type: plan.connection_type || 'Fiber',
+      service_type: plan.service_type || 'residential',
+      monthly_price: plan.monthly_price,
+      has_intro_rate: false,
+      intro_rate_price: null,
+      intro_rate_months: null,
+      contract_required: false,
+      contract_months: null,
+      contract_terms_url: null,
+      early_termination_fee: 0,
+      one_time_fees: [],
+      monthly_fees: [],
+      tax_info: 'Varies by location',
+      typical_download_speed: plan.download_speed,
+      typical_upload_speed: plan.upload_speed,
+      typical_latency: plan.latency ? Math.round(plan.latency) : null,
+      monthly_data_gb: plan.data_cap_gb,
+      overage_price_per_gb: null,
+      overage_increment_gb: null,
+      bundle_discounts_url: null,
+      data_allowance_policy_url: null,
+      network_management_url: null,
+      privacy_policy_url: null,
+      support_phone: supportPhone || null,
+      support_url: supportUrl || null,
+      data_source: 'ocr_extraction',
+      source_file: plan.filename,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    records.push(record)
+  }
+
+  const fiberCount = records.filter(r => r.connection_type === 'Fiber').length
+  const cableCount = records.filter(r => r.connection_type === 'Cable').length
+  const dslCount = records.filter(r => r.connection_type === 'DSL').length
+
+  console.log(`  ✅ Parsed ${records.length} ${providerName} plans from OCR`)
+  if (fiberCount) console.log(`     - ${fiberCount} fiber plans`)
+  if (cableCount) console.log(`     - ${cableCount} cable plans`)
+  if (dslCount) console.log(`     - ${dslCount} DSL plans`)
+  return records
+}
+
+// ============================================
+// Breezeline - Standard FCC CSV Format
+// ============================================
+
+function parseBreezlineRow(row: Record<string, string>, sourceFile: string): BroadbandPlanRecord | null {
+  const fccPlanId = row.unique_plan_id?.trim()
+  if (!fccPlanId) return null
+
+  const price = parseFloat(row.monthly_price) || 0
+  if (price === 0 || price > 400) return null  // Filter bad data
+
+  const downloadSpeed = parseInt(row.typical_download_speed) || null
+  const uploadSpeed = parseInt(row.typical_upload_speed) || null
+  const latency = parseInt(row.typical_latency) || null
+
+  // Determine connection type
+  let connectionType = 'Cable'
+  const connType = row.connection_type?.toLowerCase() || ''
+  if (connType.includes('fiber')) connectionType = 'Fiber'
+  else if (connType.includes('fixed')) connectionType = 'Cable'
+
+  return {
+    fcc_plan_id: fccPlanId,
+    provider_name: 'Breezeline',
+    provider_id: null,
+    service_plan_name: row.service_plan_name?.trim() || 'Internet',
+    tier_plan_name: row.tier_plan_name?.trim() || null,
+    connection_type: connectionType,
+    service_type: 'residential',
+    monthly_price: price,
+    has_intro_rate: row.intro_rate?.toLowerCase() === 'yes',
+    intro_rate_price: parseFloat(row.intro_rate_price) || null,
+    intro_rate_months: parseInt(row.intro_rate_time) || null,
+    contract_required: row.contract_req?.toLowerCase() === 'yes',
+    contract_months: parseInt(row.contract_time) || null,
+    contract_terms_url: row.contract_terms_url || null,
+    early_termination_fee: parseFloat(row.early_termination_fee) || 0,
+    one_time_fees: [],
+    monthly_fees: [],
+    tax_info: row.tax || 'Varies by location',
+    typical_download_speed: downloadSpeed,
+    typical_upload_speed: uploadSpeed,
+    typical_latency: latency,
+    monthly_data_gb: row.monthly_data_allow === 'NULL' ? null : parseInt(row.monthly_data_allow) || null,
+    overage_price_per_gb: null,
+    overage_increment_gb: null,
+    bundle_discounts_url: row.bundle_discounts_url || null,
+    data_allowance_policy_url: row.data_allowance_policy_url || null,
+    network_management_url: row.network_management_policy_url || null,
+    privacy_policy_url: row.privacy_policy_url || null,
+    support_phone: row.customer_support_phone || '877-435-2227',
+    support_url: row.customer_support_web || 'https://www.breezeline.com/support',
+    data_source: 'fcc_broadband_labels',
+    source_file: sourceFile,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+}
+
+async function importBreezlineCSV(filePath: string, fileName: string): Promise<BroadbandPlanRecord[]> {
+  if (!existsSync(filePath)) {
+    console.log(`  ⚠️ Breezeline CSV not found: ${filePath}`)
+    return []
+  }
+
+  const content = readFileSync(filePath, 'utf-8')
+  const lines = content.split('\n')
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
+
+  const records: BroadbandPlanRecord[] = []
+  const seenIds = new Set<string>()
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (!line) continue
+
+    // Parse CSV with quotes
+    const values: string[] = []
+    let current = ''
+    let inQuotes = false
+    for (const char of line) {
+      if (char === '"') {
+        inQuotes = !inQuotes
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim())
+        current = ''
+      } else {
+        current += char
+      }
+    }
+    values.push(current.trim())
+
+    const row: Record<string, string> = {}
+    headers.forEach((h, idx) => {
+      row[h] = values[idx] || ''
+    })
+
+    const record = parseBreezlineRow(row, fileName)
+    if (record && !seenIds.has(record.fcc_plan_id)) {
+      seenIds.add(record.fcc_plan_id)
+      records.push(record)
+    }
+  }
+
+  console.log(`  ✅ Parsed ${records.length} Breezeline plans from ${fileName}`)
+  return records
+}
+
 async function matchProvidersIds(records: BroadbandPlanRecord[]): Promise<void> {
   console.log('\n🔗 Matching provider IDs...')
 
@@ -1992,6 +2201,46 @@ async function main() {
   console.log('\n📁 Processing CenturyLink...')
   const centurylink = importCenturyLinkJSON(CENTURYLINK_JSON)
   allRecords.push(...centurylink)
+
+  // Import Optimum
+  console.log('\n📁 Processing Optimum...')
+  const optimum = importGenericOCRJSON(OPTIMUM_JSON, 'Optimum', 'https://www.optimum.com/support', '1-877-694-9474')
+  allRecords.push(...optimum)
+
+  // Import Windstream
+  console.log('\n📁 Processing Windstream...')
+  const windstream = importGenericOCRJSON(WINDSTREAM_JSON, 'Windstream', 'https://www.windstream.com/support', '1-800-347-1991')
+  allRecords.push(...windstream)
+
+  // Import Brightspeed
+  console.log('\n📁 Processing Brightspeed...')
+  const brightspeed = importGenericOCRJSON(BRIGHTSPEED_JSON, 'Brightspeed', 'https://www.brightspeed.com/support', '1-833-692-7773')
+  allRecords.push(...brightspeed)
+
+  // Import Astound
+  console.log('\n📁 Processing Astound...')
+  const astound = importGenericOCRJSON(ASTOUND_JSON, 'Astound', 'https://www.astound.com/support', '1-800-427-8686')
+  allRecords.push(...astound)
+
+  // Import Consolidated/Fidium
+  console.log('\n📁 Processing Consolidated...')
+  const consolidated = importGenericOCRJSON(CONSOLIDATED_JSON, 'Consolidated', 'https://www.consolidated.com/support', '1-844-968-7224')
+  allRecords.push(...consolidated)
+
+  // Import TDS Telecom
+  console.log('\n📁 Processing TDS Telecom...')
+  const tds = importGenericOCRJSON(TDS_JSON, 'TDS Telecom', 'https://tdstelecom.com/support', '1-888-225-5837')
+  allRecords.push(...tds)
+
+  // Import Ziply Fiber
+  console.log('\n📁 Processing Ziply Fiber...')
+  const ziply = importGenericOCRJSON(ZIPLY_JSON, 'Ziply Fiber', 'https://ziplyfiber.com/helpcenter', '1-866-947-5988')
+  allRecords.push(...ziply)
+
+  // Import Breezeline
+  console.log('\n📁 Processing Breezeline...')
+  const breezeline = await importBreezlineCSV(BREEZELINE_CSV, 'broadband-labels-2025-12-25_20-11-28.csv')
+  allRecords.push(...breezeline)
 
   // Match provider IDs
   await matchProvidersIds(allRecords)
