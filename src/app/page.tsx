@@ -15,6 +15,42 @@ interface Provider {
   coveragePercent: number
 }
 
+// Provider details for enhanced cards
+const providerDetails: Record<string, { maxSpeed: string; startingPrice: string; color: string }> = {
+  'xfinity': { maxSpeed: '2 Gbps', startingPrice: '$30', color: 'from-purple-500 to-blue-500' },
+  'spectrum': { maxSpeed: '1 Gbps', startingPrice: '$50', color: 'from-blue-500 to-cyan-500' },
+  'att-internet': { maxSpeed: '5 Gbps', startingPrice: '$55', color: 'from-cyan-500 to-blue-500' },
+  'verizon-fios': { maxSpeed: '2.3 Gbps', startingPrice: '$50', color: 'from-red-500 to-orange-500' },
+  'verizon-5g': { maxSpeed: '1 Gbps', startingPrice: '$35', color: 'from-red-500 to-pink-500' },
+  'cox': { maxSpeed: '2 Gbps', startingPrice: '$50', color: 'from-orange-500 to-amber-500' },
+  'frontier': { maxSpeed: '5 Gbps', startingPrice: '$50', color: 'from-red-600 to-red-400' },
+  'google-fiber': { maxSpeed: '8 Gbps', startingPrice: '$70', color: 'from-green-500 to-blue-500' },
+  't-mobile': { maxSpeed: '245 Mbps', startingPrice: '$40', color: 'from-pink-500 to-purple-500' },
+  'centurylink': { maxSpeed: '940 Mbps', startingPrice: '$30', color: 'from-green-500 to-teal-500' },
+  'earthlink': { maxSpeed: '5 Gbps', startingPrice: '$50', color: 'from-blue-600 to-indigo-500' },
+  'hughesnet': { maxSpeed: '100 Mbps', startingPrice: '$50', color: 'from-blue-700 to-blue-500' },
+  'viasat': { maxSpeed: '150 Mbps', startingPrice: '$70', color: 'from-indigo-500 to-blue-500' },
+  'starlink': { maxSpeed: '220 Mbps', startingPrice: '$120', color: 'from-slate-600 to-slate-400' },
+  'optimum': { maxSpeed: '8 Gbps', startingPrice: '$40', color: 'from-yellow-500 to-amber-500' },
+  'windstream': { maxSpeed: '2 Gbps', startingPrice: '$40', color: 'from-emerald-500 to-green-500' },
+  'mediacom': { maxSpeed: '1 Gbps', startingPrice: '$30', color: 'from-blue-500 to-blue-400' },
+  'wow': { maxSpeed: '1 Gbps', startingPrice: '$40', color: 'from-orange-500 to-yellow-500' },
+  'astound': { maxSpeed: '1.5 Gbps', startingPrice: '$25', color: 'from-cyan-500 to-teal-500' },
+  'brightspeed': { maxSpeed: '940 Mbps', startingPrice: '$50', color: 'from-orange-400 to-red-500' },
+  'ziply': { maxSpeed: '5 Gbps', startingPrice: '$20', color: 'from-green-400 to-emerald-500' },
+  'metronet': { maxSpeed: '5 Gbps', startingPrice: '$50', color: 'from-blue-500 to-purple-500' },
+}
+
+// Technology colors for badges
+const techColors: Record<string, string> = {
+  'Fiber': 'from-green-400 to-emerald-500 shadow-green-500/30',
+  'Cable': 'from-blue-400 to-cyan-500 shadow-blue-500/30',
+  '5G': 'from-purple-400 to-pink-500 shadow-purple-500/30',
+  'DSL': 'from-yellow-400 to-amber-500 shadow-yellow-500/30',
+  'Satellite': 'from-slate-400 to-gray-500 shadow-slate-500/30',
+  'Fixed Wireless': 'from-orange-400 to-red-500 shadow-orange-500/30',
+}
+
 // Animated counter component
 function CountUp({ end, suffix = '' }: { end: number | string; suffix?: string }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -171,74 +207,166 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Top Providers Section */}
+      {/* Top Providers Section - Enhanced Spotlight Cards */}
       {(providers.length > 0 || loadingProviders) && (
-        <section className="py-8 border-t border-gray-800 relative overflow-hidden">
-          <div className="absolute inset-0 data-grid opacity-30" />
+        <section className="py-12 border-t border-gray-800 relative overflow-hidden">
+          {/* Background effects */}
+          <div className="absolute inset-0 data-grid opacity-20" />
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
+
           <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-4xl mx-auto">
-              <motion.h2
-                className="text-xl font-semibold text-white text-center mb-6"
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
+            <div className="max-w-5xl mx-auto">
+              {/* Section Header */}
+              <motion.div
+                className="text-center mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
               >
-                <span className="neon-text-subtle text-cyan-400">Top Providers</span>
-                {' '}
-                {location?.city ? `in ${location.city}` : 'in Your Area'}
-              </motion.h2>
+                <h2 className="text-2xl md:text-3xl font-bold mb-2">
+                  <span className="holographic">Top Providers</span>
+                  {' '}
+                  <span className="text-white">
+                    {location?.city ? `in ${location.city}` : 'in Your Area'}
+                  </span>
+                </h2>
+                <p className="text-gray-400 text-sm">Based on coverage and technology in your area</p>
+              </motion.div>
+
+              {/* Provider Cards */}
               {loadingProviders ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="bg-gray-800/50 rounded-lg p-4 animate-pulse border border-gray-700">
-                      <div className="h-5 bg-gray-700 rounded w-3/4 mb-2" />
-                      <div className="h-4 bg-gray-700 rounded w-1/2" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 animate-pulse border border-gray-700/50">
+                      <div className="flex items-start gap-4">
+                        <div className="w-14 h-14 bg-gray-700 rounded-xl" />
+                        <div className="flex-1">
+                          <div className="h-5 bg-gray-700 rounded w-1/2 mb-2" />
+                          <div className="h-4 bg-gray-700 rounded w-3/4" />
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {providers.map((provider, index) => (
-                    <motion.div
-                      key={provider.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <Link
-                        href={`/providers/${provider.slug}`}
-                        className="block futuristic-card corner-accent rounded-lg p-4 group"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {providers.slice(0, 4).map((provider, index) => {
+                    const details = providerDetails[provider.slug] || {
+                      maxSpeed: 'Varies',
+                      startingPrice: 'Call',
+                      color: 'from-gray-500 to-gray-600'
+                    }
+                    return (
+                      <motion.div
+                        key={provider.id}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.1, duration: 0.5 }}
                       >
-                        <div className="font-medium text-white group-hover:text-cyan-400 transition-colors">
-                          {provider.name}
-                        </div>
-                        <div className="text-xs text-gray-400 mt-2 flex flex-wrap gap-1">
-                          {provider.technologies.slice(0, 2).map((tech) => (
-                            <span
-                              key={tech}
-                              className="px-2 py-0.5 bg-gray-700/50 rounded border border-gray-600/50 text-gray-300"
-                            >
-                              {tech}
-                            </span>
-                          ))}
-                        </div>
-                      </Link>
-                    </motion.div>
-                  ))}
+                        <Link
+                          href={`/providers/${provider.slug}`}
+                          className="group block relative bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1"
+                        >
+                          {/* Gradient overlay on hover */}
+                          <div className={`absolute inset-0 bg-gradient-to-br ${details.color} opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300`} />
+
+                          {/* Coverage badge */}
+                          <div className="absolute top-4 right-4">
+                            <div className="px-2 py-1 bg-gray-800/80 rounded-full text-xs text-gray-400 border border-gray-700/50">
+                              {provider.coveragePercent}% coverage
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-4 relative">
+                            {/* Provider Icon/Initial */}
+                            <div className={`relative w-14 h-14 rounded-xl bg-gradient-to-br ${details.color} flex items-center justify-center flex-shrink-0 shadow-lg group-hover:shadow-xl transition-shadow duration-300`}>
+                              <span className="text-xl font-bold text-white drop-shadow-md">
+                                {provider.name.charAt(0)}
+                              </span>
+                              {/* Glow effect */}
+                              <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${details.color} opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300`} />
+                            </div>
+
+                            {/* Provider Info */}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-lg text-white group-hover:text-cyan-400 transition-colors truncate">
+                                {provider.name}
+                              </h3>
+
+                              {/* Tech badges */}
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {provider.technologies.slice(0, 2).map((tech) => (
+                                  <span
+                                    key={tech}
+                                    className={`px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${techColors[tech] || 'from-gray-500 to-gray-600'} text-white shadow-sm`}
+                                  >
+                                    {tech}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Stats Row */}
+                          <div className="mt-5 pt-4 border-t border-gray-700/50 flex items-center justify-between">
+                            <div className="flex items-center gap-6">
+                              {/* Speed */}
+                              <div>
+                                <div className="text-xs text-gray-500 uppercase tracking-wide">Max Speed</div>
+                                <div className="text-lg font-bold text-cyan-400 neon-text-subtle">
+                                  {details.maxSpeed}
+                                </div>
+                              </div>
+                              {/* Price */}
+                              <div>
+                                <div className="text-xs text-gray-500 uppercase tracking-wide">From</div>
+                                <div className="text-lg font-bold text-green-400 neon-text-subtle">
+                                  {details.startingPrice}<span className="text-sm font-normal text-gray-500">/mo</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Arrow */}
+                            <div className="text-gray-600 group-hover:text-cyan-400 transition-colors">
+                              <svg className="w-6 h-6 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Coverage bar */}
+                          <div className="mt-4">
+                            <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
+                              <motion.div
+                                className={`h-full bg-gradient-to-r ${details.color} rounded-full`}
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${provider.coveragePercent}%` }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.5 + index * 0.1, duration: 0.8 }}
+                              />
+                            </div>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    )
+                  })}
                 </div>
               )}
+
+              {/* View All Link */}
               <motion.div
-                className="text-center mt-6"
+                className="text-center mt-8"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
               >
                 <Link
                   href="/providers"
-                  className="inline-flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 group"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800/50 text-gray-300 rounded-xl text-sm border border-gray-700 transition-all hover:border-cyan-500/50 hover:bg-gray-800/80 hover:text-cyan-400 hover:shadow-lg hover:shadow-cyan-500/10 group"
                 >
-                  View all providers
+                  <span>View all {providers.length}+ providers</span>
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
