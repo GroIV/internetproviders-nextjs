@@ -46,18 +46,8 @@ export function MiniPlanCard({ plan, index = 0, onAskAI }: MiniPlanCardProps) {
   const tier = tierConfig[plan.tier]
   const isSymmetric = plan.uploadSpeed === plan.downloadSpeed
 
-  // Provider ID mapping for affiliate links
-  const providerIdMap: Record<string, string> = {
-    'frontier-fiber': 'frontier',
-    'att-internet': 'att',
-    'spectrum': 'spectrum',
-    't-mobile': 'tmobile',
-    'wow': 'wow',
-    'google-fiber': 'google-fiber',
-    'starlink': 'starlink',
-    'viasat': 'viasat'
-  }
-  const affiliateProviderId = providerIdMap[plan.providerSlug]
+  // Get affiliate URL - providerSlug matches keys in affiliates.ts
+  const affiliateProviderId = plan.providerSlug
   const orderUrl = affiliateProviderId ? getAffiliateUrl(affiliateProviderId, 'chat') : null
 
   // Format speed display

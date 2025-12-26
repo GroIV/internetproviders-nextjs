@@ -73,6 +73,46 @@ const techColors: Record<string, string> = {
   'Satellite': 'from-slate-400 to-gray-500',
 }
 
+// Technology priority for sorting (lower = higher priority)
+// Fiber > Cable > 5G > Fixed Wireless > DSL > Satellite
+const TECH_PRIORITY: Record<string, number> = {
+  'Fiber': 1,
+  'Cable': 2,
+  '5G': 3,
+  'Fixed Wireless': 4,
+  'DSL': 5,
+  'Satellite': 6,
+}
+
+function getProviderTechPriority(technologies: string[] | null | undefined): number {
+  if (!technologies || technologies.length === 0) return 99
+
+  // Find the highest priority technology this provider has
+  let bestPriority = 99
+  for (const tech of technologies) {
+    const priority = TECH_PRIORITY[tech]
+    if (priority !== undefined && priority < bestPriority) {
+      bestPriority = priority
+    }
+  }
+  return bestPriority
+}
+
+function sortProvidersByTechPriority<T extends { name: string; technologies?: string[] | null }>(providers: T[]): T[] {
+  return [...providers].sort((a, b) => {
+    const aPriority = getProviderTechPriority(a.technologies)
+    const bPriority = getProviderTechPriority(b.technologies)
+
+    // First sort by technology priority
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority
+    }
+
+    // Then alphabetically by name
+    return a.name.localeCompare(b.name)
+  })
+}
+
 export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) {
   const { location, setManualZip } = useLocation()
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true)
@@ -108,21 +148,30 @@ export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) 
     [availableProviders]
   )
 
-  // Filter providers based on toggle
+  // Filter and sort providers based on toggle
+  // Always sort by technology hierarchy: Fiber > Cable > 5G > Fixed Wireless > DSL > Satellite
   const displayProviders = useMemo(() => {
+    let providers: Provider[]
+
     if (!showOnlyAvailable || !location?.zipCode) {
-      return allProviders
+      // Show all providers
+      providers = allProviders
+    } else if (availableProviders.length > 0) {
+      // Filter to only available providers
+      providers = allProviders.filter(p => availableSlugs.has(p.slug))
+    } else {
+      // No coverage data - show all
+      providers = allProviders
     }
-    // If we have available providers data, filter to only those
-    if (availableProviders.length > 0) {
-      return allProviders.filter(p => availableSlugs.has(p.slug))
-    }
-    return allProviders
+
+    // Always sort by technology priority, then alphabetically
+    return sortProvidersByTechPriority(providers)
   }, [allProviders, showOnlyAvailable, location?.zipCode, availableProviders, availableSlugs])
 
   // Group providers by type
   const fiberProviders = displayProviders.filter(p => p.technologies?.includes('Fiber'))
   const cableProviders = displayProviders.filter(p => p.technologies?.includes('Cable'))
+  const wirelessProviders = displayProviders.filter(p => p.technologies?.includes('5G') || p.technologies?.includes('Fixed Wireless'))
   const satelliteProviders = displayProviders.filter(p => p.technologies?.includes('Satellite'))
   const tvProviders = displayProviders.filter(p => p.category === 'TV' || p.category === 'Satellite TV')
 
@@ -232,7 +281,7 @@ export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) 
         <StaggerContainer
           staggerDelay={0.1}
           direction="up"
-          className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-12"
         >
           <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
             <div className="text-2xl font-bold text-blue-400">{displayProviders.length}</div>
@@ -242,41 +291,30 @@ export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) 
           </div>
           <div className="futuristic-card rounded-xl p-4 text-center glow-burst-emerald">
             <div className="text-2xl font-bold text-green-400">{fiberProviders.length}</div>
-            <div className="text-sm text-gray-400">Fiber Providers</div>
+            <div className="text-sm text-gray-400">Fiber</div>
           </div>
           <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
             <div className="text-2xl font-bold text-cyan-400">{cableProviders.length}</div>
-            <div className="text-sm text-gray-400">Cable Providers</div>
+            <div className="text-sm text-gray-400">Cable</div>
+          </div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-pink">
+            <div className="text-2xl font-bold text-purple-400">{wirelessProviders.length}</div>
+            <div className="text-sm text-gray-400">5G/Wireless</div>
           </div>
           <div className="futuristic-card rounded-xl p-4 text-center glow-burst-orange">
             <div className="text-2xl font-bold text-orange-400">{satelliteProviders.length}</div>
-            <div className="text-sm text-gray-400">Satellite Providers</div>
+            <div className="text-sm text-gray-400">Satellite</div>
           </div>
-          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-pink">
-            <div className="text-2xl font-bold text-purple-400">{tvProviders.length}</div>
-            <div className="text-sm text-gray-400">TV Providers</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
+            <div className="text-2xl font-bold text-red-400">{tvProviders.length}</div>
+            <div className="text-sm text-gray-400">TV</div>
           </div>
         </StaggerContainer>
 
-        {/* TV Providers Section */}
-        {tvProviders.length > 0 && (
-          <>
-            <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
-              TV Providers
-              <span className="px-2 py-1 bg-purple-600/20 text-purple-400 text-sm rounded">Satellite TV</span>
-            </h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {tvProviders.map((provider) => (
-                <ProviderCard key={provider.id} provider={provider} />
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* All Providers Grid */}
+        {/* Internet Providers Grid - sorted by technology hierarchy */}
         <ScrollReveal direction="left">
           <h2 className="text-2xl font-semibold mb-6 gradient-text-fresh">
-            {showOnlyAvailable && location?.zipCode ? 'Available Providers' : 'All Providers'}
+            {showOnlyAvailable && location?.zipCode ? 'Available Internet Providers' : 'Internet Providers'}
           </h2>
         </ScrollReveal>
 
@@ -289,23 +327,25 @@ export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) 
             transition={{ duration: 0.2 }}
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
           >
-            {displayProviders.map((provider) => {
-              // Find coverage info if available
-              const coverageInfo = availableProviders.find(p => p.slug === provider.slug)
-              return (
-                <ProviderCard
-                  key={provider.id}
-                  provider={provider}
-                  coveragePercent={coverageInfo?.coveragePercent}
-                />
-              )
-            })}
+            {displayProviders
+              .filter(p => p.category !== 'TV' && p.category !== 'Satellite TV')
+              .map((provider) => {
+                // Find coverage info if available
+                const coverageInfo = availableProviders.find(p => p.slug === provider.slug)
+                return (
+                  <ProviderCard
+                    key={provider.id}
+                    provider={provider}
+                    coveragePercent={coverageInfo?.coveragePercent}
+                  />
+                )
+              })}
           </motion.div>
         </AnimatePresence>
 
-        {displayProviders.length === 0 && (
+        {displayProviders.filter(p => p.category !== 'TV' && p.category !== 'Satellite TV').length === 0 && (
           <div className="text-center py-12 text-gray-400">
-            <p>No providers found for your location.</p>
+            <p>No internet providers found for your location.</p>
             <button
               onClick={() => setShowOnlyAvailable(false)}
               className="mt-4 text-cyan-400 hover:text-cyan-300"
@@ -313,6 +353,23 @@ export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) 
               View all providers
             </button>
           </div>
+        )}
+
+        {/* TV Providers Section */}
+        {tvProviders.length > 0 && (
+          <>
+            <ScrollReveal direction="left">
+              <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
+                <span className="gradient-text-warm">TV Providers</span>
+                <span className="px-2 py-1 bg-red-600/20 text-red-400 text-sm rounded">Satellite TV</span>
+              </h2>
+            </ScrollReveal>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {tvProviders.map((provider) => (
+                <ProviderCard key={provider.id} provider={provider} />
+              ))}
+            </div>
+          </>
         )}
 
         {/* CTA */}

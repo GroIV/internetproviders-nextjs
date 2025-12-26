@@ -164,14 +164,54 @@ async function getProvidersByZip(zipCode: string): Promise<Provider[]> {
   // Create lookup map for names
   const nameMap = new Map(providerNames.map((p: any) => [p.provider_id, p.name]))
 
-  // Helper to check if provider is satellite (should be deprioritized)
-  const isSatelliteProvider = (name: string) => {
+  // Helper to get technology priority for a provider name
+  // Priority: Fiber (1) > Cable (2) > 5G (3) > Fixed Wireless (4) > DSL (5) > Satellite (6)
+  const getTechPriority = (name: string): number => {
     const lowerName = name.toLowerCase()
-    return lowerName.includes('viasat') ||
-      lowerName.includes('echostar') ||
-      lowerName.includes('hughesnet') ||
-      lowerName.includes('starlink') ||
-      lowerName.includes('space exploration')
+
+    // Satellite providers (lowest priority)
+    if (lowerName.includes('viasat') ||
+        lowerName.includes('echostar') ||
+        lowerName.includes('hughesnet') ||
+        lowerName.includes('starlink') ||
+        lowerName.includes('space exploration')) {
+      return 6
+    }
+
+    // 5G/Wireless providers
+    if (lowerName.includes('t-mobile') ||
+        (lowerName.includes('verizon') && !lowerName.includes('fios'))) {
+      return 3
+    }
+
+    // Fiber providers (highest priority)
+    if (lowerName.includes('fios') ||
+        lowerName.includes('google') ||
+        lowerName.includes('frontier') ||
+        lowerName.includes('centurylink') ||
+        lowerName.includes('lumen') ||
+        lowerName.includes('ziply') ||
+        lowerName.includes('metronet') ||
+        (lowerName.includes('at&t') && !lowerName.includes('wireless'))) {
+      return 1
+    }
+
+    // Cable providers
+    if (lowerName.includes('charter') ||
+        lowerName.includes('comcast') ||
+        lowerName.includes('xfinity') ||
+        lowerName.includes('cox') ||
+        lowerName.includes('altice') ||
+        lowerName.includes('optimum') ||
+        lowerName.includes('spectrum') ||
+        lowerName.includes('mediacom') ||
+        lowerName.includes('astound') ||
+        lowerName.includes('wow')) {
+      return 2
+    }
+
+    // Default - treat as DSL/other
+    return 5
   }
 
   // Combine and format
@@ -182,16 +222,17 @@ async function getProvidersByZip(zipCode: string): Promise<Provider[]> {
     }))
     .filter((p: Provider) => p.name !== 'Unknown Provider')
 
-  // Sort: non-satellite first (by coverage), then satellite (by coverage)
+  // Sort by technology hierarchy, then by coverage within same technology
   providers.sort((a, b) => {
-    const aIsSatellite = isSatelliteProvider(a.name)
-    const bIsSatellite = isSatelliteProvider(b.name)
+    const aPriority = getTechPriority(a.name)
+    const bPriority = getTechPriority(b.name)
 
-    // If one is satellite and one isn't, non-satellite comes first
-    if (aIsSatellite && !bIsSatellite) return 1
-    if (!aIsSatellite && bIsSatellite) return -1
+    // First sort by technology priority
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority
+    }
 
-    // Same type: sort by coverage descending
+    // Same technology: sort by coverage descending
     return b.coverage - a.coverage
   })
 
@@ -258,23 +299,31 @@ function TechnologyCard({
 
 function ProviderCard({ provider }: { provider: Provider }) {
   // Determine provider type based on name
-  const isSatellite = provider.name.toLowerCase().includes('echostar') ||
-    provider.name.toLowerCase().includes('viasat') ||
-    provider.name.toLowerCase().includes('space exploration') ||
-    provider.name.toLowerCase().includes('starlink')
+  const lowerName = provider.name.toLowerCase()
 
-  const isFiber = provider.name.toLowerCase().includes('at&t') ||
-    provider.name.toLowerCase().includes('verizon') ||
-    provider.name.toLowerCase().includes('frontier') ||
-    provider.name.toLowerCase().includes('centurylink') ||
-    provider.name.toLowerCase().includes('google fiber')
+  const isSatellite = lowerName.includes('echostar') ||
+    lowerName.includes('viasat') ||
+    lowerName.includes('space exploration') ||
+    lowerName.includes('starlink') ||
+    lowerName.includes('hughesnet')
 
-  const isCable = provider.name.toLowerCase().includes('charter') ||
-    provider.name.toLowerCase().includes('comcast') ||
-    provider.name.toLowerCase().includes('xfinity') ||
-    provider.name.toLowerCase().includes('cox') ||
-    provider.name.toLowerCase().includes('altice') ||
-    provider.name.toLowerCase().includes('spectrum')
+  const is5G = lowerName.includes('t-mobile') ||
+    (lowerName.includes('verizon') && !lowerName.includes('fios'))
+
+  const isFiber = lowerName.includes('fios') ||
+    (lowerName.includes('at&t') && !lowerName.includes('wireless')) ||
+    lowerName.includes('frontier') ||
+    lowerName.includes('centurylink') ||
+    lowerName.includes('lumen') ||
+    lowerName.includes('google')
+
+  const isCable = lowerName.includes('charter') ||
+    lowerName.includes('comcast') ||
+    lowerName.includes('xfinity') ||
+    lowerName.includes('cox') ||
+    lowerName.includes('altice') ||
+    lowerName.includes('optimum') ||
+    lowerName.includes('spectrum')
 
   let type = 'Internet Provider'
   let color = 'text-gray-400'
@@ -282,6 +331,9 @@ function ProviderCard({ provider }: { provider: Provider }) {
   if (isSatellite) {
     type = 'Satellite'
     color = 'text-orange-400'
+  } else if (is5G) {
+    type = '5G/Wireless'
+    color = 'text-green-400'
   } else if (isFiber) {
     type = 'Fiber/DSL'
     color = 'text-purple-400'

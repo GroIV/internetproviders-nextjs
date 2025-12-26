@@ -101,13 +101,8 @@ export function PlanCard({
   }
 
   // Get affiliate URL for this provider
-  const providerIdMap: Record<string, string> = {
-    'frontier-fiber': 'frontier',
-    'att-internet': 'att',
-    'spectrum': 'spectrum',
-    't-mobile': 'tmobile'
-  }
-  const affiliateProviderId = providerIdMap[providerSlug]
+  // Note: providerId must match the keys in affiliates.ts
+  const affiliateProviderId = providerSlug
   const orderUrl = affiliateProviderId ? getAffiliateUrl(affiliateProviderId, 'plans-page') : null
 
   return (

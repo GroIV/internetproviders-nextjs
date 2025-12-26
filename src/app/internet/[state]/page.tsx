@@ -71,13 +71,68 @@ async function getStateProviders(stateCode: string) {
     }
   })
 
-  // Convert to array and sort by average coverage
+  // Helper to get technology priority for a provider name
+  // Priority: Fiber (1) > Cable (2) > 5G (3) > Fixed Wireless (4) > DSL (5) > Satellite (6)
+  const getTechPriority = (name: string): number => {
+    const lowerName = name.toLowerCase()
+
+    // Satellite providers (lowest priority)
+    if (lowerName.includes('viasat') ||
+        lowerName.includes('echostar') ||
+        lowerName.includes('hughesnet') ||
+        lowerName.includes('starlink') ||
+        lowerName.includes('space exploration')) {
+      return 6
+    }
+
+    // 5G/Wireless providers
+    if (lowerName.includes('t-mobile') ||
+        (lowerName.includes('verizon') && !lowerName.includes('fios'))) {
+      return 3
+    }
+
+    // Fiber providers (highest priority)
+    if (lowerName.includes('fios') ||
+        lowerName.includes('google') ||
+        lowerName.includes('frontier') ||
+        lowerName.includes('centurylink') ||
+        lowerName.includes('lumen') ||
+        lowerName.includes('ziply') ||
+        lowerName.includes('metronet') ||
+        (lowerName.includes('at&t') && !lowerName.includes('wireless'))) {
+      return 1
+    }
+
+    // Cable providers
+    if (lowerName.includes('charter') ||
+        lowerName.includes('comcast') ||
+        lowerName.includes('xfinity') ||
+        lowerName.includes('cox') ||
+        lowerName.includes('altice') ||
+        lowerName.includes('optimum') ||
+        lowerName.includes('spectrum') ||
+        lowerName.includes('mediacom') ||
+        lowerName.includes('astound') ||
+        lowerName.includes('wow')) {
+      return 2
+    }
+
+    // Default - treat as DSL/other
+    return 5
+  }
+
+  // Convert to array and sort by technology hierarchy, then coverage within same tech
   const providers = Array.from(providerMap.values())
     .map(p => ({
       name: p.name,
       avgCoverage: Math.round((p.totalCoverage / p.count) * 100),
     }))
-    .sort((a, b) => b.avgCoverage - a.avgCoverage)
+    .sort((a, b) => {
+      const aPriority = getTechPriority(a.name)
+      const bPriority = getTechPriority(b.name)
+      if (aPriority !== bPriority) return aPriority - bPriority
+      return b.avgCoverage - a.avgCoverage
+    })
     .slice(0, 15)
 
   return { providers, coverageStats: null }
@@ -106,17 +161,33 @@ export async function generateStaticParams() {
 function getProviderType(name: string): { type: string; color: string } {
   const lowerName = name.toLowerCase()
 
-  if (lowerName.includes('viasat') || lowerName.includes('echostar') || lowerName.includes('starlink') || lowerName.includes('space exploration')) {
+  // Satellite providers
+  if (lowerName.includes('viasat') || lowerName.includes('echostar') || lowerName.includes('starlink') || lowerName.includes('space exploration') || lowerName.includes('hughesnet')) {
     return { type: 'Satellite', color: 'text-orange-400' }
   }
-  if (lowerName.includes('at&t') || lowerName.includes('verizon') || lowerName.includes('frontier') || lowerName.includes('centurylink') || lowerName.includes('lumen')) {
+  // 5G/Wireless - check before fiber since Verizon without Fios is 5G
+  if (lowerName.includes('t-mobile')) {
+    return { type: '5G/Wireless', color: 'text-green-400' }
+  }
+  if (lowerName.includes('verizon') && !lowerName.includes('fios')) {
+    return { type: '5G/Wireless', color: 'text-green-400' }
+  }
+  // Fiber/DSL providers - Verizon Fios specifically
+  if (lowerName.includes('fios')) {
+    return { type: 'Fiber', color: 'text-purple-400' }
+  }
+  if (lowerName.includes('at&t') && !lowerName.includes('wireless')) {
     return { type: 'Fiber/DSL', color: 'text-purple-400' }
   }
-  if (lowerName.includes('charter') || lowerName.includes('comcast') || lowerName.includes('xfinity') || lowerName.includes('cox') || lowerName.includes('spectrum') || lowerName.includes('altice')) {
-    return { type: 'Cable', color: 'text-blue-400' }
+  if (lowerName.includes('frontier') || lowerName.includes('centurylink') || lowerName.includes('lumen')) {
+    return { type: 'Fiber/DSL', color: 'text-purple-400' }
   }
-  if (lowerName.includes('t-mobile') || lowerName.includes('verizon wireless')) {
-    return { type: '5G/Wireless', color: 'text-green-400' }
+  if (lowerName.includes('google')) {
+    return { type: 'Fiber', color: 'text-purple-400' }
+  }
+  // Cable providers
+  if (lowerName.includes('charter') || lowerName.includes('comcast') || lowerName.includes('xfinity') || lowerName.includes('cox') || lowerName.includes('spectrum') || lowerName.includes('altice') || lowerName.includes('optimum')) {
+    return { type: 'Cable', color: 'text-blue-400' }
   }
   return { type: 'Internet', color: 'text-gray-400' }
 }
