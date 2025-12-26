@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PlanCard } from './PlanCard'
 import { featuredPlans, type ProviderFeaturedPlans } from '@/lib/featuredPlans'
 import { useLocation } from '@/contexts/LocationContext'
+import { sortByTechPriority } from '@/lib/techPriority'
 
 type ViewMode = 'providers' | 'tiers' | 'value'
 type TierFilter = 'all' | 'budget' | 'value' | 'premium'
@@ -64,22 +65,32 @@ export function FeaturedPlansDisplay({
     [availableProviders]
   )
 
-  // Filter featured plans based on availability
+  // Filter featured plans based on availability and sort by technology priority
   const filteredFeaturedPlans = useMemo(() => {
+    let plans: ProviderFeaturedPlans[]
     if (!showOnlyAvailable || !location?.zipCode || availableProviders.length === 0) {
-      return featuredPlans
+      plans = featuredPlans
+    } else {
+      plans = featuredPlans.filter(p => availableSlugs.has(p.slug))
     }
-    return featuredPlans.filter(p => availableSlugs.has(p.slug))
+    // Sort by best technology (Fiber > Cable > 5G > Fixed Wireless > DSL > Satellite)
+    return sortByTechPriority(plans, (provider) =>
+      provider.plans.map(plan => plan.technology)
+    )
   }, [showOnlyAvailable, location?.zipCode, availableProviders, availableSlugs])
 
-  // Get all plans with provider info (filtered)
-  const allPlansWithProvider = filteredFeaturedPlans.flatMap(provider =>
-    provider.plans.map(plan => ({
-      ...plan,
-      providerName: provider.providerName,
-      providerSlug: provider.slug
-    }))
-  )
+  // Get all plans with provider info (filtered and sorted by technology)
+  const allPlansWithProvider = useMemo(() => {
+    const plans = filteredFeaturedPlans.flatMap(provider =>
+      provider.plans.map(plan => ({
+        ...plan,
+        providerName: provider.providerName,
+        providerSlug: provider.slug
+      }))
+    )
+    // Sort by technology priority (Fiber > Cable > 5G > Fixed Wireless > DSL > Satellite)
+    return sortByTechPriority(plans, (plan) => plan.technology)
+  }, [filteredFeaturedPlans])
 
   // Filter plans based on tier
   const filteredPlans = tierFilter === 'all'

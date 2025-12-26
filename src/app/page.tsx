@@ -5,6 +5,7 @@ import { motion, useInView, useScroll, useTransform } from 'framer-motion'
 import { ChatWindow } from '@/components/ChatWindow'
 import { useLocation } from '@/contexts/LocationContext'
 import Link from 'next/link'
+import { sortByTechPriority } from '@/lib/techPriority'
 
 interface Provider {
   id: number
@@ -118,7 +119,9 @@ export default function Home() {
         const res = await fetch(`/api/providers/list?zip=${location.zipCode}&limit=6`)
         const data = await res.json()
         if (data.success) {
-          setProviders(data.providers)
+          // Sort by technology priority (Fiber > Cable > 5G > Fixed Wireless > DSL > Satellite)
+          const sorted = sortByTechPriority(data.providers, (p: Provider) => p.technologies || [])
+          setProviders(sorted)
         }
       } catch (err) {
         console.error('Failed to fetch providers:', err)

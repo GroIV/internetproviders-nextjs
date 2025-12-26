@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useLocation } from '@/contexts/LocationContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ScrollReveal, StaggerContainer, AnimatedToggle, LoadingSpinner } from '@/components/ui'
+import { sortByTechPriority } from '@/lib/techPriority'
 
 interface Provider {
   id: number
@@ -108,16 +109,19 @@ export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) 
     [availableProviders]
   )
 
-  // Filter providers based on toggle
+  // Filter providers based on toggle and sort by technology priority
   const displayProviders = useMemo(() => {
+    let providers: Provider[]
     if (!showOnlyAvailable || !location?.zipCode) {
-      return allProviders
+      providers = allProviders
+    } else if (availableProviders.length > 0) {
+      // If we have available providers data, filter to only those
+      providers = allProviders.filter(p => availableSlugs.has(p.slug))
+    } else {
+      providers = allProviders
     }
-    // If we have available providers data, filter to only those
-    if (availableProviders.length > 0) {
-      return allProviders.filter(p => availableSlugs.has(p.slug))
-    }
-    return allProviders
+    // Sort by technology priority (Fiber > Cable > 5G > Fixed Wireless > DSL > Satellite)
+    return sortByTechPriority(providers, (p) => p.technologies || [])
   }, [allProviders, showOnlyAvailable, location?.zipCode, availableProviders, availableSlugs])
 
   // Group providers by type
