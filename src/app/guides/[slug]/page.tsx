@@ -130,13 +130,6 @@ const guideTemplates: Record<string, {
         <li>Check for data caps (overage fees add up)</li>
         <li>Ask about price lock guarantees</li>
       </ul>
-      <h3>4. Low-Income Programs</h3>
-      <p>You may qualify for discounted internet through:</p>
-      <ul>
-        <li><strong>ACP:</strong> Up to $30/month discount for qualifying households</li>
-        <li><strong>Lifeline:</strong> $9.25/month discount</li>
-        <li><strong>Provider programs:</strong> Internet Essentials, Spectrum Internet Assist</li>
-      </ul>
     `,
   },
   speed: {

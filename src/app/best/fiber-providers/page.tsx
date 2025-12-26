@@ -18,14 +18,14 @@ const providerDetails: Record<string, {
   cons: string[]
   rating: number
 }> = {
-  'att': {
+  'att-internet': {
     maxSpeed: '5 Gbps',
     startingPrice: '$55/mo',
     pros: ['Symmetrical upload/download', 'No data caps', 'Wide availability'],
     cons: ['Price increases after promo', 'Equipment fee'],
     rating: 4.5,
   },
-  'verizon': {
+  'verizon-fios': {
     maxSpeed: '2.3 Gbps',
     startingPrice: '$50/mo',
     pros: ['No contracts required', 'Excellent reliability', 'Great customer service'],

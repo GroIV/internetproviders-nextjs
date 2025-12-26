@@ -22,7 +22,7 @@ const fastestProviders = [
   },
   {
     name: 'AT&T Fiber',
-    slug: 'att',
+    slug: 'att-internet',
     maxSpeed: '5 Gbps',
     technology: 'Fiber',
     latency: '< 10ms',
@@ -44,7 +44,7 @@ const fastestProviders = [
   },
   {
     name: 'Verizon Fios',
-    slug: 'verizon',
+    slug: 'verizon-fios',
     maxSpeed: '2.3 Gbps',
     technology: 'Fiber',
     latency: '< 8ms',

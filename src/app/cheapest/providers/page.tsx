@@ -29,7 +29,7 @@ const cheapProviders = [
   },
   {
     name: 'AT&T Internet Air',
-    slug: 'att',
+    slug: 'att-internet',
     price: '$35/mo',
     speed: '100+ Mbps',
     highlight: '5G wireless',
@@ -47,7 +47,7 @@ const cheapProviders = [
   },
   {
     name: 'Verizon 5G Home',
-    slug: 'verizon',
+    slug: 'verizon-fios',
     price: '$35/mo',
     speed: '300+ Mbps',
     highlight: 'With mobile plan',
@@ -62,27 +62,6 @@ const cheapProviders = [
     highlight: 'Best fiber value',
     features: ['No contracts', 'No data caps', 'Price for life'],
     note: 'Fiber availability varies',
-  },
-]
-
-const affordableProgramsInfo = [
-  {
-    name: 'ACP (Affordable Connectivity Program)',
-    savings: 'Up to $30/mo',
-    description: 'Federal program providing discounts to eligible low-income households',
-    eligibility: 'Based on income or participation in assistance programs',
-  },
-  {
-    name: 'Lifeline',
-    savings: 'Up to $9.25/mo',
-    description: 'FCC program for qualifying low-income subscribers',
-    eligibility: 'Income at or below 135% of federal poverty guidelines',
-  },
-  {
-    name: 'Internet Essentials (Comcast)',
-    savings: '$10/mo internet',
-    description: 'Low-cost internet for qualifying families',
-    eligibility: 'Families with children eligible for free school lunch',
   },
 ]
 
@@ -172,26 +151,6 @@ export default function CheapestProvidersPage() {
               <p className="text-xs text-gray-500 italic">{provider.note}</p>
             </div>
           ))}
-        </div>
-
-        {/* Assistance Programs */}
-        <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 border border-green-800/50 rounded-xl p-6 mb-12">
-          <h2 className="text-xl font-semibold mb-4">Low-Income Assistance Programs</h2>
-          <p className="text-gray-400 text-sm mb-6">
-            You may qualify for additional discounts through these government and provider programs:
-          </p>
-          <div className="space-y-4">
-            {affordableProgramsInfo.map((program) => (
-              <div key={program.name} className="bg-gray-900/50 rounded-lg p-4">
-                <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
-                  <h3 className="font-medium">{program.name}</h3>
-                  <span className="text-green-400 font-semibold">{program.savings}</span>
-                </div>
-                <p className="text-sm text-gray-400 mb-1">{program.description}</p>
-                <p className="text-xs text-gray-500"><strong>Eligibility:</strong> {program.eligibility}</p>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Tips */}
