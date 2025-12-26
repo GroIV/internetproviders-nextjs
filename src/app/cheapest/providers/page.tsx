@@ -115,7 +115,7 @@ export default function CheapestProvidersPage() {
         </div>
 
         {/* Key Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
           <div className="futuristic-card rounded-xl p-4 text-center glow-burst-emerald">
             <div className="text-2xl font-bold gradient-text-fresh">$25</div>
             <div className="text-sm text-gray-400">Lowest Price/mo</div>

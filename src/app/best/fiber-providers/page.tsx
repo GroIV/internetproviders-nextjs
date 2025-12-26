@@ -217,7 +217,7 @@ export default async function BestFiberProvidersPage({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
           <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
             <div className="text-2xl font-bold gradient-text-purple">{avgCoverage}%</div>
             <div className="text-sm text-gray-400">Avg Fiber Coverage</div>
