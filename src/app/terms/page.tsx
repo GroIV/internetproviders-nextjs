@@ -24,7 +24,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">Agreement to Terms</h2>
             <p className="text-gray-300">
-              By accessing or using InternetProviders.ai ("the Website"), you agree to be bound
+              By accessing or using InternetProviders.ai (&quot;the Website&quot;), you agree to be bound
               by these Terms of Service. If you do not agree to these terms, please do not use
               our Website.
             </p>
@@ -73,7 +73,7 @@ export default function TermsPage() {
             <ul className="list-disc list-inside text-gray-300 space-y-2">
               <li>Use the Website for any unlawful purpose</li>
               <li>Attempt to gain unauthorized access to our systems</li>
-              <li>Interfere with or disrupt the Website's operation</li>
+              <li>Interfere with or disrupt the Website&apos;s operation</li>
               <li>Use automated tools to scrape or collect data from the Website</li>
               <li>Impersonate any person or entity</li>
               <li>Upload malicious code or content</li>
@@ -103,7 +103,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">Disclaimer of Warranties</h2>
             <p className="text-gray-300">
-              THE WEBSITE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND,
+              THE WEBSITE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND,
               EXPRESS OR IMPLIED. WE DISCLAIM ALL WARRANTIES, INCLUDING MERCHANTABILITY, FITNESS
               FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. WE DO NOT GUARANTEE THAT THE
               WEBSITE WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE.

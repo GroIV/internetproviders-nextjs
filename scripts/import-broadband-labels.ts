@@ -930,7 +930,7 @@ async function importViasatCSV(csvPath: string, fileName: string): Promise<Broad
     // We need to find the matching end by counting braces
     let jsonEnd = -1
     let braceCount = 0
-    let inQuotes = false
+    const inQuotes = false
     let foundJsonStart = false
 
     for (let j = jsonStart; j < line.length; j++) {
@@ -1563,7 +1563,7 @@ function importCoxJSON(jsonPath: string): BroadbandPlanRecord[] {
     const fccPlanId = `COX-OCR-${plan.filename.replace('.png', '').replace(/[^a-zA-Z0-9]/g, '-')}`
 
     // Clean up plan name - remove location prefix for cleaner display
-    let planName = plan.plan_name
+    const planName = plan.plan_name
     // Extract core plan name (e.g., "Go Super Fast Internet" from "Tucson AZ Go Super Fast Internet")
     const planMatch = planName.match(/(ConnectAssist|Go\s+(?:Fast|Faster|Even Faster|Super Fast|Beyond Fast|BeyondFast)|Fiber.*)/i)
     const corePlanName = planMatch ? planMatch[1] : planName

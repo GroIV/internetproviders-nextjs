@@ -25,7 +25,7 @@ interface ChatContextType {
   chatSectionVisible: boolean
   currentZip: string | null
   sendMessage: (content: string, zipCode?: string) => Promise<void>
-  initializeChat: (zipCode: string, city: string, providerCount?: number) => Promise<void>
+  initializeChat: (zipCode: string, city: string) => Promise<void>
   clearHistory: () => void
   setIsOpen: (open: boolean) => void
   setPageContext: (context: string) => void
@@ -218,7 +218,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, [messages])
 
   // Reset chat when location changes significantly
-  const resetForNewLocation = useCallback((newZip: string, newCity: string) => {
+  const resetForNewLocation = useCallback(() => {
     // Clear existing chat
     setMessages([])
     setHasWelcomed(false)
@@ -232,10 +232,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // Initialize chat with welcome message
-  const initializeChat = useCallback(async (zipCode: string, city: string, providerCount?: number) => {
+  const initializeChat = useCallback(async (zipCode: string, city: string) => {
     // If we already welcomed for a different ZIP, reset first
     if (welcomedZip && welcomedZip !== zipCode) {
-      resetForNewLocation(zipCode, city)
+      resetForNewLocation()
       // Small delay to let state update
       await new Promise(resolve => setTimeout(resolve, 100))
     }

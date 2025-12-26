@@ -31,28 +31,8 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        const parsedLocation = JSON.parse(stored)
-        setLocation(parsedLocation)
-        // If stored location is IP-based, try to upgrade to GPS in background
-        if (parsedLocation.source === 'ip') {
-          tryGPSUpgrade()
-        }
-      } catch {
-        localStorage.removeItem(STORAGE_KEY)
-      }
-    } else {
-      // Auto-detect from IP on first visit, then try GPS
-      detectFromIPThenGPS()
-    }
-  }, [])
-
   // Try to detect from IP first, then automatically try GPS
-  const detectFromIPThenGPS = async () => {
+  const detectFromIPThenGPS = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
@@ -77,11 +57,31 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
       // Try GPS upgrade in background
       tryGPSUpgrade()
-    } catch (err) {
+    } catch {
       setError('Failed to detect location')
       setIsLoading(false)
     }
-  }
+  }, [])
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      try {
+        const parsedLocation = JSON.parse(stored)
+        setLocation(parsedLocation)
+        // If stored location is IP-based, try to upgrade to GPS in background
+        if (parsedLocation.source === 'ip') {
+          tryGPSUpgrade()
+        }
+      } catch {
+        localStorage.removeItem(STORAGE_KEY)
+      }
+    } else {
+      // Auto-detect from IP on first visit, then try GPS
+      detectFromIPThenGPS()
+    }
+  }, [detectFromIPThenGPS])
 
   // Try to upgrade to GPS location in background (doesn't show loading state)
   const tryGPSUpgrade = () => {
@@ -143,7 +143,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       } else {
         setError('Could not detect location from IP')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to detect location')
     } finally {
       setIsLoading(false)

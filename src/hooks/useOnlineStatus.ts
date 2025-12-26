@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 
 interface OnlineStatus {
   isOnline: boolean
@@ -8,27 +8,30 @@ interface OnlineStatus {
 }
 
 export function useOnlineStatus(): OnlineStatus {
-  const [isOnline, setIsOnline] = useState(true)
+  // Initialize with navigator.onLine if available
+  const [isOnline, setIsOnline] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return navigator.onLine
+    }
+    return true
+  })
   const [wasOffline, setWasOffline] = useState(false)
 
-  const handleOnline = useCallback(() => {
-    setIsOnline(true)
-    // Track that we came back online (for showing "back online" messages)
-    if (!isOnline) {
-      setWasOffline(true)
-      // Clear the "was offline" flag after 5 seconds
-      setTimeout(() => setWasOffline(false), 5000)
-    }
-  }, [isOnline])
-
-  const handleOffline = useCallback(() => {
-    setIsOnline(false)
-  }, [])
-
   useEffect(() => {
-    // Set initial state based on navigator.onLine
-    if (typeof window !== 'undefined') {
-      setIsOnline(navigator.onLine)
+    const handleOnline = () => {
+      setIsOnline(prev => {
+        // Track that we came back online (for showing "back online" messages)
+        if (!prev) {
+          setWasOffline(true)
+          // Clear the "was offline" flag after 5 seconds
+          setTimeout(() => setWasOffline(false), 5000)
+        }
+        return true
+      })
+    }
+
+    const handleOffline = () => {
+      setIsOnline(false)
     }
 
     // Add event listeners
@@ -39,7 +42,7 @@ export function useOnlineStatus(): OnlineStatus {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [handleOnline, handleOffline])
+  }, [])
 
   return { isOnline, wasOffline }
 }

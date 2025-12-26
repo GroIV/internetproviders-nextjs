@@ -316,7 +316,7 @@ export default async function ProviderPage({ params }: Props) {
 
             {technologies.includes('Satellite') && (
               <p className="text-gray-300 mt-4">
-                {provider.name}'s satellite internet service is available virtually anywhere in the continental
+                {provider.name}&apos;s satellite internet service is available virtually anywhere in the continental
                 United States, making it an excellent option for rural areas where other types of internet
                 service may not be available.
               </p>

@@ -37,7 +37,7 @@ const technologyColors: Record<string, string> = {
 }
 
 export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) {
-  const { location, isLoading: locationLoading, setManualZip } = useLocation()
+  const { location, setManualZip } = useLocation()
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true)
   const [availableProviders, setAvailableProviders] = useState<AvailableProvider[]>([])
   const [isLoadingProviders, setIsLoadingProviders] = useState(false)

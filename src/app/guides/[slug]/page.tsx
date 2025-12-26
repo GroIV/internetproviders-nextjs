@@ -446,7 +446,7 @@ async function getProviders(zipCode: string): Promise<Provider[]> {
     const name = nameMap.get(p.provider_id) || 'Unknown'
     const lowerName = name.toLowerCase()
 
-    let technologies: string[] = []
+    const technologies: string[] = []
     if (lowerName.includes('fiber') || lowerName.includes('fios') || lowerName.includes('frontier') || lowerName.includes('google')) {
       technologies.push('Fiber')
     }
@@ -467,7 +467,7 @@ async function getProviders(zipCode: string): Promise<Provider[]> {
     }
 
     // Clean provider name for display
-    let displayName = name
+    const displayName = name
       .replace(/, Inc\.|Inc\.|Corporation|Corp\.|LLC/g, '')
       .replace('Charter Communications', 'Spectrum')
       .replace('Comcast Cable', 'Xfinity')

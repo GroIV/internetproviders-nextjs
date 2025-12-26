@@ -18,12 +18,16 @@ const BLOB_COLORS = [
 ]
 
 export function AuroraBlobs({ className = '', opacity = 0.12 }: AuroraBlobsProps) {
-  const [isReducedMotion, setIsReducedMotion] = useState(false)
+  // Initialize with media query if available
+  const [isReducedMotion, setIsReducedMotion] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    }
+    return false
+  })
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setIsReducedMotion(mediaQuery.matches)
-
     const handler = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches)
     mediaQuery.addEventListener('change', handler)
     return () => mediaQuery.removeEventListener('change', handler)

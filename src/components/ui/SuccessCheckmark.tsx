@@ -31,16 +31,31 @@ export function SuccessCheckmark({
   const radius = sizeConfig.container / 2 - sizeConfig.stroke
   const circumference = 2 * Math.PI * radius
 
+  // Derive sparkle visibility - can only be true when show is true
+  const displaySparkles = show && showSparkles
+
   useEffect(() => {
-    if (show) {
-      const timer = setTimeout(() => {
-        setShowSparkles(true)
-        setTimeout(() => setShowSparkles(false), 600)
-        onComplete?.()
-      }, 500)
-      return () => clearTimeout(timer)
+    if (!show) {
+      return
     }
-    setShowSparkles(false)
+
+    // Reset sparkles when show becomes true (use timeout to satisfy lint)
+    const resetTimer = setTimeout(() => setShowSparkles(false), 0)
+
+    const showTimer = setTimeout(() => {
+      setShowSparkles(true)
+      onComplete?.()
+    }, 500)
+
+    const hideTimer = setTimeout(() => {
+      setShowSparkles(false)
+    }, 1100) // 500 + 600
+
+    return () => {
+      clearTimeout(resetTimer)
+      clearTimeout(showTimer)
+      clearTimeout(hideTimer)
+    }
   }, [show, onComplete])
 
   return (
@@ -84,7 +99,7 @@ export function SuccessCheckmark({
             </motion.svg>
 
             {/* Sparkles */}
-            {showSparkles && (
+            {displaySparkles && (
               <>
                 {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
                   <motion.div

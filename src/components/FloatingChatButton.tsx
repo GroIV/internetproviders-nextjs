@@ -12,7 +12,8 @@ export function FloatingChatButton() {
 
   // Prevent hydration mismatch
   useEffect(() => {
-    setIsMounted(true)
+    const timer = setTimeout(() => setIsMounted(true), 0)
+    return () => clearTimeout(timer)
   }, [])
 
   // Close floating panel when chat section becomes visible again

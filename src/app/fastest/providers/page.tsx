@@ -226,8 +226,8 @@ export default function FastestProvidersPage() {
           <h2 className="text-xl font-semibold mb-4 gradient-text-sunset">Do You Really Need Multi-Gig Speeds?</h2>
           <div className="text-sm text-gray-400 space-y-4">
             <p>
-              While 8 Gbps sounds impressive, most households won't use anywhere near that bandwidth.
-              Here's a reality check:
+              While 8 Gbps sounds impressive, most households won&apos;t use anywhere near that bandwidth.
+              Here&apos;s a reality check:
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-2">

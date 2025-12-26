@@ -47,8 +47,8 @@ function SpeedTestContent() {
 
       speedTestRef.current = speedTest
 
-      let downloadSpeeds: number[] = []
-      let uploadSpeeds: number[] = []
+      const downloadSpeeds: number[] = []
+      const uploadSpeeds: number[] = []
 
       speedTest.onRunningChange = (running: boolean) => {
         if (!running) {

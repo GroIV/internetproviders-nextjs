@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PlanCard } from './PlanCard'
-import { featuredPlans, getBestValuePlans, type ProviderFeaturedPlans, type FeaturedPlan } from '@/lib/featuredPlans'
+import { featuredPlans, type ProviderFeaturedPlans } from '@/lib/featuredPlans'
 import { useLocation } from '@/contexts/LocationContext'
 
 type ViewMode = 'providers' | 'tiers' | 'value'
@@ -30,7 +30,7 @@ export function FeaturedPlansDisplay({
   const { location, setManualZip } = useLocation()
   const [viewMode, setViewMode] = useState<ViewMode>('providers')
   const [tierFilter, setTierFilter] = useState<TierFilter>('all')
-  const [selectedProvider, setSelectedProvider] = useState<string | null>(initialProvider || null)
+  const [selectedProvider] = useState<string | null>(initialProvider || null)
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(true)
   const [availableProviders, setAvailableProviders] = useState<AvailableProvider[]>([])
   const [isLoadingProviders, setIsLoadingProviders] = useState(false)

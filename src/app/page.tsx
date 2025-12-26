@@ -48,7 +48,7 @@ function CountUp({ end, suffix = '' }: { end: number | string; suffix?: string }
 }
 
 export default function Home() {
-  const { location, isLoading: locationLoading } = useLocation()
+  const { location } = useLocation()
   const [providers, setProviders] = useState<Provider[]>([])
   const [loadingProviders, setLoadingProviders] = useState(false)
   const heroRef = useRef<HTMLElement>(null)
@@ -64,18 +64,25 @@ export default function Home() {
 
   // Fetch providers when location is available
   useEffect(() => {
-    if (location?.zipCode) {
+    if (!location?.zipCode) return
+
+    // Use async function to avoid setState in effect body
+    const fetchProviders = async () => {
       setLoadingProviders(true)
-      fetch(`/api/providers/list?zip=${location.zipCode}&limit=6`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            setProviders(data.providers)
-          }
-        })
-        .catch(err => console.error('Failed to fetch providers:', err))
-        .finally(() => setLoadingProviders(false))
+      try {
+        const res = await fetch(`/api/providers/list?zip=${location.zipCode}&limit=6`)
+        const data = await res.json()
+        if (data.success) {
+          setProviders(data.providers)
+        }
+      } catch (err) {
+        console.error('Failed to fetch providers:', err)
+      } finally {
+        setLoadingProviders(false)
+      }
     }
+
+    fetchProviders()
   }, [location?.zipCode])
 
   return (

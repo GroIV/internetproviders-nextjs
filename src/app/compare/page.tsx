@@ -366,7 +366,7 @@ export default async function ComparePage({
           {!zipCode ? (
             <CompareAutoRedirect hasZipParam={false} showInstructions={true} />
           ) : (
-            <a
+            <Link
               href="/compare"
               className="inline-flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
@@ -374,7 +374,7 @@ export default async function ComparePage({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               Search different ZIP code
-            </a>
+            </Link>
           )}
         </div>
 
@@ -486,7 +486,7 @@ export default async function ComparePage({
             </svg>
             <h3 className="text-xl font-semibold mb-2">No Data Found</h3>
             <p className="text-gray-400 max-w-md mx-auto">
-              We don't have coverage data for ZIP code {zipCode}.
+              We don&apos;t have coverage data for ZIP code {zipCode}.
               Try a nearby ZIP code or check back later.
             </p>
           </div>

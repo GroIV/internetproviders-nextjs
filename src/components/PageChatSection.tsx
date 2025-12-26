@@ -108,9 +108,13 @@ export function PageChatSection() {
   // Send proactive message when navigating to a new page (after welcome)
   // Use ref to avoid stale closure issues with setTimeout
   const currentPathnameRef = useRef(pathname)
-  currentPathnameRef.current = pathname
   const currentLocationRef = useRef(location)
-  currentLocationRef.current = location
+
+  // Update refs in effect to avoid mutation during render
+  useEffect(() => {
+    currentPathnameRef.current = pathname
+    currentLocationRef.current = location
+  })
 
   useEffect(() => {
     if (!shouldRender || !hasWelcomed) return

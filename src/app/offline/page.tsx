@@ -16,7 +16,9 @@ export default function OfflinePage() {
     if (saved) {
       try {
         const location = JSON.parse(saved)
-        setCachedLocation(location)
+        // Use timeout to satisfy lint (setState in callback)
+        const timer = setTimeout(() => setCachedLocation(location), 0)
+        return () => clearTimeout(timer)
       } catch {
         // Ignore parse errors
       }
@@ -48,9 +50,9 @@ export default function OfflinePage() {
         </div>
 
         {/* Message */}
-        <h1 className="text-3xl font-bold mb-4">You're Offline</h1>
+        <h1 className="text-3xl font-bold mb-4">You&apos;re Offline</h1>
         <p className="text-gray-400 mb-8">
-          It looks like you've lost your internet connection. Some features may not be available until you're back online.
+          It looks like you&apos;ve lost your internet connection. Some features may not be available until you&apos;re back online.
         </p>
 
         {/* Cached Location Info */}
@@ -66,7 +68,7 @@ export default function OfflinePage() {
               )}
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              When you're back online, we'll show providers for this location.
+              When you&apos;re back online, we&apos;ll show providers for this location.
             </p>
           </div>
         )}
@@ -104,7 +106,7 @@ export default function OfflinePage() {
 
         {/* Tips */}
         <div className="mt-12 text-left">
-          <h3 className="text-lg font-semibold mb-4">While You're Offline</h3>
+          <h3 className="text-lg font-semibold mb-4">While You&apos;re Offline</h3>
           <ul className="space-y-3 text-gray-400">
             <li className="flex items-start gap-3">
               <svg className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

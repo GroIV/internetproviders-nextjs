@@ -594,7 +594,7 @@ export default async function ProviderComparisonPage({ params }: Props) {
                 {priceWinner === 1 && <li>• You want the lowest starting price</li>}
                 {details1.primaryTech === 'Fiber' && <li>• You want fiber reliability and low latency</li>}
                 {details1.primaryTech === '5G' && <li>• You want wireless flexibility without cables</li>}
-                {!details1.contractRequired && details2.contractRequired && <li>• You don't want to commit to a contract</li>}
+                {!details1.contractRequired && details2.contractRequired && <li>• You don&apos;t want to commit to a contract</li>}
                 <li>• {provider1.name} is available at your address</li>
               </ul>
             </div>
@@ -605,7 +605,7 @@ export default async function ProviderComparisonPage({ params }: Props) {
                 {priceWinner === 2 && <li>• You want the lowest starting price</li>}
                 {details2.primaryTech === 'Fiber' && <li>• You want fiber reliability and low latency</li>}
                 {details2.primaryTech === '5G' && <li>• You want wireless flexibility without cables</li>}
-                {!details2.contractRequired && details1.contractRequired && <li>• You don't want to commit to a contract</li>}
+                {!details2.contractRequired && details1.contractRequired && <li>• You don&apos;t want to commit to a contract</li>}
                 <li>• {provider2.name} is available at your address</li>
               </ul>
             </div>

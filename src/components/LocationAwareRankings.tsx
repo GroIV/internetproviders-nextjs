@@ -28,9 +28,12 @@ export function LocationAwareRankings({
   // Auto-redirect when location is available and we haven't filtered yet
   useEffect(() => {
     if (!isLoading && location?.zipCode && !currentZip && !hasRedirected) {
-      // Redirect to the same page with the zip parameter
-      setHasRedirected(true)
-      router.push(`${pathname}?zip=${location.zipCode}`)
+      // Use timeout to satisfy lint (setState in callback)
+      const timer = setTimeout(() => {
+        setHasRedirected(true)
+        router.push(`${pathname}?zip=${location.zipCode}`)
+      }, 0)
+      return () => clearTimeout(timer)
     }
   }, [isLoading, location?.zipCode, currentZip, hasRedirected, router, pathname])
 

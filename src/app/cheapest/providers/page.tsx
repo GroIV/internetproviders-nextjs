@@ -108,7 +108,7 @@ export default function CheapestProvidersPage() {
             Cheapest Internet Providers
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
-            Get reliable internet without breaking the bank. We've found the most
+            Get reliable internet without breaking the bank. We&apos;ve found the most
             affordable options that still deliver good speeds and service.
           </p>
           <LocationInfo message="Showing affordable providers" />
@@ -200,7 +200,7 @@ export default function CheapestProvidersPage() {
           <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-400">
             <div className="flex items-start gap-3">
               <span className="text-green-400 font-bold">1.</span>
-              <span><strong>Negotiate:</strong> Call and ask for promotional pricing, especially if you're a new customer or threatening to cancel.</span>
+              <span><strong>Negotiate:</strong> Call and ask for promotional pricing, especially if you&apos;re a new customer or threatening to cancel.</span>
             </div>
             <div className="flex items-start gap-3">
               <span className="text-green-400 font-bold">2.</span>

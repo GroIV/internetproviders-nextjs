@@ -10,8 +10,19 @@ interface GlobalBackgroundProps {
 }
 
 export function GlobalBackground({ className = '' }: GlobalBackgroundProps) {
-  const [isMobile, setIsMobile] = useState(false)
-  const [isReducedMotion, setIsReducedMotion] = useState(false)
+  // Initialize with window values if available
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768
+    }
+    return false
+  })
+  const [isReducedMotion, setIsReducedMotion] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    }
+    return false
+  })
 
   useEffect(() => {
     // Check for mobile viewport
@@ -21,12 +32,9 @@ export function GlobalBackground({ className = '' }: GlobalBackgroundProps) {
 
     // Check for reduced motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setIsReducedMotion(mediaQuery.matches)
-
     const motionHandler = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches)
     mediaQuery.addEventListener('change', motionHandler)
 
-    checkMobile()
     window.addEventListener('resize', checkMobile)
 
     return () => {

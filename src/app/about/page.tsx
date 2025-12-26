@@ -71,7 +71,7 @@ export default function AboutPage() {
 
           <h2 className="text-2xl font-semibold mt-8 mb-4">Contact Us</h2>
           <p className="text-gray-300 mb-6">
-            Have questions, suggestions, or feedback? We'd love to hear from you.
+            Have questions, suggestions, or feedback? We&apos;d love to hear from you.
             Visit our <Link href="/contact" className="text-blue-400 hover:underline">contact page</Link> to
             get in touch with our team.
           </p>

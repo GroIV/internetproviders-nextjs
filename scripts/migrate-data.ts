@@ -149,7 +149,7 @@ async function importCoverage(providers: Array<{ id: number; name: string; slug:
     technology: string | null
   }> = []
 
-  let unmatchedProviders = new Set<string>()
+  const unmatchedProviders = new Set<string>()
 
   Object.entries(zipDb).forEach(([zipCode, data]) => {
     data.providers.forEach(providerName => {

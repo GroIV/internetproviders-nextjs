@@ -265,7 +265,7 @@ export default function QuizPage() {
               </svg>
             </div>
             <h1 className="text-3xl font-bold mb-2">Your Recommendation</h1>
-            <p className="text-gray-400">Based on your answers, here's what we suggest</p>
+            <p className="text-gray-400">Based on your answers, here&apos;s what we suggest</p>
           </div>
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">

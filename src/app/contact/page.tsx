@@ -20,7 +20,7 @@ export default function ContactPage() {
         <h1 className="text-4xl font-bold mb-8 gradient-text-ocean">Contact Us</h1>
 
         <p className="text-xl text-gray-300 mb-8">
-          Have questions or feedback? We'd love to hear from you. Choose the best way
+          Have questions or feedback? We&apos;d love to hear from you. Choose the best way
           to reach us below.
         </p>
 
