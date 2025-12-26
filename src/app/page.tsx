@@ -15,30 +15,39 @@ interface Provider {
   coveragePercent: number
 }
 
-// Provider details for enhanced cards
-const providerDetails: Record<string, { maxSpeed: string; startingPrice: string; color: string }> = {
-  'xfinity': { maxSpeed: '2 Gbps', startingPrice: '$30', color: 'from-purple-500 to-blue-500' },
-  'spectrum': { maxSpeed: '1 Gbps', startingPrice: '$50', color: 'from-blue-500 to-cyan-500' },
-  'att-internet': { maxSpeed: '5 Gbps', startingPrice: '$55', color: 'from-cyan-500 to-blue-500' },
-  'verizon-fios': { maxSpeed: '2.3 Gbps', startingPrice: '$50', color: 'from-red-500 to-orange-500' },
-  'verizon-5g': { maxSpeed: '1 Gbps', startingPrice: '$35', color: 'from-red-500 to-pink-500' },
-  'cox': { maxSpeed: '2 Gbps', startingPrice: '$50', color: 'from-orange-500 to-amber-500' },
-  'frontier': { maxSpeed: '5 Gbps', startingPrice: '$50', color: 'from-red-600 to-red-400' },
-  'google-fiber': { maxSpeed: '8 Gbps', startingPrice: '$70', color: 'from-green-500 to-blue-500' },
-  't-mobile': { maxSpeed: '245 Mbps', startingPrice: '$40', color: 'from-pink-500 to-purple-500' },
-  'centurylink': { maxSpeed: '940 Mbps', startingPrice: '$30', color: 'from-green-500 to-teal-500' },
-  'earthlink': { maxSpeed: '5 Gbps', startingPrice: '$50', color: 'from-blue-600 to-indigo-500' },
-  'hughesnet': { maxSpeed: '100 Mbps', startingPrice: '$50', color: 'from-blue-700 to-blue-500' },
-  'viasat': { maxSpeed: '150 Mbps', startingPrice: '$70', color: 'from-indigo-500 to-blue-500' },
-  'starlink': { maxSpeed: '220 Mbps', startingPrice: '$120', color: 'from-slate-600 to-slate-400' },
-  'optimum': { maxSpeed: '8 Gbps', startingPrice: '$40', color: 'from-yellow-500 to-amber-500' },
-  'windstream': { maxSpeed: '2 Gbps', startingPrice: '$40', color: 'from-emerald-500 to-green-500' },
-  'mediacom': { maxSpeed: '1 Gbps', startingPrice: '$30', color: 'from-blue-500 to-blue-400' },
-  'wow': { maxSpeed: '1 Gbps', startingPrice: '$40', color: 'from-orange-500 to-yellow-500' },
-  'astound': { maxSpeed: '1.5 Gbps', startingPrice: '$25', color: 'from-cyan-500 to-teal-500' },
-  'brightspeed': { maxSpeed: '940 Mbps', startingPrice: '$50', color: 'from-orange-400 to-red-500' },
-  'ziply': { maxSpeed: '5 Gbps', startingPrice: '$20', color: 'from-green-400 to-emerald-500' },
-  'metronet': { maxSpeed: '5 Gbps', startingPrice: '$50', color: 'from-blue-500 to-purple-500' },
+// Provider details for enhanced cards (speedMbps used for speed bar calculation)
+const providerDetails: Record<string, { maxSpeed: string; speedMbps: number; startingPrice: string; color: string }> = {
+  'xfinity': { maxSpeed: '2 Gbps', speedMbps: 2000, startingPrice: '$30', color: 'from-purple-500 to-blue-500' },
+  'spectrum': { maxSpeed: '1 Gbps', speedMbps: 1000, startingPrice: '$50', color: 'from-blue-500 to-cyan-500' },
+  'att-internet': { maxSpeed: '5 Gbps', speedMbps: 5000, startingPrice: '$55', color: 'from-cyan-500 to-blue-500' },
+  'verizon-fios': { maxSpeed: '2.3 Gbps', speedMbps: 2300, startingPrice: '$50', color: 'from-red-500 to-orange-500' },
+  'verizon-5g': { maxSpeed: '1 Gbps', speedMbps: 1000, startingPrice: '$35', color: 'from-red-500 to-pink-500' },
+  'cox': { maxSpeed: '2 Gbps', speedMbps: 2000, startingPrice: '$50', color: 'from-orange-500 to-amber-500' },
+  'frontier': { maxSpeed: '5 Gbps', speedMbps: 5000, startingPrice: '$50', color: 'from-red-600 to-red-400' },
+  'google-fiber': { maxSpeed: '8 Gbps', speedMbps: 8000, startingPrice: '$70', color: 'from-green-500 to-blue-500' },
+  't-mobile': { maxSpeed: '245 Mbps', speedMbps: 245, startingPrice: '$40', color: 'from-pink-500 to-purple-500' },
+  'centurylink': { maxSpeed: '940 Mbps', speedMbps: 940, startingPrice: '$30', color: 'from-green-500 to-teal-500' },
+  'earthlink': { maxSpeed: '5 Gbps', speedMbps: 5000, startingPrice: '$50', color: 'from-blue-600 to-indigo-500' },
+  'hughesnet': { maxSpeed: '100 Mbps', speedMbps: 100, startingPrice: '$50', color: 'from-blue-700 to-blue-500' },
+  'viasat': { maxSpeed: '150 Mbps', speedMbps: 150, startingPrice: '$70', color: 'from-indigo-500 to-blue-500' },
+  'starlink': { maxSpeed: '220 Mbps', speedMbps: 220, startingPrice: '$120', color: 'from-slate-600 to-slate-400' },
+  'optimum': { maxSpeed: '8 Gbps', speedMbps: 8000, startingPrice: '$40', color: 'from-yellow-500 to-amber-500' },
+  'windstream': { maxSpeed: '2 Gbps', speedMbps: 2000, startingPrice: '$40', color: 'from-emerald-500 to-green-500' },
+  'mediacom': { maxSpeed: '1 Gbps', speedMbps: 1000, startingPrice: '$30', color: 'from-blue-500 to-blue-400' },
+  'wow': { maxSpeed: '1 Gbps', speedMbps: 1000, startingPrice: '$40', color: 'from-orange-500 to-yellow-500' },
+  'astound': { maxSpeed: '1.5 Gbps', speedMbps: 1500, startingPrice: '$25', color: 'from-cyan-500 to-teal-500' },
+  'brightspeed': { maxSpeed: '940 Mbps', speedMbps: 940, startingPrice: '$50', color: 'from-orange-400 to-red-500' },
+  'ziply': { maxSpeed: '5 Gbps', speedMbps: 5000, startingPrice: '$20', color: 'from-green-400 to-emerald-500' },
+  'metronet': { maxSpeed: '5 Gbps', speedMbps: 5000, startingPrice: '$50', color: 'from-blue-500 to-purple-500' },
+}
+
+// Calculate speed percentage (logarithmic scale for better visualization)
+// 100 Mbps = ~25%, 1 Gbps = ~60%, 5 Gbps = ~85%, 8 Gbps = 100%
+const getSpeedPercent = (speedMbps: number): number => {
+  const maxSpeed = 8000 // 8 Gbps as reference
+  // Use logarithmic scale so slower speeds still show meaningful bars
+  const logPercent = (Math.log10(speedMbps + 1) / Math.log10(maxSpeed + 1)) * 100
+  return Math.min(Math.max(logPercent, 5), 100) // Min 5%, max 100%
 }
 
 // Technology colors for badges
@@ -254,9 +263,11 @@ export default function Home() {
                   {providers.slice(0, 4).map((provider, index) => {
                     const details = providerDetails[provider.slug] || {
                       maxSpeed: 'Varies',
+                      speedMbps: 500,
                       startingPrice: 'Call',
                       color: 'from-gray-500 to-gray-600'
                     }
+                    const speedPercent = getSpeedPercent(details.speedMbps)
                     return (
                       <motion.div
                         key={provider.id}
@@ -272,12 +283,6 @@ export default function Home() {
                           {/* Gradient overlay on hover */}
                           <div className={`absolute inset-0 bg-gradient-to-br ${details.color} opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300`} />
 
-                          {/* Coverage badge */}
-                          <div className="absolute top-4 right-4">
-                            <div className="px-2 py-1 bg-gray-800/80 rounded-full text-xs text-gray-400 border border-gray-700/50">
-                              {provider.coveragePercent}% coverage
-                            </div>
-                          </div>
 
                           <div className="flex items-start gap-4 relative">
                             {/* Provider Icon/Initial */}
@@ -336,13 +341,13 @@ export default function Home() {
                             </div>
                           </div>
 
-                          {/* Coverage bar */}
+                          {/* Speed bar */}
                           <div className="mt-4">
-                            <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
+                            <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
                               <motion.div
-                                className={`h-full bg-gradient-to-r ${details.color} rounded-full`}
+                                className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full"
                                 initial={{ width: 0 }}
-                                whileInView={{ width: `${provider.coveragePercent}%` }}
+                                whileInView={{ width: `${speedPercent}%` }}
                                 viewport={{ once: true }}
                                 transition={{ delay: 0.5 + index * 0.1, duration: 0.8 }}
                               />
