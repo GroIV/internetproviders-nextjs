@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useLayoutEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -15,6 +15,11 @@ export default function InterstitialPage() {
   const [countdown, setCountdown] = useState(3)
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null)
   const [hasLink, setHasLink] = useState(true)
+
+  // Scroll to top immediately when page loads
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   // Get provider display name
   const providerName = providerDisplayNames[providerSlug] || providerSlug
