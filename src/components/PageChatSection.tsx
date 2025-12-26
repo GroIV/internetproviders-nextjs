@@ -193,69 +193,46 @@ export function PageChatSection() {
 
   return (
     <div ref={sectionRef} className="border-b border-gray-800 bg-gradient-to-b from-gray-900/50 to-transparent">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-4">
         <div className="max-w-3xl mx-auto">
-          {/* Header with page context */}
-          <div className="text-center mb-4">
+          {/* Compact header - single row with AI Assistant and page context */}
+          <div className="flex items-center justify-center gap-3 mb-3">
+            {/* AI Assistant label with icon */}
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+              </div>
+              <span className="text-white font-medium">AI Assistant</span>
+            </div>
+
+            {/* Separator */}
+            <span className="text-gray-600">•</span>
+
+            {/* Page context badge */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={pageTitle}
-                initial={{ opacity: 0, y: -20, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                transition={{
-                  type: "spring" as const,
-                  stiffness: 500,
-                  damping: 30,
-                }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-blue-600/30 to-cyan-600/20 border border-blue-500/40 rounded-full text-sm mb-3 shadow-lg shadow-blue-500/10"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-1.5 text-sm text-gray-400"
               >
-                {/* Animated icon */}
-                <motion.div
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </motion.div>
-                {/* Animated text with gradient */}
-                <motion.span
-                  className="bg-gradient-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent font-medium"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  {pageTitle}
-                </motion.span>
-                {/* Pulse indicator */}
-                <motion.span
-                  className="w-2 h-2 rounded-full bg-cyan-400"
-                  animate={{
-                    scale: [1, 1.3, 1],
-                    opacity: [1, 0.6, 1],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
+                <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>{pageTitle}</span>
               </motion.div>
             </AnimatePresence>
-            <h2 className="text-xl font-semibold text-white mb-1">
-              AI Assistant
-            </h2>
-            <p className="text-sm text-gray-400">
-              Ask questions about this page or internet providers in your area
-            </p>
           </div>
 
-          {/* Chat Window - Compact for above-content placement */}
+          {/* Chat Window - More height for content */}
           <ChatWindow
             embedded={true}
             showQuickActions={true}
-            className="h-[300px] sm:h-[350px] min-h-0"
+            className="h-[340px] sm:h-[400px] min-h-0"
           />
         </div>
       </div>
