@@ -1,0 +1,15 @@
+# robots.txt for internetproviders.ai
+# SEO Migration - Phase 1
+
+User-agent: *
+Allow: /
+
+# Sitemap location (Next.js App Router generates this dynamically)
+Sitemap: https://www.internetproviders.ai/sitemap.xml
+
+# Block crawling of API routes
+Disallow: /api/
+
+# Block crawling of internal/utility pages
+Disallow: /offline
+Disallow: /test-widgets
