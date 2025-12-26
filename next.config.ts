@@ -103,6 +103,45 @@ const nextConfig: NextConfig = {
         destination: '/guides/:slug',
         permanent: true,
       },
+      {
+        source: '/resources',
+        destination: '/guides',
+        permanent: true,
+      },
+
+      // Provider state-only pages → Internet state pages
+      // e.g., /providers/md → /internet/md
+      {
+        source: '/providers/:state(\\w{2})',
+        destination: '/internet/:state',
+        permanent: true,
+      },
+
+      // Frontier Fiber city pages → Frontier provider page
+      {
+        source: '/frontier-fiber/:path*',
+        destination: '/providers/frontier-fiber',
+        permanent: true,
+      },
+
+      // Legacy info pages → About
+      {
+        source: '/editorial-policy',
+        destination: '/about',
+        permanent: true,
+      },
+      {
+        source: '/disclosure',
+        destination: '/about',
+        permanent: true,
+      },
+
+      // Coverage page → Compare
+      {
+        source: '/coverage',
+        destination: '/compare',
+        permanent: true,
+      },
 
       // Provider state/city pages → Internet location pages
       // e.g., /providers/texas/austin → /internet/texas/austin
