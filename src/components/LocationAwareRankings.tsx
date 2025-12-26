@@ -4,6 +4,7 @@ import { useLocation } from '@/contexts/LocationContext'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { AnimatedToggle } from '@/components/ui'
 
 interface LocationAwareRankingsProps {
   technology: 'Cable' | 'Fiber' | 'DSL' | '5G' | 'Satellite'
@@ -39,15 +40,15 @@ export function LocationAwareRankings({
   }, [isLoading, location?.zipCode, currentZip, hasRedirected, router, pathname, showLocalOnly])
 
   // Handle toggle change
-  const handleToggle = () => {
-    if (showLocalOnly && isFiltered) {
-      // Switch to showing all providers (remove zip param)
-      setShowLocalOnly(false)
-      router.push(pathname)
-    } else if (!showLocalOnly && location?.zipCode) {
+  const handleToggle = (checked: boolean) => {
+    if (checked && location?.zipCode) {
       // Switch to showing local providers
       setShowLocalOnly(true)
       router.push(`${pathname}?zip=${location.zipCode}`)
+    } else {
+      // Switch to showing all providers (remove zip param)
+      setShowLocalOnly(false)
+      router.push(pathname)
     }
   }
 
@@ -73,18 +74,11 @@ export function LocationAwareRankings({
           <span className={`text-sm ${!isFiltered ? 'text-white font-medium' : 'text-gray-500'}`}>
             All Providers
           </span>
-          <button
-            onClick={handleToggle}
-            className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
-              isFiltered ? 'bg-cyan-600' : 'bg-gray-700'
-            }`}
-          >
-            <span
-              className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
-                isFiltered ? 'translate-x-8' : 'translate-x-1'
-              }`}
-            />
-          </button>
+          <AnimatedToggle
+            checked={isFiltered}
+            onChange={handleToggle}
+            activeColor="cyan"
+          />
           <span className={`text-sm ${isFiltered ? 'text-white font-medium' : 'text-gray-500'}`}>
             My Area
           </span>
