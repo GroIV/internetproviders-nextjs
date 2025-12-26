@@ -68,7 +68,6 @@ export function Footer() {
               <li><Link href="/best/cable-providers" className="hover:text-cyan-400 transition-colors">Best Cable</Link></li>
               <li><Link href="/cheapest/providers" className="hover:text-cyan-400 transition-colors">Cheapest Internet</Link></li>
               <li><Link href="/fastest/providers" className="hover:text-cyan-400 transition-colors">Fastest Internet</Link></li>
-              <li><Link href="/deals" className="hover:text-cyan-400 transition-colors">Deals & Promotions</Link></li>
             </ul>
           </div>
 

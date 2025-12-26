@@ -157,7 +157,7 @@ const faqData: FAQCategory[] = [
         question: 'How can I lower my internet bill?',
         answer: (
           <>
-            Tips: Negotiate with retention department, buy your own equipment, skip TV bundles, use autopay discounts, and check for low-income assistance programs. See our <Link href="/deals" className="text-blue-400 hover:text-blue-300">Deals page</Link> for current promotions and discounts.
+            Tips: Negotiate with retention department, buy your own equipment, skip TV bundles, use autopay discounts. See our <Link href="/cheapest/providers" className="text-blue-400 hover:text-blue-300">Cheapest Providers</Link> page for budget-friendly options.
           </>
         ),
       },

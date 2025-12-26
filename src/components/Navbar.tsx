@@ -187,10 +187,6 @@ export function Navbar() {
                   <Link href="/cheapest/providers" className="block px-4 py-2 text-sm text-gray-300 hover:text-blue-400 hover:bg-gray-800/50 transition-colors">
                     Cheapest Providers
                   </Link>
-                  <div className="border-t border-gray-700/50 my-2" />
-                  <Link href="/deals" className="block px-4 py-2 text-sm text-gray-300 hover:text-blue-400 hover:bg-gray-800/50 transition-colors">
-                    Deals & Promotions
-                  </Link>
                 </motion.div>
               )}
             </AnimatePresence>
