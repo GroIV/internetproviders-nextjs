@@ -6,6 +6,9 @@ import { GuidesClient } from './GuidesClient'
 export const metadata: Metadata = {
   title: 'Internet Guides',
   description: 'Comprehensive guides to help you choose the best internet service. Compare providers, understand speeds, and find the right plan for your needs.',
+  alternates: {
+    canonical: '/guides',
+  },
 }
 
 // Define guide templates - these match the [slug] page templates

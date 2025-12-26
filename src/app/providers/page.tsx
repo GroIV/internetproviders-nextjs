@@ -5,6 +5,9 @@ import { ProvidersPageClient } from '@/components/providers'
 export const metadata: Metadata = {
   title: 'Internet Providers',
   description: 'Browse all internet service providers. Compare fiber, cable, DSL, and satellite providers nationwide.',
+  alternates: {
+    canonical: '/providers',
+  },
 }
 
 async function getProviders() {

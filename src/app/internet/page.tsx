@@ -6,6 +6,9 @@ import { ZipSearch } from '@/components/ZipSearch'
 export const metadata: Metadata = {
   title: 'Internet Providers by State | Find ISPs in Your Area',
   description: 'Browse internet service providers by state. Compare fiber, cable, and wireless internet options available in all 50 US states.',
+  alternates: {
+    canonical: '/internet',
+  },
 }
 
 export default function InternetByStatePage() {

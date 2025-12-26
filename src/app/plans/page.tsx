@@ -5,6 +5,9 @@ import { FeaturedPlansDisplay } from '@/components/plans'
 export const metadata: Metadata = {
   title: 'Featured Internet Plans | Compare Pricing & Speeds',
   description: 'Compare featured internet plans from top providers. Find the best value fiber, cable, and 5G plans with verified FCC pricing data.',
+  alternates: {
+    canonical: '/plans',
+  },
   openGraph: {
     title: 'Featured Internet Plans - InternetProviders.ai',
     description: 'Compare featured internet plans from Frontier, AT&T, Spectrum, and T-Mobile with verified pricing.',

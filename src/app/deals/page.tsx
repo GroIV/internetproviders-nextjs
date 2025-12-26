@@ -7,6 +7,9 @@ import { RelatedRankings } from '@/components/RelatedRankings'
 export const metadata: Metadata = {
   title: 'Internet Deals & Promotions 2025 | Current ISP Offers',
   description: 'Find the best internet deals and promotions from top providers. Compare current offers, discounts, and limited-time pricing on internet plans.',
+  alternates: {
+    canonical: '/deals',
+  },
 }
 
 const tagColors: Record<string, string> = {

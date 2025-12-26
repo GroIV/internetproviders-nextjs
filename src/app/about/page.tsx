@@ -4,6 +4,9 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'About InternetProviders.ai | Our Mission',
   description: 'Learn about InternetProviders.ai, your trusted resource for comparing internet service providers and finding the best deals in your area.',
+  alternates: {
+    canonical: '/about',
+  },
 }
 
 export default function AboutPage() {
