@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
 import { ChatWindow } from './ChatWindow'
 import { useChat } from '@/contexts/ChatContext'
 import { useLocation } from '@/contexts/LocationContext'
@@ -192,47 +191,14 @@ export function PageChatSection() {
   }
 
   return (
-    <div ref={sectionRef} className="border-b border-gray-800 bg-gradient-to-b from-gray-900/50 to-transparent">
-      <div className="container mx-auto px-4 py-4">
+    <div ref={sectionRef} className="border-b border-gray-800">
+      <div className="container mx-auto px-4 py-3">
         <div className="max-w-3xl mx-auto">
-          {/* Compact header - single row with AI Assistant and page context */}
-          <div className="flex items-center justify-center gap-3 mb-3">
-            {/* AI Assistant label with icon */}
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
-                <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-              </div>
-              <span className="text-white font-medium">AI Assistant</span>
-            </div>
-
-            {/* Separator */}
-            <span className="text-gray-600">•</span>
-
-            {/* Page context badge */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={pageTitle}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center gap-1.5 text-sm text-gray-400"
-              >
-                <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>{pageTitle}</span>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          {/* Chat Window - More height for content */}
+          {/* Chat Window - Full height, no header needed */}
           <ChatWindow
             embedded={true}
             showQuickActions={true}
-            className="h-[340px] sm:h-[400px] min-h-0"
+            className="h-[450px] sm:h-[500px] min-h-0"
           />
         </div>
       </div>
