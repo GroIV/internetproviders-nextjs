@@ -8,11 +8,13 @@ interface AuroraBlobsProps {
   opacity?: number
 }
 
-// HSL colors for the aurora blobs
+// HSL colors for the aurora blobs - Expanded palette
 const BLOB_COLORS = [
   { h: 217, s: 91, l: 60 },  // Blue
   { h: 180, s: 100, l: 43 }, // Cyan
   { h: 262, s: 83, l: 58 },  // Purple
+  { h: 330, s: 80, l: 60 },  // Pink/Magenta
+  { h: 25, s: 95, l: 53 },   // Orange
 ]
 
 export function AuroraBlobs({ className = '', opacity = 0.12 }: AuroraBlobsProps) {
@@ -92,6 +94,48 @@ export function AuroraBlobs({ className = '', opacity = 0.12 }: AuroraBlobsProps
           repeat: Infinity,
           ease: 'easeInOut',
           delay: 10,
+        }}
+      />
+
+      {/* Blob 4 - Pink/Magenta, top-right area */}
+      <motion.div
+        className="absolute w-[450px] h-[450px] rounded-full blur-3xl"
+        style={{
+          background: `radial-gradient(circle, hsla(${BLOB_COLORS[3].h}, ${BLOB_COLORS[3].s}%, ${BLOB_COLORS[3].l}%, ${opacity}) 0%, transparent 70%)`,
+          right: '15%',
+          top: '-5%',
+        }}
+        animate={{
+          x: [0, -50, 30, 0],
+          y: [0, 70, -20, 0],
+          scale: [1, 0.95, 1.1, 1],
+        }}
+        transition={{
+          duration: 28,
+          repeat: Infinity,
+          ease: 'easeInOut',
+          delay: 3,
+        }}
+      />
+
+      {/* Blob 5 - Orange, bottom-right area */}
+      <motion.div
+        className="absolute w-[400px] h-[400px] rounded-full blur-3xl"
+        style={{
+          background: `radial-gradient(circle, hsla(${BLOB_COLORS[4].h}, ${BLOB_COLORS[4].s}%, ${BLOB_COLORS[4].l}%, ${opacity}) 0%, transparent 70%)`,
+          right: '-5%',
+          bottom: '10%',
+        }}
+        animate={{
+          x: [0, -70, 40, 0],
+          y: [0, -40, 60, 0],
+          scale: [1, 1.05, 0.9, 1],
+        }}
+        transition={{
+          duration: 26,
+          repeat: Infinity,
+          ease: 'easeInOut',
+          delay: 8,
         }}
       />
     </div>

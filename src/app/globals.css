@@ -427,6 +427,27 @@ body {
     inset 0 0 15px rgba(139, 92, 246, 0.1);
 }
 
+.glow-border-pink {
+  box-shadow:
+    0 0 15px rgba(236, 72, 153, 0.5),
+    0 0 30px rgba(236, 72, 153, 0.3),
+    inset 0 0 15px rgba(236, 72, 153, 0.1);
+}
+
+.glow-border-orange {
+  box-shadow:
+    0 0 15px rgba(249, 115, 22, 0.5),
+    0 0 30px rgba(249, 115, 22, 0.3),
+    inset 0 0 15px rgba(249, 115, 22, 0.1);
+}
+
+.glow-border-emerald {
+  box-shadow:
+    0 0 15px rgba(16, 185, 129, 0.5),
+    0 0 30px rgba(16, 185, 129, 0.3),
+    inset 0 0 15px rgba(16, 185, 129, 0.1);
+}
+
 /* Animated neon border */
 @keyframes neon-pulse {
   0%, 100% {
@@ -653,6 +674,162 @@ body {
   box-shadow:
     0 10px 40px rgba(59, 130, 246, 0.4),
     0 0 20px rgba(6, 182, 212, 0.3);
+}
+
+/* Glow burst effect on hover */
+@keyframes glow-burst {
+  0% {
+    box-shadow: 0 0 5px rgba(6, 182, 212, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(6, 182, 212, 0.5),
+      0 0 50px rgba(6, 182, 212, 0.3),
+      0 0 75px rgba(59, 130, 246, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(6, 182, 212, 0.2);
+  }
+}
+
+.glow-burst-hover:hover {
+  animation: glow-burst 0.6s ease-out;
+}
+
+@keyframes glow-burst-pink {
+  0% { box-shadow: 0 0 5px rgba(236, 72, 153, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(236, 72, 153, 0.5), 0 0 50px rgba(236, 72, 153, 0.3); }
+  100% { box-shadow: 0 0 5px rgba(236, 72, 153, 0.2); }
+}
+
+@keyframes glow-burst-orange {
+  0% { box-shadow: 0 0 5px rgba(249, 115, 22, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(249, 115, 22, 0.5), 0 0 50px rgba(249, 115, 22, 0.3); }
+  100% { box-shadow: 0 0 5px rgba(249, 115, 22, 0.2); }
+}
+
+@keyframes glow-burst-emerald {
+  0% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.5), 0 0 50px rgba(16, 185, 129, 0.3); }
+  100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.2); }
+}
+
+.glow-burst-pink:hover { animation: glow-burst-pink 0.6s ease-out; }
+.glow-burst-orange:hover { animation: glow-burst-orange 0.6s ease-out; }
+.glow-burst-emerald:hover { animation: glow-burst-emerald 0.6s ease-out; }
+
+/* ========================================
+   TYPOGRAPHY GRADIENTS
+   ======================================== */
+
+/* Animated rainbow gradient text */
+@keyframes gradient-rainbow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-text-rainbow {
+  background: linear-gradient(
+    90deg,
+    #06b6d4 0%,
+    #3b82f6 16%,
+    #8b5cf6 33%,
+    #ec4899 50%,
+    #f97316 66%,
+    #10b981 83%,
+    #06b6d4 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-rainbow 5s linear infinite;
+}
+
+/* Sunset gradient: Orange → Pink → Purple */
+.gradient-text-sunset {
+  background: linear-gradient(
+    90deg,
+    #f97316 0%,
+    #ec4899 50%,
+    #8b5cf6 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Animated sunset gradient */
+.gradient-text-sunset-animated {
+  background: linear-gradient(
+    90deg,
+    #f97316 0%,
+    #ec4899 25%,
+    #8b5cf6 50%,
+    #ec4899 75%,
+    #f97316 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-rainbow 4s linear infinite;
+}
+
+/* Ocean gradient: Cyan → Blue → Purple */
+.gradient-text-ocean {
+  background: linear-gradient(
+    90deg,
+    #06b6d4 0%,
+    #3b82f6 50%,
+    #8b5cf6 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Animated ocean gradient */
+.gradient-text-ocean-animated {
+  background: linear-gradient(
+    90deg,
+    #06b6d4 0%,
+    #3b82f6 25%,
+    #8b5cf6 50%,
+    #3b82f6 75%,
+    #06b6d4 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-rainbow 4s linear infinite;
+}
+
+/* Fresh gradient: Emerald → Cyan → Blue */
+.gradient-text-fresh {
+  background: linear-gradient(
+    90deg,
+    #10b981 0%,
+    #06b6d4 50%,
+    #3b82f6 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Warm gradient: Orange → Pink */
+.gradient-text-warm {
+  background: linear-gradient(
+    90deg,
+    #f97316 0%,
+    #ec4899 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 @keyframes button-ripple {

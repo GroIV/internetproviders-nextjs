@@ -11,11 +11,14 @@ interface Particle {
   opacity: number
 }
 
-// Color palette for shifting mode (HSL values)
+// Color palette for shifting mode (HSL values) - Rainbow cycle
 const COLOR_PALETTE = [
   { h: 180, s: 100, l: 43 }, // Cyan
   { h: 217, s: 91, l: 60 },  // Blue
   { h: 262, s: 83, l: 58 },  // Purple
+  { h: 330, s: 80, l: 60 },  // Pink/Magenta
+  { h: 25, s: 95, l: 53 },   // Orange
+  { h: 160, s: 84, l: 39 },  // Emerald
 ]
 
 // Interpolate between two HSL colors

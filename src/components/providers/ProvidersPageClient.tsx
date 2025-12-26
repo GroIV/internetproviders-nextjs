@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useLocation } from '@/contexts/LocationContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ScrollReveal, StaggerContainer, AnimatedToggle, LoadingSpinner } from '@/components/ui'
 
 interface Provider {
   id: number
@@ -99,12 +100,12 @@ export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) 
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4">Internet Providers</h1>
+        <ScrollReveal direction="up" className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-4 gradient-text-ocean">Internet Providers</h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
             Compare the top internet service providers in the United States
           </p>
-        </div>
+        </ScrollReveal>
 
         {/* Location & Filter Controls */}
         <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 mb-8">
@@ -156,21 +157,12 @@ export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) 
               <span className={`text-sm ${!showOnlyAvailable ? 'text-white' : 'text-gray-500'}`}>
                 All Providers
               </span>
-              <button
-                onClick={() => setShowOnlyAvailable(!showOnlyAvailable)}
+              <AnimatedToggle
+                checked={showOnlyAvailable && !!location?.zipCode}
+                onChange={() => setShowOnlyAvailable(!showOnlyAvailable)}
                 disabled={!location?.zipCode}
-                className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
-                  showOnlyAvailable && location?.zipCode
-                    ? 'bg-cyan-600'
-                    : 'bg-gray-700'
-                } ${!location?.zipCode ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-              >
-                <span
-                  className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${
-                    showOnlyAvailable && location?.zipCode ? 'translate-x-6' : 'translate-x-0'
-                  }`}
-                />
-              </button>
+                activeColor="cyan"
+              />
               <span className={`text-sm ${showOnlyAvailable && location?.zipCode ? 'text-white' : 'text-gray-500'}`}>
                 Available in My Area
               </span>
@@ -182,7 +174,7 @@ export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) 
             <div className="mt-4 pt-4 border-t border-gray-800">
               {isLoadingProviders ? (
                 <div className="flex items-center gap-2 text-gray-400 text-sm">
-                  <div className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                  <LoadingSpinner variant="dots" size="sm" />
                   Loading available providers...
                 </div>
               ) : availableProviders.length > 0 ? (
@@ -200,30 +192,34 @@ export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) 
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+        <StaggerContainer
+          staggerDelay={0.1}
+          direction="up"
+          className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-12"
+        >
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
             <div className="text-2xl font-bold text-blue-400">{displayProviders.length}</div>
             <div className="text-sm text-gray-400">
               {showOnlyAvailable && location?.zipCode ? 'Available' : 'Total'} Providers
             </div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-emerald">
             <div className="text-2xl font-bold text-green-400">{fiberProviders.length}</div>
             <div className="text-sm text-gray-400">Fiber Providers</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
             <div className="text-2xl font-bold text-cyan-400">{cableProviders.length}</div>
             <div className="text-sm text-gray-400">Cable Providers</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-orange">
             <div className="text-2xl font-bold text-orange-400">{satelliteProviders.length}</div>
             <div className="text-sm text-gray-400">Satellite Providers</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-pink">
             <div className="text-2xl font-bold text-purple-400">{tvProviders.length}</div>
             <div className="text-sm text-gray-400">TV Providers</div>
           </div>
-        </div>
+        </StaggerContainer>
 
         {/* TV Providers Section */}
         {tvProviders.length > 0 && (
@@ -241,9 +237,11 @@ export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) 
         )}
 
         {/* All Providers Grid */}
-        <h2 className="text-2xl font-semibold mb-6">
-          {showOnlyAvailable && location?.zipCode ? 'Available Providers' : 'All Providers'}
-        </h2>
+        <ScrollReveal direction="left">
+          <h2 className="text-2xl font-semibold mb-6 gradient-text-fresh">
+            {showOnlyAvailable && location?.zipCode ? 'Available Providers' : 'All Providers'}
+          </h2>
+        </ScrollReveal>
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -306,7 +304,7 @@ function ProviderCard({
   return (
     <Link
       href={`/providers/${provider.slug}`}
-      className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-blue-600/50 transition-colors group relative"
+      className="futuristic-card corner-accent rounded-xl p-6 group relative glow-burst-hover"
     >
       {/* Coverage badge */}
       {coveragePercent !== undefined && (
