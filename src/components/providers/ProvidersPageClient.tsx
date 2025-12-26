@@ -27,13 +27,50 @@ interface ProvidersPageClientProps {
   allProviders: Provider[]
 }
 
-const technologyColors: Record<string, string> = {
-  'Fiber': 'bg-green-600/20 text-green-400',
-  'Cable': 'bg-blue-600/20 text-blue-400',
-  'DSL': 'bg-yellow-600/20 text-yellow-400',
-  '5G': 'bg-purple-600/20 text-purple-400',
-  'Fixed Wireless': 'bg-cyan-600/20 text-cyan-400',
-  'Satellite': 'bg-orange-600/20 text-orange-400',
+// Provider details for enhanced cards
+const providerDetails: Record<string, { maxSpeed: string; speedMbps: number; startingPrice: string; color: string }> = {
+  'xfinity': { maxSpeed: '2 Gbps', speedMbps: 2000, startingPrice: '$30', color: 'from-purple-500 to-blue-500' },
+  'spectrum': { maxSpeed: '1 Gbps', speedMbps: 1000, startingPrice: '$50', color: 'from-blue-500 to-cyan-500' },
+  'att-internet': { maxSpeed: '5 Gbps', speedMbps: 5000, startingPrice: '$55', color: 'from-cyan-500 to-blue-500' },
+  'verizon-fios': { maxSpeed: '2.3 Gbps', speedMbps: 2300, startingPrice: '$50', color: 'from-red-500 to-orange-500' },
+  'verizon-5g': { maxSpeed: '1 Gbps', speedMbps: 1000, startingPrice: '$35', color: 'from-red-500 to-pink-500' },
+  'cox': { maxSpeed: '2 Gbps', speedMbps: 2000, startingPrice: '$50', color: 'from-orange-500 to-amber-500' },
+  'frontier': { maxSpeed: '5 Gbps', speedMbps: 5000, startingPrice: '$50', color: 'from-red-600 to-red-400' },
+  'google-fiber': { maxSpeed: '8 Gbps', speedMbps: 8000, startingPrice: '$70', color: 'from-green-500 to-blue-500' },
+  't-mobile': { maxSpeed: '245 Mbps', speedMbps: 245, startingPrice: '$40', color: 'from-pink-500 to-purple-500' },
+  'centurylink': { maxSpeed: '940 Mbps', speedMbps: 940, startingPrice: '$30', color: 'from-green-500 to-teal-500' },
+  'earthlink': { maxSpeed: '5 Gbps', speedMbps: 5000, startingPrice: '$50', color: 'from-blue-600 to-indigo-500' },
+  'hughesnet': { maxSpeed: '100 Mbps', speedMbps: 100, startingPrice: '$50', color: 'from-blue-700 to-blue-500' },
+  'viasat': { maxSpeed: '150 Mbps', speedMbps: 150, startingPrice: '$70', color: 'from-indigo-500 to-blue-500' },
+  'starlink': { maxSpeed: '220 Mbps', speedMbps: 220, startingPrice: '$120', color: 'from-slate-600 to-slate-400' },
+  'optimum': { maxSpeed: '8 Gbps', speedMbps: 8000, startingPrice: '$40', color: 'from-yellow-500 to-amber-500' },
+  'windstream': { maxSpeed: '2 Gbps', speedMbps: 2000, startingPrice: '$40', color: 'from-emerald-500 to-green-500' },
+  'mediacom': { maxSpeed: '1 Gbps', speedMbps: 1000, startingPrice: '$30', color: 'from-blue-500 to-blue-400' },
+  'wow': { maxSpeed: '1 Gbps', speedMbps: 1000, startingPrice: '$40', color: 'from-orange-500 to-yellow-500' },
+  'astound': { maxSpeed: '1.5 Gbps', speedMbps: 1500, startingPrice: '$25', color: 'from-cyan-500 to-teal-500' },
+  'brightspeed': { maxSpeed: '940 Mbps', speedMbps: 940, startingPrice: '$50', color: 'from-orange-400 to-red-500' },
+  'ziply': { maxSpeed: '5 Gbps', speedMbps: 5000, startingPrice: '$20', color: 'from-green-400 to-emerald-500' },
+  'metronet': { maxSpeed: '5 Gbps', speedMbps: 5000, startingPrice: '$50', color: 'from-blue-500 to-purple-500' },
+  'directv': { maxSpeed: 'N/A', speedMbps: 0, startingPrice: '$65', color: 'from-blue-600 to-blue-400' },
+  'dish': { maxSpeed: 'N/A', speedMbps: 0, startingPrice: '$80', color: 'from-red-600 to-red-400' },
+}
+
+// Calculate speed percentage (logarithmic scale for better visualization)
+const getSpeedPercent = (speedMbps: number): number => {
+  if (speedMbps === 0) return 0
+  const maxSpeed = 8000
+  const logPercent = (Math.log10(speedMbps + 1) / Math.log10(maxSpeed + 1)) * 100
+  return Math.min(Math.max(logPercent, 5), 100)
+}
+
+// Technology colors for gradient badges
+const techColors: Record<string, string> = {
+  'Fiber': 'from-green-400 to-emerald-500',
+  'Cable': 'from-blue-400 to-cyan-500',
+  'DSL': 'from-yellow-400 to-amber-500',
+  '5G': 'from-purple-400 to-pink-500',
+  'Fixed Wireless': 'from-orange-400 to-red-500',
+  'Satellite': 'from-slate-400 to-gray-500',
 }
 
 export function ProvidersPageClient({ allProviders }: ProvidersPageClientProps) {
@@ -301,42 +338,104 @@ function ProviderCard({
   provider: Provider
   coveragePercent?: number
 }) {
+  const details = providerDetails[provider.slug] || {
+    maxSpeed: 'Varies',
+    speedMbps: 500,
+    startingPrice: 'Call',
+    color: 'from-gray-500 to-gray-600'
+  }
+  const speedPercent = getSpeedPercent(details.speedMbps)
+  const isTV = provider.category === 'TV' || provider.category === 'Satellite TV'
+
   return (
     <Link
       href={`/providers/${provider.slug}`}
-      className="futuristic-card corner-accent rounded-xl p-6 group relative glow-burst-hover"
+      className="group block relative bg-gray-900/50 backdrop-blur-sm rounded-2xl p-5 border border-gray-700/50 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1"
     >
+      {/* Gradient overlay on hover */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${details.color} opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300`} />
+
       {/* Coverage badge */}
       {coveragePercent !== undefined && (
         <div className="absolute top-3 right-3">
-          <span className="px-2 py-1 bg-cyan-600/20 text-cyan-400 text-xs rounded-full">
+          <span className="px-2 py-1 bg-gray-800/80 text-gray-400 text-xs rounded-full border border-gray-700/50">
             {coveragePercent}% coverage
           </span>
         </div>
       )}
 
-      <div className="flex items-center gap-4 mb-4">
-        <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center text-xl font-bold text-gray-400 group-hover:text-blue-400 transition-colors">
-          {provider.name.charAt(0)}
+      <div className="flex items-start gap-4 relative">
+        {/* Provider Icon */}
+        <div className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${details.color} flex items-center justify-center flex-shrink-0 shadow-lg group-hover:shadow-xl transition-shadow duration-300`}>
+          <span className="text-lg font-bold text-white drop-shadow-md">
+            {provider.name.charAt(0)}
+          </span>
+          <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${details.color} opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300`} />
         </div>
-        <div>
-          <h3 className="font-semibold group-hover:text-blue-400 transition-colors">
+
+        {/* Provider Info */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors truncate">
             {provider.name}
           </h3>
-          <p className="text-sm text-gray-400">{provider.category}</p>
+
+          {/* Tech badges */}
+          {provider.technologies && provider.technologies.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {provider.technologies.slice(0, 2).map((tech: string) => (
+                <span
+                  key={tech}
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${techColors[tech] || 'from-gray-500 to-gray-600'} text-white shadow-sm`}
+                >
+                  {tech}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {provider.technologies && provider.technologies.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {provider.technologies.map((tech: string) => (
-            <span
-              key={tech}
-              className={`px-2 py-1 rounded text-xs font-medium ${technologyColors[tech] || 'bg-gray-600/20 text-gray-400'}`}
-            >
-              {tech}
-            </span>
-          ))}
+      {/* Stats Row */}
+      <div className="mt-4 pt-3 border-t border-gray-700/50 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          {/* Speed */}
+          {!isTV && (
+            <div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wide">Speed</div>
+              <div className="text-sm font-bold text-cyan-400">
+                {details.maxSpeed}
+              </div>
+            </div>
+          )}
+          {/* Price */}
+          <div>
+            <div className="text-[10px] text-gray-500 uppercase tracking-wide">From</div>
+            <div className="text-sm font-bold text-green-400">
+              {details.startingPrice}<span className="text-xs font-normal text-gray-500">/mo</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Arrow */}
+        <div className="text-gray-600 group-hover:text-cyan-400 transition-colors">
+          <svg className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Speed bar (only for internet providers) */}
+      {!isTV && speedPercent > 0 && (
+        <div className="mt-3">
+          <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full"
+              initial={{ width: 0 }}
+              whileInView={{ width: `${speedPercent}%` }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+            />
+          </div>
         </div>
       )}
     </Link>
