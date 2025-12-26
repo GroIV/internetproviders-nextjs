@@ -7,6 +7,7 @@ interface ResultsCardProps {
   label: string
   value: string | number
   unit?: string
+  description?: string
   icon: ReactNode
   color: 'cyan' | 'purple' | 'amber' | 'green' | 'blue' | 'pink'
   delay?: number
@@ -45,7 +46,7 @@ const colorConfig: Record<string, { gradient: string; glow: string; text: string
   }
 }
 
-export function ResultsCard({ label, value, unit, icon, color, delay = 0 }: ResultsCardProps) {
+export function ResultsCard({ label, value, unit, description, icon, color, delay = 0 }: ResultsCardProps) {
   const config = colorConfig[color]
 
   return (
@@ -75,6 +76,11 @@ export function ResultsCard({ label, value, unit, icon, color, delay = 0 }: Resu
 
       {/* Label */}
       <div className="text-xs text-gray-400 mt-1">{label}</div>
+
+      {/* Description */}
+      {description && (
+        <div className="text-xs text-gray-500 mt-2 leading-relaxed">{description}</div>
+      )}
     </motion.div>
   )
 }

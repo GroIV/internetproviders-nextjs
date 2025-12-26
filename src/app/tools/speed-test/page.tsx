@@ -349,6 +349,7 @@ function SpeedTestContent() {
                     label="Download"
                     value={results.download}
                     unit="Mbps"
+                    description="How fast you receive data. Important for streaming, browsing, and downloads."
                     color="cyan"
                     delay={0.1}
                     icon={
@@ -361,6 +362,7 @@ function SpeedTestContent() {
                     label="Upload"
                     value={results.upload}
                     unit="Mbps"
+                    description="How fast you send data. Important for video calls, cloud backups, and uploads."
                     color="purple"
                     delay={0.15}
                     icon={
@@ -373,6 +375,7 @@ function SpeedTestContent() {
                     label="Ping"
                     value={results.latency}
                     unit="ms"
+                    description="Response time to the server. Lower is better for gaming and video calls."
                     color="amber"
                     delay={0.2}
                     icon={
@@ -385,6 +388,7 @@ function SpeedTestContent() {
                     label="Jitter"
                     value={results.jitter}
                     unit="ms"
+                    description="Variation in ping times. Lower means more stable connection quality."
                     color="pink"
                     delay={0.25}
                     icon={
@@ -397,6 +401,7 @@ function SpeedTestContent() {
                     label="Peak Download"
                     value={results.peakDownload}
                     unit="Mbps"
+                    description="Highest speed reached during the test. Shows your connection's potential."
                     color="blue"
                     delay={0.3}
                     icon={
@@ -408,6 +413,7 @@ function SpeedTestContent() {
                   <ResultsCard
                     label="Samples"
                     value={results.samples}
+                    description="Number of measurements taken. More samples means more accurate results."
                     color="green"
                     delay={0.35}
                     icon={
