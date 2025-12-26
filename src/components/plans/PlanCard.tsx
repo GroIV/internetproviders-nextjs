@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { SpeedGauge } from './SpeedGauge'
 import { useChat } from '@/contexts/ChatContext'
-import { getAffiliateUrl } from '@/lib/affiliates'
+import { getAffiliateUrl, hasAffiliateLink } from '@/lib/affiliates'
 import type { FeaturedPlan } from '@/lib/featuredPlans'
 
 interface PlanCardProps {
@@ -100,15 +100,9 @@ export function PlanCard({
     setIsOpen(true)
   }
 
-  // Get affiliate URL for this provider
-  const providerIdMap: Record<string, string> = {
-    'frontier-fiber': 'frontier',
-    'att-internet': 'att',
-    'spectrum': 'spectrum',
-    't-mobile': 'tmobile'
-  }
-  const affiliateProviderId = providerIdMap[providerSlug]
-  const orderUrl = affiliateProviderId ? getAffiliateUrl(affiliateProviderId, 'plans-page') : null
+  // Get affiliate URL for this provider - use slug directly
+  const canOrder = hasAffiliateLink(providerSlug)
+  const orderUrl = canOrder ? getAffiliateUrl(providerSlug, 'plans') : null
 
   return (
     <motion.div
