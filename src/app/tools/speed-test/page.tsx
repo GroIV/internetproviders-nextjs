@@ -70,7 +70,8 @@ function SpeedTestContent() {
             setCurrentSpeed(speedMbps)
             downloadSpeeds.push(speedMbps)
           }
-          setProgress(10 + (downloadSpeeds.length / 5) * 50)
+          // Cap at 60% max for download phase
+          setProgress(Math.min(60, 10 + (downloadSpeeds.length / 5) * 50))
         } else if (type === 'upload') {
           setCurrentTest('upload')
           if (summary.upload) {
@@ -78,7 +79,8 @@ function SpeedTestContent() {
             setCurrentSpeed(speedMbps)
             uploadSpeeds.push(speedMbps)
           }
-          setProgress(60 + (uploadSpeeds.length / 5) * 35)
+          // Cap at 95% max for upload phase (100% set on complete)
+          setProgress(Math.min(95, 60 + (uploadSpeeds.length / 5) * 35))
         }
       }
 
@@ -156,7 +158,7 @@ function SpeedTestContent() {
                 fill="none"
                 stroke={phase === 'complete' ? '#10B981' : currentTest === 'download' ? '#3B82F6' : currentTest === 'upload' ? '#8B5CF6' : '#F59E0B'}
                 strokeWidth="8"
-                strokeDasharray={`${(progress / 100) * 212} 283`}
+                strokeDasharray={`${(Math.min(100, progress) / 100) * 212} 283`}
                 strokeLinecap="round"
                 className="transition-all duration-300"
               />
@@ -196,14 +198,14 @@ function SpeedTestContent() {
                 <span className="text-gray-400">Progress</span>
                 <span className="text-white">{Math.round(progress)}%</span>
               </div>
-              <div className="w-full bg-gray-800 rounded-full h-2">
+              <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
                 <div
                   className={`h-2 rounded-full transition-all duration-300 ${
                     currentTest === 'download' ? 'bg-blue-600' :
                     currentTest === 'upload' ? 'bg-purple-600' :
                     'bg-yellow-600'
                   }`}
-                  style={{ width: `${progress}%` }}
+                  style={{ width: `${Math.min(100, progress)}%` }}
                 />
               </div>
             </div>
