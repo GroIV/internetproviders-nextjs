@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/server'
-import { ZipSearch } from '@/components/ZipSearch'
+import { CompareAutoRedirect } from '@/components/CompareAutoRedirect'
 import { getProviderSlug, cleanProviderName } from '@/lib/providers'
 import { RelatedRankings } from '@/components/RelatedRankings'
 import { JsonLd, generateBreadcrumbSchema } from '@/lib/seo'
@@ -339,9 +339,9 @@ export default async function ComparePage({
               : `Enter your ZIP code to see available providers`}
           </p>
 
-          {/* Only show full search when no ZIP, otherwise show compact change option */}
+          {/* Auto-redirect when location is known, otherwise show search */}
           {!zipCode ? (
-            <ZipSearch />
+            <CompareAutoRedirect hasZipParam={false} showInstructions={true} />
           ) : (
             <a
               href="/compare"
@@ -469,26 +469,7 @@ export default async function ComparePage({
           </div>
         )}
 
-        {/* No search yet */}
-        {!zipCode && (
-          <div className="mt-12 grid md:grid-cols-3 gap-6">
-            <div className="p-6 futuristic-card rounded-xl corner-accent glow-burst-hover">
-              <div className="text-3xl mb-3 gradient-text-fresh">1</div>
-              <h3 className="font-semibold mb-2">Enter Your ZIP</h3>
-              <p className="text-sm text-gray-400">Type your 5-digit ZIP code to start</p>
-            </div>
-            <div className="p-6 futuristic-card rounded-xl corner-accent glow-burst-hover">
-              <div className="text-3xl mb-3 gradient-text-ocean">2</div>
-              <h3 className="font-semibold mb-2">See Providers</h3>
-              <p className="text-sm text-gray-400">View all available internet providers</p>
-            </div>
-            <div className="p-6 futuristic-card rounded-xl corner-accent glow-burst-hover">
-              <div className="text-3xl mb-3 gradient-text-sunset">3</div>
-              <h3 className="font-semibold mb-2">Compare Coverage</h3>
-              <p className="text-sm text-gray-400">Check speeds and technology availability</p>
-            </div>
-          </div>
-        )}
+        {/* Instructions are now rendered by CompareAutoRedirect client component */}
 
         {/* Related Rankings */}
         <div className="mt-12">
