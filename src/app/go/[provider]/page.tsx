@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useLayoutEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -16,10 +16,6 @@ export default function InterstitialPage() {
   const [redirectUrl, setRedirectUrl] = useState<string | null>(null)
   const [hasLink, setHasLink] = useState(true)
 
-  // Scroll to top immediately when page loads
-  useLayoutEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
 
   // Get provider display name
   const providerName = providerDisplayNames[providerSlug] || providerSlug
@@ -62,7 +58,7 @@ export default function InterstitialPage() {
   // Provider not found or no affiliate link
   if (!hasLink) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+      <div className="fixed inset-0 z-[9999] bg-gray-950 flex items-center justify-center px-4">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-500/20 flex items-center justify-center">
             <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +81,7 @@ export default function InterstitialPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="fixed inset-0 z-[9999] bg-gray-950 flex items-center justify-center px-4 overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
