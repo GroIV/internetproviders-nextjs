@@ -2,53 +2,86 @@
 
 import { useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  SpeedGauge,
+  LiveGraph,
+  ResultsCard,
+  GradeDisplay,
+  calculateGrade,
+  ActivityGrid,
+  PhaseTimeline,
+  ComparisonBars
+} from '@/components/speed-test'
 
-type TestPhase = 'idle' | 'running' | 'complete'
+type TestPhase = 'idle' | 'latency' | 'download' | 'upload' | 'complete'
 
 interface Results {
   download: number
   upload: number
   latency: number
   jitter: number
+  samples: number
+  peakDownload: number
+  peakUpload: number
 }
 
 function SpeedTestContent() {
   const [phase, setPhase] = useState<TestPhase>('idle')
   const [results, setResults] = useState<Results | null>(null)
   const [currentSpeed, setCurrentSpeed] = useState(0)
-  const [currentTest, setCurrentTest] = useState<'download' | 'upload' | 'latency'>('latency')
   const [progress, setProgress] = useState(0)
+  const [graphData, setGraphData] = useState<number[]>([])
+  const [liveStats, setLiveStats] = useState({ peak: 0, samples: 0, variance: 0 })
   const speedTestRef = useRef<unknown>(null)
+  const speedsRef = useRef<number[]>([])
 
   const runSpeedTest = useCallback(async () => {
-    setPhase('running')
+    setPhase('latency')
     setProgress(0)
     setResults(null)
     setCurrentSpeed(0)
-    setCurrentTest('latency')
+    setGraphData([])
+    setLiveStats({ peak: 0, samples: 0, variance: 0 })
+    speedsRef.current = []
 
     try {
       // Dynamically import the speedtest module (only works in browser)
       const SpeedTestModule = await import('@cloudflare/speedtest')
       const SpeedTest = SpeedTestModule.default
 
+      // Extended test configuration for 45-60 second test
       const speedTest = new SpeedTest({
         autoStart: false,
         measurements: [
-          { type: 'latency', numPackets: 4 },
-          { type: 'download', bytes: 1e5, count: 1 },
-          { type: 'download', bytes: 1e6, count: 4 },
-          { type: 'download', bytes: 1e7, count: 4 },
-          { type: 'upload', bytes: 1e5, count: 1 },
-          { type: 'upload', bytes: 1e6, count: 4 },
+          // Extended latency testing
+          { type: 'latency', numPackets: 20 },
+
+          // Warmup downloads
+          { type: 'download', bytes: 1e5, count: 2 },
+
+          // Progressive download tests
+          { type: 'download', bytes: 1e6, count: 8 },
+          { type: 'download', bytes: 1e7, count: 6 },
+          { type: 'download', bytes: 2.5e7, count: 4 },
+
+          // Warmup uploads
+          { type: 'upload', bytes: 1e5, count: 2 },
+
+          // Progressive upload tests
+          { type: 'upload', bytes: 1e6, count: 6 },
+          { type: 'upload', bytes: 5e6, count: 4 },
         ],
       })
 
       speedTestRef.current = speedTest
 
-      const downloadSpeeds: number[] = []
-      const uploadSpeeds: number[] = []
+      let downloadCount = 0
+      let uploadCount = 0
+      const totalDownloads = 20 // 2 + 8 + 6 + 4
+      const totalUploads = 12 // 2 + 6 + 4
+      let peakDownload = 0
+      let peakUpload = 0
 
       speedTest.onRunningChange = (running: boolean) => {
         if (!running) {
@@ -61,36 +94,89 @@ function SpeedTestContent() {
         const summary = speedTest.results.getSummary()
 
         if (type === 'latency') {
-          setCurrentTest('download')
+          setPhase('download')
           setProgress(10)
         } else if (type === 'download') {
-          setCurrentTest('download')
+          setPhase('download')
+          downloadCount++
+
           if (summary.download) {
             const speedMbps = summary.download / 1e6
+
+            // Track peak
+            if (speedMbps > peakDownload) {
+              peakDownload = speedMbps
+            }
+
+            // Update current speed and graph
             setCurrentSpeed(speedMbps)
-            downloadSpeeds.push(speedMbps)
+            speedsRef.current.push(speedMbps)
+
+            setGraphData(prev => {
+              const newData = [...prev, speedMbps]
+              // Keep last 30 points
+              return newData.slice(-30)
+            })
+
+            // Calculate variance
+            const speeds = speedsRef.current
+            const avg = speeds.reduce((a, b) => a + b, 0) / speeds.length
+            const variance = Math.sqrt(speeds.reduce((sum, s) => sum + Math.pow(s - avg, 2), 0) / speeds.length)
+
+            setLiveStats({
+              peak: peakDownload,
+              samples: downloadCount,
+              variance: variance
+            })
           }
-          // Cap at 60% max for download phase
-          setProgress(Math.min(60, 10 + (downloadSpeeds.length / 5) * 50))
+
+          // Progress: 10% to 60% for downloads
+          setProgress(10 + (downloadCount / totalDownloads) * 50)
         } else if (type === 'upload') {
-          setCurrentTest('upload')
+          setPhase('upload')
+          uploadCount++
+
           if (summary.upload) {
             const speedMbps = summary.upload / 1e6
+
+            // Track peak
+            if (speedMbps > peakUpload) {
+              peakUpload = speedMbps
+            }
+
             setCurrentSpeed(speedMbps)
-            uploadSpeeds.push(speedMbps)
+
+            setGraphData(prev => {
+              const newData = [...prev, speedMbps]
+              return newData.slice(-30)
+            })
+
+            setLiveStats(prev => ({
+              ...prev,
+              peak: Math.max(prev.peak, speedMbps),
+              samples: downloadCount + uploadCount
+            }))
           }
-          // Cap at 95% max for upload phase (100% set on complete)
-          setProgress(Math.min(95, 60 + (uploadSpeeds.length / 5) * 35))
+
+          // Progress: 60% to 95% for uploads
+          setProgress(60 + (uploadCount / totalUploads) * 35)
         }
       }
 
       speedTest.onFinish = (results: { getSummary: () => { download?: number; upload?: number; latency?: number; jitter?: number } }) => {
         const summary = results.getSummary()
+
+        const finalDownload = Math.round((summary.download || 0) / 1e6 * 10) / 10
+        const finalUpload = Math.round((summary.upload || 0) / 1e6 * 10) / 10
+
         setResults({
-          download: Math.round((summary.download || 0) / 1e6 * 10) / 10,
-          upload: Math.round((summary.upload || 0) / 1e6 * 10) / 10,
+          download: finalDownload,
+          upload: finalUpload,
           latency: Math.round(summary.latency || 0),
           jitter: Math.round((summary.jitter || 0) * 10) / 10,
+          samples: downloadCount + uploadCount,
+          peakDownload: Math.round(peakDownload * 10) / 10,
+          peakUpload: Math.round(peakUpload * 10) / 10,
         })
         setPhase('complete')
         setProgress(100)
@@ -103,238 +189,327 @@ function SpeedTestContent() {
     }
   }, [])
 
-  const getSpeedRating = (download: number): { label: string; color: string; description: string } => {
-    if (download >= 100) {
-      return { label: 'Excellent', color: 'text-green-400', description: 'Great for 4K streaming, gaming, and large downloads' }
-    } else if (download >= 50) {
-      return { label: 'Good', color: 'text-blue-400', description: 'Suitable for HD streaming and video calls' }
-    } else if (download >= 25) {
-      return { label: 'Average', color: 'text-yellow-400', description: 'Okay for basic streaming and browsing' }
-    } else {
-      return { label: 'Slow', color: 'text-red-400', description: 'May struggle with video streaming' }
-    }
-  }
+  const resetTest = useCallback(() => {
+    setPhase('idle')
+    setProgress(0)
+    setResults(null)
+    setCurrentSpeed(0)
+    setGraphData([])
+    setLiveStats({ peak: 0, samples: 0, variance: 0 })
+    speedsRef.current = []
+  }, [])
+
+  const gradeInfo = results ? calculateGrade(results.download, results.upload, results.latency, results.jitter) : null
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-2xl mx-auto">
-        {/* Breadcrumb */}
-        <nav className="mb-8 text-sm text-gray-400">
-          <Link href="/" className="hover:text-white">Home</Link>
-          <span className="mx-2">/</span>
-          <Link href="/tools" className="hover:text-white">Tools</Link>
-          <span className="mx-2">/</span>
-          <span className="text-white">Speed Test</span>
-        </nav>
+    <div className="min-h-screen bg-gray-950 relative overflow-hidden">
+      {/* Background gradient orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 right-1/3 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
+      </div>
 
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4">Internet Speed Test</h1>
-          <p className="text-gray-400">
-            Test your current internet connection speed
-          </p>
-        </div>
+      <div className="container mx-auto px-4 py-12 relative z-10">
+        <div className="max-w-3xl mx-auto">
+          {/* Breadcrumb */}
+          <nav className="mb-8 text-sm text-gray-400">
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+            <span className="mx-2">/</span>
+            <Link href="/tools" className="hover:text-white transition-colors">Tools</Link>
+            <span className="mx-2">/</span>
+            <span className="text-white">Speed Test</span>
+          </nav>
 
-        {/* Speed Test Card */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8">
-          {/* Speedometer Display */}
-          <div className="relative w-64 h-64 mx-auto mb-8">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              {/* Background arc */}
-              <circle
-                cx="50"
-                cy="50"
-                r="45"
-                fill="none"
-                stroke="#374151"
-                strokeWidth="8"
-                strokeDasharray="212 71"
-              />
-              {/* Progress arc */}
-              <circle
-                cx="50"
-                cy="50"
-                r="45"
-                fill="none"
-                stroke={phase === 'complete' ? '#10B981' : currentTest === 'download' ? '#3B82F6' : currentTest === 'upload' ? '#8B5CF6' : '#F59E0B'}
-                strokeWidth="8"
-                strokeDasharray={`${(Math.min(100, progress) / 100) * 212} 283`}
-                strokeLinecap="round"
-                className="transition-all duration-300"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="text-5xl font-bold">
-                {phase === 'idle' ? '0' :
-                 phase === 'complete' ? results?.download :
-                 currentSpeed.toFixed(1)}
+          {/* Header */}
+          <motion.div
+            className="text-center mb-8"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Internet Speed Test
+            </h1>
+            <p className="text-gray-400">
+              Test your connection with our comprehensive speed analysis
+            </p>
+          </motion.div>
+
+          {/* Main Speed Test Card */}
+          <motion.div
+            className="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-8 mb-8 shadow-2xl"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {/* Speed Gauge */}
+            <SpeedGauge
+              phase={phase}
+              currentSpeed={currentSpeed}
+              progress={progress}
+            />
+
+            {/* Phase Timeline - only show during test */}
+            {phase !== 'idle' && phase !== 'complete' && (
+              <div className="mt-6">
+                <PhaseTimeline currentPhase={phase} />
               </div>
-              <div className="text-gray-400 text-sm">Mbps</div>
-              {phase === 'running' && (
-                <div className={`text-sm mt-2 capitalize ${
-                  currentTest === 'download' ? 'text-blue-400' :
-                  currentTest === 'upload' ? 'text-purple-400' :
-                  'text-yellow-400'
-                }`}>
-                  Testing {currentTest}...
-                </div>
-              )}
-            </div>
-          </div>
+            )}
 
-          {/* Start Button or Results */}
-          {phase === 'idle' && (
-            <button
-              onClick={runSpeedTest}
-              className="w-full py-4 bg-blue-600 text-white rounded-lg text-lg font-medium hover:bg-blue-700 transition-colors"
-            >
-              Start Speed Test
-            </button>
-          )}
+            {/* Live Graph - only show during test */}
+            <AnimatePresence>
+              {(phase === 'download' || phase === 'upload') && graphData.length > 0 && (
+                <motion.div
+                  className="mt-6"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <LiveGraph
+                    phase={phase}
+                    dataPoints={graphData}
+                    maxValue={Math.max(200, ...graphData) * 1.2}
+                  />
 
-          {phase === 'running' && (
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Progress</span>
-                <span className="text-white">{Math.round(progress)}%</span>
-              </div>
-              <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
-                <div
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    currentTest === 'download' ? 'bg-blue-600' :
-                    currentTest === 'upload' ? 'bg-purple-600' :
-                    'bg-yellow-600'
-                  }`}
-                  style={{ width: `${Math.min(100, progress)}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {phase === 'complete' && results && (
-            <div className="space-y-6">
-              {/* Results Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-gray-800/50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-400">{results.download}</div>
-                  <div className="text-xs text-gray-400">Download Mbps</div>
-                </div>
-                <div className="text-center p-4 bg-gray-800/50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-400">{results.upload}</div>
-                  <div className="text-xs text-gray-400">Upload Mbps</div>
-                </div>
-                <div className="text-center p-4 bg-gray-800/50 rounded-lg">
-                  <div className="text-2xl font-bold text-yellow-400">{results.latency}</div>
-                  <div className="text-xs text-gray-400">Ping ms</div>
-                </div>
-                <div className="text-center p-4 bg-gray-800/50 rounded-lg">
-                  <div className="text-2xl font-bold text-cyan-400">{results.jitter}</div>
-                  <div className="text-xs text-gray-400">Jitter ms</div>
-                </div>
-              </div>
-
-              {/* Rating */}
-              {(() => {
-                const rating = getSpeedRating(results.download)
-                return (
-                  <div className="text-center p-4 bg-gray-800/30 rounded-lg">
-                    <div className={`text-xl font-semibold ${rating.color}`}>
-                      {rating.label} Speed
+                  {/* Live Stats */}
+                  <div className="flex justify-center gap-8 mt-4 text-sm">
+                    <div className="text-center">
+                      <div className="text-cyan-400 font-semibold">{liveStats.peak.toFixed(1)}</div>
+                      <div className="text-gray-500 text-xs">Peak Mbps</div>
                     </div>
-                    <div className="text-sm text-gray-400 mt-1">
-                      {rating.description}
+                    <div className="text-center">
+                      <div className="text-purple-400 font-semibold">{liveStats.samples}</div>
+                      <div className="text-gray-500 text-xs">Samples</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-amber-400 font-semibold">&plusmn;{liveStats.variance.toFixed(1)}</div>
+                      <div className="text-gray-500 text-xs">Variance</div>
                     </div>
                   </div>
-                )
-              })()}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-              {/* Test Again Button */}
-              <button
-                onClick={() => {
-                  setPhase('idle')
-                  setProgress(0)
-                  setResults(null)
-                  setCurrentSpeed(0)
-                }}
-                className="w-full py-3 border border-gray-700 text-gray-300 rounded-lg font-medium hover:border-gray-600 hover:text-white transition-colors"
+            {/* Start Button */}
+            {phase === 'idle' && (
+              <motion.button
+                onClick={runSpeedTest}
+                className="w-full mt-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl text-lg font-medium hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                Test Again
-              </button>
-            </div>
-          )}
-        </div>
+                Start Speed Test
+              </motion.button>
+            )}
 
-        {/* Powered by */}
-        <div className="mt-4 text-center text-xs text-gray-500">
-          Powered by <a href="https://speed.cloudflare.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">Cloudflare</a>
-        </div>
-
-        {/* Tips */}
-        <div className="mt-8 bg-gray-900 border border-gray-800 rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">Tips for Accurate Results</h2>
-          <ul className="space-y-2 text-sm text-gray-400">
-            <li className="flex items-start gap-2">
-              <svg className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Close other browser tabs and applications
-            </li>
-            <li className="flex items-start gap-2">
-              <svg className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Use a wired connection if possible
-            </li>
-            <li className="flex items-start gap-2">
-              <svg className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Run the test multiple times for accuracy
-            </li>
-          </ul>
-        </div>
-
-        {/* Understanding Results */}
-        <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">Understanding Your Results</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-medium text-blue-400 mb-2">Download Speed</h3>
-              <p className="text-sm text-gray-400">
-                How fast you can pull data. Important for streaming and browsing.
-              </p>
-              <div className="mt-2 text-xs text-gray-500">
-                25+ Mbps: HD | 100+ Mbps: 4K | 300+ Mbps: Multiple users
+            {/* Progress during test */}
+            {(phase === 'latency' || phase === 'download' || phase === 'upload') && (
+              <div className="mt-8">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-400">Progress</span>
+                  <span className="text-gray-300">{Math.round(progress)}%</span>
+                </div>
+                <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <motion.div
+                    className={`h-full rounded-full ${
+                      phase === 'latency' ? 'bg-gradient-to-r from-amber-500 to-yellow-500' :
+                      phase === 'download' ? 'bg-gradient-to-r from-cyan-500 to-blue-500' :
+                      'bg-gradient-to-r from-purple-500 to-pink-500'
+                    }`}
+                    style={{ width: `${progress}%` }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
               </div>
-            </div>
-            <div>
-              <h3 className="font-medium text-purple-400 mb-2">Upload Speed</h3>
-              <p className="text-sm text-gray-400">
-                How fast you can send data. Important for video calls and uploads.
-              </p>
-              <div className="mt-2 text-xs text-gray-500">
-                5+ Mbps: Video calls | 50+ Mbps: Content creators
-              </div>
-            </div>
+            )}
+          </motion.div>
+
+          {/* Results Section */}
+          <AnimatePresence>
+            {phase === 'complete' && results && gradeInfo && (
+              <motion.div
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 40 }}
+                transition={{ duration: 0.5 }}
+              >
+                {/* Grade Display */}
+                <div className="mb-6">
+                  <GradeDisplay
+                    grade={gradeInfo.grade}
+                    description={gradeInfo.description}
+                  />
+                </div>
+
+                {/* Results Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                  <ResultsCard
+                    label="Download"
+                    value={results.download}
+                    unit="Mbps"
+                    color="cyan"
+                    delay={0.1}
+                    icon={
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
+                    }
+                  />
+                  <ResultsCard
+                    label="Upload"
+                    value={results.upload}
+                    unit="Mbps"
+                    color="purple"
+                    delay={0.15}
+                    icon={
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                      </svg>
+                    }
+                  />
+                  <ResultsCard
+                    label="Ping"
+                    value={results.latency}
+                    unit="ms"
+                    color="amber"
+                    delay={0.2}
+                    icon={
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    }
+                  />
+                  <ResultsCard
+                    label="Jitter"
+                    value={results.jitter}
+                    unit="ms"
+                    color="pink"
+                    delay={0.25}
+                    icon={
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    }
+                  />
+                  <ResultsCard
+                    label="Peak Download"
+                    value={results.peakDownload}
+                    unit="Mbps"
+                    color="blue"
+                    delay={0.3}
+                    icon={
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                    }
+                  />
+                  <ResultsCard
+                    label="Samples"
+                    value={results.samples}
+                    color="green"
+                    delay={0.35}
+                    icon={
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    }
+                  />
+                </div>
+
+                {/* Comparison Bars & Activity Grid */}
+                <div className="grid md:grid-cols-2 gap-6 mb-6">
+                  <ComparisonBars
+                    download={results.download}
+                    upload={results.upload}
+                  />
+                  <ActivityGrid results={results} />
+                </div>
+
+                {/* Test Again Button */}
+                <motion.button
+                  onClick={resetTest}
+                  className="w-full py-4 border border-gray-700 text-gray-300 rounded-xl font-medium hover:border-gray-600 hover:text-white hover:bg-gray-800/50 transition-all duration-300"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  Test Again
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Powered by */}
+          <div className="mt-6 text-center text-xs text-gray-500">
+            Powered by{' '}
+            <a
+              href="https://speed.cloudflare.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              Cloudflare
+            </a>
           </div>
-        </div>
 
-        {/* CTA */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-400 mb-4">Not happy with your speeds?</p>
-          <Link
-            href="/compare"
-            className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          {/* Tips Section */}
+          <motion.div
+            className="mt-8 bg-gray-900/40 backdrop-blur-sm rounded-xl border border-gray-700/50 p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
           >
-            Compare Faster Providers
-          </Link>
+            <h2 className="text-lg font-semibold mb-4 text-gray-200">Tips for Accurate Results</h2>
+            <ul className="space-y-3 text-sm text-gray-400">
+              <li className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Close other browser tabs and applications using bandwidth
+              </li>
+              <li className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Use a wired ethernet connection if possible for most accurate results
+              </li>
+              <li className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Run the test multiple times at different hours to see consistency
+              </li>
+              <li className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Test runs ~45-60 seconds for comprehensive analysis
+              </li>
+            </ul>
+          </motion.div>
+
+          {/* CTA */}
+          <motion.div
+            className="mt-8 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <p className="text-gray-400 mb-4">Not happy with your speeds?</p>
+            <Link
+              href="/compare"
+              className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-medium hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40"
+            >
+              Compare Faster Providers
+            </Link>
+          </motion.div>
         </div>
       </div>
     </div>
   )
 }
 
-// Use dynamic import to prevent SSR issues with the Cloudflare package
 export default function SpeedTestPage() {
   return <SpeedTestContent />
 }
