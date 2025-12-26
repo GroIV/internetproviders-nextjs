@@ -164,6 +164,16 @@ async function getProvidersByZip(zipCode: string): Promise<Provider[]> {
   // Create lookup map for names
   const nameMap = new Map(providerNames.map((p: any) => [p.provider_id, p.name]))
 
+  // Helper to check if provider is satellite (should be deprioritized)
+  const isSatelliteProvider = (name: string) => {
+    const lowerName = name.toLowerCase()
+    return lowerName.includes('viasat') ||
+      lowerName.includes('echostar') ||
+      lowerName.includes('hughesnet') ||
+      lowerName.includes('starlink') ||
+      lowerName.includes('space exploration')
+  }
+
   // Combine and format
   const providers: Provider[] = cbsaData
     .map((cp: any) => ({
@@ -171,6 +181,19 @@ async function getProvidersByZip(zipCode: string): Promise<Provider[]> {
       coverage: Math.round(cp.coverage_pct * 100),
     }))
     .filter((p: Provider) => p.name !== 'Unknown Provider')
+
+  // Sort: non-satellite first (by coverage), then satellite (by coverage)
+  providers.sort((a, b) => {
+    const aIsSatellite = isSatelliteProvider(a.name)
+    const bIsSatellite = isSatelliteProvider(b.name)
+
+    // If one is satellite and one isn't, non-satellite comes first
+    if (aIsSatellite && !bIsSatellite) return 1
+    if (!aIsSatellite && bIsSatellite) return -1
+
+    // Same type: sort by coverage descending
+    return b.coverage - a.coverage
+  })
 
   return providers
 }
