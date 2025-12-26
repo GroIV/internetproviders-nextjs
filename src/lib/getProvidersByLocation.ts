@@ -76,7 +76,10 @@ export async function getProvidersByZip(
     if (p.name === 'Xfinity') providerMap.set('comcast', p)
     if (p.name === 'AT&T Internet') providerMap.set('at&t', p)
     if (p.name === 'AT&T Internet') providerMap.set('at&t services', p)
-    if (p.name === 'Verizon Fios') providerMap.set('verizon', p)
+    // NOTE: Don't map generic "verizon" to "Verizon Fios" - FCC "Verizon Communications Inc."
+    // includes DSL, 5G Home, AND Fios. Verizon Fios is only available in specific East Coast states.
+    // Map to Verizon 5G Home instead if that provider exists, otherwise skip.
+    if (p.name === 'Verizon 5G Home') providerMap.set('verizon', p)
     if (p.name === 'Cox Internet') providerMap.set('cox communications', p)
     if (p.slug === 'frontier') providerMap.set('frontier communications', p)
   })
