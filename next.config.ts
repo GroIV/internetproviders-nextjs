@@ -89,9 +89,110 @@ const nextConfig: NextConfig = {
   trailingSlash: false,
 
   // 301 Redirects for SEO
+  // SEO Migration: Redirect old URLs to preserve Google authority
   async redirects() {
     return [
-      // Common misspellings and old URL patterns
+      // =============================================
+      // LEGACY URL PATTERNS (from old DigitalOcean site)
+      // Per SEO migration plan: preserve authority
+      // =============================================
+
+      // Resources → Guides (old content section)
+      {
+        source: '/resources/:slug',
+        destination: '/guides/:slug',
+        permanent: true,
+      },
+
+      // Provider state/city pages → Internet location pages
+      // e.g., /providers/texas/austin → /internet/texas/austin
+      {
+        source: '/providers/:state/:city',
+        destination: '/internet/:state/:city',
+        permanent: true,
+      },
+
+      // Technology-specific pages → Best/ranking pages
+      {
+        source: '/fiber-internet',
+        destination: '/best/fiber-providers',
+        permanent: true,
+      },
+      {
+        source: '/fiber-internet/:path*',
+        destination: '/best/fiber-providers',
+        permanent: true,
+      },
+      {
+        source: '/cable-internet',
+        destination: '/best/cable-providers',
+        permanent: true,
+      },
+      {
+        source: '/cable-internet/:path*',
+        destination: '/best/cable-providers',
+        permanent: true,
+      },
+      {
+        source: '/satellite-internet',
+        destination: '/providers',
+        permanent: true,
+      },
+      {
+        source: '/satellite-internet/:path*',
+        destination: '/providers',
+        permanent: true,
+      },
+      {
+        source: '/5g-home-internet',
+        destination: '/providers',
+        permanent: true,
+      },
+      {
+        source: '/5g-home-internet/:path*',
+        destination: '/providers',
+        permanent: true,
+      },
+      {
+        source: '/dsl-internet',
+        destination: '/providers',
+        permanent: true,
+      },
+      {
+        source: '/dsl-internet/:path*',
+        destination: '/providers',
+        permanent: true,
+      },
+
+      // ZIP pages → Home (KILL category per SEO plan)
+      // These were Soft 404s, redirect to home to pass any link equity
+      {
+        source: '/zip/:zip',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/internet-providers/zip/:zip',
+        destination: '/',
+        permanent: true,
+      },
+
+      // Business pages → Providers listing
+      {
+        source: '/business-internet',
+        destination: '/providers',
+        permanent: true,
+      },
+      {
+        source: '/business-internet/:path*',
+        destination: '/providers',
+        permanent: true,
+      },
+
+      // =============================================
+      // COMMON MISSPELLINGS AND URL VARIATIONS
+      // =============================================
+
       {
         source: '/provider/:slug',
         destination: '/providers/:slug',
@@ -122,7 +223,11 @@ const nextConfig: NextConfig = {
         destination: '/guides/:slug',
         permanent: true,
       },
-      // State page variations
+
+      // =============================================
+      // STATE PAGE VARIATIONS
+      // =============================================
+
       {
         source: '/states/:state',
         destination: '/internet/:state',
@@ -133,7 +238,11 @@ const nextConfig: NextConfig = {
         destination: '/internet/:state',
         permanent: true,
       },
-      // Compare variations
+
+      // =============================================
+      // COMPARE/SEARCH VARIATIONS
+      // =============================================
+
       {
         source: '/search',
         destination: '/compare',
@@ -149,7 +258,11 @@ const nextConfig: NextConfig = {
         destination: '/compare',
         permanent: true,
       },
-      // Tool variations
+
+      // =============================================
+      // TOOL VARIATIONS
+      // =============================================
+
       {
         source: '/speedtest',
         destination: '/tools/speed-test',
@@ -160,7 +273,12 @@ const nextConfig: NextConfig = {
         destination: '/tools/speed-test',
         permanent: true,
       },
-      // Remove trailing slashes
+
+      // =============================================
+      // URL NORMALIZATION
+      // =============================================
+
+      // Remove trailing slashes (must be last)
       {
         source: '/:path+/',
         destination: '/:path+',
