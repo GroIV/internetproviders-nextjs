@@ -283,6 +283,12 @@ export default function Home() {
                           {/* Gradient overlay on hover */}
                           <div className={`absolute inset-0 bg-gradient-to-br ${details.color} opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300`} />
 
+                          {/* Coverage badge */}
+                          <div className="absolute top-4 right-4">
+                            <div className="px-2 py-1 bg-gray-800/80 rounded-full text-xs text-gray-400 border border-gray-700/50">
+                              {provider.coveragePercent}% coverage
+                            </div>
+                          </div>
 
                           <div className="flex items-start gap-4 relative">
                             {/* Provider Icon/Initial */}
