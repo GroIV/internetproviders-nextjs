@@ -251,7 +251,7 @@ export function PageChatSection() {
           <ChatWindow
             embedded={true}
             showQuickActions={true}
-            className="h-[350px] min-h-0"
+            className="h-[300px] sm:h-[350px] min-h-0"
           />
         </div>
       </div>

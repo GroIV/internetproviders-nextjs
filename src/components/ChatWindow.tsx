@@ -251,7 +251,7 @@ export function ChatWindow({
     scrollChatToBottom()
   }
 
-  const containerHeight = embedded ? 'h-[60vh] min-h-[400px]' : 'h-[500px]'
+  const containerHeight = embedded ? 'h-[55vh] sm:h-[60vh] min-h-[350px] sm:min-h-[400px]' : 'h-[500px]'
   const activeQuickActions = pageInfo.quickActions || defaultQuickActions
 
   return (

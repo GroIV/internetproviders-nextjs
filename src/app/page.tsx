@@ -250,7 +250,7 @@ export default function Home() {
         <div className="absolute right-0 top-1/2 -translate-y-1/2 w-px h-20 bg-gradient-to-b from-transparent via-blue-500/50 to-transparent" />
 
         <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-3 gap-4 text-center max-w-2xl mx-auto">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center max-w-2xl mx-auto">
             <motion.div
               className="relative"
               initial={{ opacity: 0, y: 20 }}
