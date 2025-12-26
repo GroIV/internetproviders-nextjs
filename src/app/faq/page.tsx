@@ -226,7 +226,7 @@ function generateFAQStructuredData() {
 
 function FAQAccordion({ category }: { category: FAQCategory }) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+    <div className="futuristic-card rounded-xl overflow-hidden">
       <div className="flex items-center gap-3 px-6 py-4 bg-gray-800/50">
         <div className="text-blue-400">{category.icon}</div>
         <h2 className="text-lg font-semibold">{category.name}</h2>
@@ -278,7 +278,7 @@ export default function FAQPage() {
             <span className="inline-block px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-sm font-medium mb-4">
               Help Center
             </span>
-            <h1 className="text-4xl font-bold mb-4">
+            <h1 className="text-4xl font-bold mb-4 gradient-text-ocean">
               Frequently Asked Questions
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">

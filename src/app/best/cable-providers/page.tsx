@@ -208,7 +208,7 @@ export default async function BestCableProvidersPage({
           <span className="inline-block px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-sm font-medium mb-4">
             2025 Rankings
           </span>
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl font-bold mb-4 gradient-text-ocean">
             Best Cable Internet Providers
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
@@ -228,16 +228,16 @@ export default async function BestCableProvidersPage({
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-12">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-blue-400">{avgCoverage}%</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
+            <div className="text-2xl font-bold gradient-text-ocean">{avgCoverage}%</div>
             <div className="text-sm text-gray-400">Avg Cable Coverage</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">2 Gbps</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-emerald">
+            <div className="text-2xl font-bold gradient-text-fresh">2 Gbps</div>
             <div className="text-sm text-gray-400">Top Speeds Available</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-purple-400">{providers.length}</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
+            <div className="text-2xl font-bold gradient-text-purple">{providers.length}</div>
             <div className="text-sm text-gray-400">{isFiltered ? 'Available Here' : 'Cable Providers'}</div>
           </div>
         </div>
@@ -298,7 +298,7 @@ export default async function BestCableProvidersPage({
               return (
                 <div
                   key={provider.slug}
-                  className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-blue-600/50 transition-colors"
+                  className="futuristic-card corner-accent rounded-xl p-6 hover:border-blue-600/50 transition-colors glow-burst-hover"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                     <div className="flex items-center gap-4">
@@ -378,8 +378,8 @@ export default async function BestCableProvidersPage({
         )}
 
         {/* Browse by State - Internal Links */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-12">
-          <h2 className="text-xl font-semibold mb-4">Find Cable Internet by State</h2>
+        <div className="futuristic-card rounded-xl p-6 mb-12">
+          <h2 className="text-xl font-semibold mb-4 gradient-text-fresh">Find Cable Internet by State</h2>
           <p className="text-sm text-gray-400 mb-4">
             Cable availability varies by location. Check providers in your state:
           </p>
@@ -403,8 +403,8 @@ export default async function BestCableProvidersPage({
         </div>
 
         {/* Related Guides */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-12">
-          <h2 className="text-xl font-semibold mb-4">Related Guides</h2>
+        <div className="futuristic-card rounded-xl p-6 mb-12">
+          <h2 className="text-xl font-semibold mb-4 gradient-text-ocean">Related Guides</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <Link
               href="/compare/technology/fiber-vs-cable"

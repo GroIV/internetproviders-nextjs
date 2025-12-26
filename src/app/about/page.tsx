@@ -17,7 +17,7 @@ export default function AboutPage() {
           <span className="text-white">About</span>
         </nav>
 
-        <h1 className="text-4xl font-bold mb-8">About InternetProviders.ai</h1>
+        <h1 className="text-4xl font-bold mb-8 gradient-text-ocean">About InternetProviders.ai</h1>
 
         <div className="prose prose-invert max-w-none">
           <p className="text-xl text-gray-300 mb-8">
@@ -26,7 +26,7 @@ export default function AboutPage() {
             make informed decisions about their home internet service.
           </p>
 
-          <h2 className="text-2xl font-semibold mt-8 mb-4">Our Mission</h2>
+          <h2 className="text-2xl font-semibold mt-8 mb-4 gradient-text-fresh">Our Mission</h2>
           <p className="text-gray-300 mb-6">
             We believe everyone deserves access to reliable, affordable internet. Our mission
             is to simplify the process of finding and comparing internet providers by providing

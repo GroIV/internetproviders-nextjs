@@ -198,7 +198,7 @@ export default async function BestFiberProvidersPage({
           <span className="inline-block px-3 py-1 bg-purple-600/20 text-purple-400 rounded-full text-sm font-medium mb-4">
             2025 Rankings
           </span>
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl font-bold mb-4 gradient-text-purple">
             Best Fiber Internet Providers
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
@@ -218,16 +218,16 @@ export default async function BestFiberProvidersPage({
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mb-12">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-purple-400">{avgCoverage}%</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
+            <div className="text-2xl font-bold gradient-text-purple">{avgCoverage}%</div>
             <div className="text-sm text-gray-400">Avg Fiber Coverage</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">10 Gbps</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-emerald">
+            <div className="text-2xl font-bold gradient-text-fresh">10 Gbps</div>
             <div className="text-sm text-gray-400">Top Speeds Available</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-blue-400">{providers.length}</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
+            <div className="text-2xl font-bold gradient-text-ocean">{providers.length}</div>
             <div className="text-sm text-gray-400">{isFiltered ? 'Available Here' : 'Fiber Providers'}</div>
           </div>
         </div>
@@ -285,7 +285,7 @@ export default async function BestFiberProvidersPage({
               return (
                 <div
                   key={provider.slug}
-                  className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-purple-600/50 transition-colors"
+                  className="futuristic-card corner-accent rounded-xl p-6 hover:border-purple-600/50 transition-colors glow-burst-hover"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                     <div className="flex items-center gap-4">
@@ -365,8 +365,8 @@ export default async function BestFiberProvidersPage({
         )}
 
         {/* Related Guides */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-12">
-          <h2 className="text-xl font-semibold mb-4">Related Guides</h2>
+        <div className="futuristic-card rounded-xl p-6 mb-12">
+          <h2 className="text-xl font-semibold mb-4 gradient-text-ocean">Related Guides</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <Link
               href="/compare/technology/fiber-vs-cable"

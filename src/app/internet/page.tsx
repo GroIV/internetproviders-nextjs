@@ -30,7 +30,7 @@ export default function InternetByStatePage() {
 
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl font-bold mb-4 gradient-text-ocean">
             Internet Providers by State
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
@@ -43,8 +43,8 @@ export default function InternetByStatePage() {
         {/* Regions */}
         <div className="space-y-8 mb-12">
           {Object.entries(regions).map(([region, stateSlugs]) => (
-            <div key={region} className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              <h2 className="text-xl font-semibold mb-4">{region}</h2>
+            <div key={region} className="futuristic-card rounded-xl p-6">
+              <h2 className="text-xl font-semibold mb-4 gradient-text-fresh">{region}</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {stateSlugs.map(slug => {
                   const state = stateList.find(s => s.slug === slug)
@@ -66,8 +66,8 @@ export default function InternetByStatePage() {
         </div>
 
         {/* All States Grid */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-          <h2 className="text-xl font-semibold mb-4">All States</h2>
+        <div className="futuristic-card rounded-xl p-6">
+          <h2 className="text-xl font-semibold mb-4 gradient-text-ocean">All States</h2>
           <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2">
             {stateList.map(state => (
               <Link

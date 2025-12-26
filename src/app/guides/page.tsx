@@ -163,7 +163,7 @@ export default async function GuidesPage({
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl font-bold mb-4 gradient-text-ocean">
             {zipInfo?.city ? `Internet Guides for ${zipInfo.city}` : 'Internet Guides'}
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
@@ -271,7 +271,7 @@ export default async function GuidesPage({
             return (
               <article
                 key={guide.slug}
-                className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-colors group"
+                className="futuristic-card corner-accent rounded-xl overflow-hidden transition-colors group glow-burst-hover"
               >
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-3">
@@ -340,8 +340,8 @@ export default async function GuidesPage({
         )}
 
         {/* Popular Locations */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8">
-          <h2 className="text-xl font-semibold mb-6 text-center">Browse by Location</h2>
+        <div className="futuristic-card rounded-xl p-8">
+          <h2 className="text-xl font-semibold mb-6 text-center gradient-text-fresh">Browse by Location</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
             <Link
               href="/internet/texas"

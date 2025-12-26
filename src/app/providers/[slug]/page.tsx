@@ -213,7 +213,7 @@ export default async function ProviderPage({ params }: Props) {
           </nav>
 
         {/* Header */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">
+        <div className="futuristic-card corner-accent rounded-xl p-8 mb-8">
           <div className="flex items-start gap-6">
             <div className="w-20 h-20 rounded-xl bg-gray-800 flex items-center justify-center text-3xl font-bold text-blue-400">
               {provider.name.charAt(0)}
@@ -249,26 +249,26 @@ export default async function ProviderPage({ params }: Props) {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-blue-400">
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
+            <div className="text-2xl font-bold gradient-text-ocean">
               {provider.coverageCount.toLocaleString()}
             </div>
             <div className="text-sm text-gray-400">ZIP Codes</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-emerald">
+            <div className="text-2xl font-bold gradient-text-fresh">
               {startingPrice ? `$${startingPrice}` : '$30'}
             </div>
             <div className="text-sm text-gray-400">Starting Price*</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-cyan-400">
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
+            <div className="text-2xl font-bold gradient-text-ocean">
               {formatMaxSpeed(maxSpeed)}
             </div>
             <div className="text-sm text-gray-400">Max Speed</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-purple-400">
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
+            <div className="text-2xl font-bold gradient-text-purple">
               {providerPlans ? providerPlans.plans.length : '-'}
             </div>
             <div className="text-sm text-gray-400">Featured Plans</div>
@@ -297,8 +297,8 @@ export default async function ProviderPage({ params }: Props) {
         />
 
         {/* About Section */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">
-          <h2 className="text-2xl font-bold mb-4">About {provider.name}</h2>
+        <div className="futuristic-card rounded-xl p-8 mb-8">
+          <h2 className="text-2xl font-bold mb-4 gradient-text-ocean">About {provider.name}</h2>
           <div className="prose prose-invert max-w-none">
             <p className="text-gray-300">
               {provider.name} is a leading internet service provider offering
@@ -326,8 +326,8 @@ export default async function ProviderPage({ params }: Props) {
 
         {/* Technologies */}
         {technologies.length > 0 && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">
-            <h2 className="text-2xl font-bold mb-6">Available Technologies</h2>
+          <div className="futuristic-card rounded-xl p-8 mb-8">
+            <h2 className="text-2xl font-bold mb-6 gradient-text-fresh">Available Technologies</h2>
             <div className="grid md:grid-cols-2 gap-4">
               {technologies.map((tech: string) => (
                 <div key={tech} className="flex items-start gap-4 p-4 bg-gray-800/50 rounded-lg">
@@ -372,8 +372,8 @@ export default async function ProviderPage({ params }: Props) {
 
         {/* Compare With Section */}
         {comparisonSlugs.length > 0 && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">
-            <h2 className="text-2xl font-bold mb-4">Compare {provider.name}</h2>
+          <div className="futuristic-card rounded-xl p-8 mb-8">
+            <h2 className="text-2xl font-bold mb-4 gradient-text-sunset">Compare {provider.name}</h2>
             <p className="text-gray-400 mb-6">See how {provider.name} stacks up against other providers</p>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
               {comparisonSlugs.map((compSlug) => {
@@ -400,8 +400,8 @@ export default async function ProviderPage({ params }: Props) {
 
         {/* Related Providers */}
         {relatedProviders.length > 0 && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 mb-8">
-            <h2 className="text-2xl font-bold mb-4">Similar Providers</h2>
+          <div className="futuristic-card rounded-xl p-8 mb-8">
+            <h2 className="text-2xl font-bold mb-4 gradient-text-ocean">Similar Providers</h2>
             <p className="text-gray-400 mb-6">Other providers you might want to consider</p>
             <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
               {relatedProviders.map((p) => (

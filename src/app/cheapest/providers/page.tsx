@@ -104,7 +104,7 @@ export default function CheapestProvidersPage() {
           <span className="inline-block px-3 py-1 bg-green-600/20 text-green-400 rounded-full text-sm font-medium mb-4">
             Budget-Friendly
           </span>
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl font-bold mb-4 gradient-text-fresh">
             Cheapest Internet Providers
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
@@ -116,16 +116,16 @@ export default function CheapestProvidersPage() {
 
         {/* Key Stats */}
         <div className="grid grid-cols-3 gap-4 mb-12">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">$25</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-emerald">
+            <div className="text-2xl font-bold gradient-text-fresh">$25</div>
             <div className="text-sm text-gray-400">Lowest Price/mo</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-blue-400">75+ Mbps</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
+            <div className="text-2xl font-bold gradient-text-ocean">75+ Mbps</div>
             <div className="text-sm text-gray-400">Min Speed</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-purple-400">6+</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
+            <div className="text-2xl font-bold gradient-text-purple">6+</div>
             <div className="text-sm text-gray-400">Budget Options</div>
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function CheapestProvidersPage() {
           {cheapProviders.map((provider, index) => (
             <div
               key={provider.name}
-              className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-green-600/50 transition-colors relative"
+              className="futuristic-card corner-accent rounded-xl p-6 hover:border-green-600/50 transition-colors relative glow-burst-emerald"
             >
               {index === 0 && (
                 <div className="absolute -top-3 left-4 px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-full">
@@ -195,8 +195,8 @@ export default function CheapestProvidersPage() {
         </div>
 
         {/* Tips */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-12">
-          <h2 className="text-xl font-semibold mb-4">Tips for Getting the Best Deal</h2>
+        <div className="futuristic-card rounded-xl p-6 mb-12">
+          <h2 className="text-xl font-semibold mb-4 gradient-text-sunset">Tips for Getting the Best Deal</h2>
           <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-400">
             <div className="flex items-start gap-3">
               <span className="text-green-400 font-bold">1.</span>

@@ -202,7 +202,7 @@ function TechnologyCard({
   color: string
 }) {
   return (
-    <div className="p-6 bg-gray-900 rounded-xl border border-gray-800">
+    <div className="p-6 futuristic-card rounded-xl corner-accent glow-burst-hover">
       <div className="flex items-center gap-3 mb-4">
         {icon}
         <h3 className="text-lg font-semibold">{title}</h3>
@@ -272,7 +272,7 @@ function ProviderCard({ provider }: { provider: Provider }) {
   const slug = getProviderSlug(provider.name)
 
   const content = (
-    <div className="flex items-center justify-between p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-gray-700 transition-colors group">
+    <div className="flex items-center justify-between p-4 futuristic-card rounded-lg group glow-burst-hover">
       <div className="flex items-center gap-4">
         <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
           <span className={`text-xl font-bold ${slug ? 'text-gray-500 group-hover:text-blue-400 transition-colors' : 'text-gray-500'}`}>
@@ -330,7 +330,7 @@ export default async function ComparePage({
         <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl font-bold mb-4 gradient-text-ocean">
             {zipCode ? `Internet Providers in ${zipCode}` : 'Find Internet Providers'}
           </h1>
           <p className="text-xl text-gray-400 mb-6">
@@ -472,18 +472,18 @@ export default async function ComparePage({
         {/* No search yet */}
         {!zipCode && (
           <div className="mt-12 grid md:grid-cols-3 gap-6">
-            <div className="p-6 bg-gray-900 rounded-xl border border-gray-800">
-              <div className="text-3xl mb-3">1</div>
+            <div className="p-6 futuristic-card rounded-xl corner-accent glow-burst-hover">
+              <div className="text-3xl mb-3 gradient-text-fresh">1</div>
               <h3 className="font-semibold mb-2">Enter Your ZIP</h3>
               <p className="text-sm text-gray-400">Type your 5-digit ZIP code to start</p>
             </div>
-            <div className="p-6 bg-gray-900 rounded-xl border border-gray-800">
-              <div className="text-3xl mb-3">2</div>
+            <div className="p-6 futuristic-card rounded-xl corner-accent glow-burst-hover">
+              <div className="text-3xl mb-3 gradient-text-ocean">2</div>
               <h3 className="font-semibold mb-2">See Providers</h3>
               <p className="text-sm text-gray-400">View all available internet providers</p>
             </div>
-            <div className="p-6 bg-gray-900 rounded-xl border border-gray-800">
-              <div className="text-3xl mb-3">3</div>
+            <div className="p-6 futuristic-card rounded-xl corner-accent glow-burst-hover">
+              <div className="text-3xl mb-3 gradient-text-sunset">3</div>
               <h3 className="font-semibold mb-2">Compare Coverage</h3>
               <p className="text-sm text-gray-400">Check speeds and technology availability</p>
             </div>

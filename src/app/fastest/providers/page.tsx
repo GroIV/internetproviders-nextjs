@@ -122,7 +122,7 @@ export default function FastestProvidersPage() {
           <span className="inline-block px-3 py-1 bg-cyan-600/20 text-cyan-400 rounded-full text-sm font-medium mb-4">
             Speed Champions
           </span>
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl font-bold mb-4 gradient-text-rainbow">
             Fastest Internet Providers
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
@@ -134,16 +134,16 @@ export default function FastestProvidersPage() {
 
         {/* Speed Stats */}
         <div className="grid grid-cols-3 gap-4 mb-12">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-cyan-400">8 Gbps</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
+            <div className="text-2xl font-bold gradient-text-ocean">8 Gbps</div>
             <div className="text-sm text-gray-400">Fastest Available</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-purple-400">&lt; 5ms</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-hover">
+            <div className="text-2xl font-bold gradient-text-purple">&lt; 5ms</div>
             <div className="text-sm text-gray-400">Best Latency</div>
           </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">Fiber</div>
+          <div className="futuristic-card rounded-xl p-4 text-center glow-burst-emerald">
+            <div className="text-2xl font-bold gradient-text-fresh">Fiber</div>
             <div className="text-sm text-gray-400">Top Technology</div>
           </div>
         </div>
@@ -154,7 +154,7 @@ export default function FastestProvidersPage() {
           {fastestProviders.map((provider, index) => (
             <div
               key={provider.name}
-              className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-cyan-600/50 transition-colors"
+              className="futuristic-card corner-accent rounded-xl p-6 hover:border-cyan-600/50 transition-colors glow-burst-hover"
             >
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -222,8 +222,8 @@ export default function FastestProvidersPage() {
         </div>
 
         {/* Do You Need It */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-12">
-          <h2 className="text-xl font-semibold mb-4">Do You Really Need Multi-Gig Speeds?</h2>
+        <div className="futuristic-card rounded-xl p-6 mb-12">
+          <h2 className="text-xl font-semibold mb-4 gradient-text-sunset">Do You Really Need Multi-Gig Speeds?</h2>
           <div className="text-sm text-gray-400 space-y-4">
             <p>
               While 8 Gbps sounds impressive, most households won't use anywhere near that bandwidth.

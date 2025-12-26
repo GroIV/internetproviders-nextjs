@@ -82,7 +82,7 @@ export default async function DealsPage() {
           <span className="inline-block px-3 py-1 bg-red-600/20 text-red-400 rounded-full text-sm font-medium mb-4">
             December 2025
           </span>
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl font-bold mb-4 gradient-text-warm">
             Internet Deals & Promotions
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-8">
@@ -133,7 +133,7 @@ export default async function DealsPage() {
           {promotions.map((deal) => (
             <div
               key={deal.id}
-              className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors relative"
+              className="futuristic-card rounded-xl p-6 relative glow-burst-orange"
             >
               <span className={`absolute -top-3 right-4 px-3 py-1 ${tagColors[deal.provider_name] || 'bg-blue-600'} text-white text-xs font-medium rounded-full`}>
                 {deal.promo_type === 'gift_card' ? 'Gift Card' : 'Deal'}
