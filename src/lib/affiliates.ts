@@ -45,6 +45,7 @@ export const COMPARISON_ELIGIBLE_PROVIDERS = new Set([
   'frontier',
   'frontier-fiber',  // Database slug
   'google-fiber',
+  'hughesnet',
   'optimum',
   'spectrum',
   't-mobile',
