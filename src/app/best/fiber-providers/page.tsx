@@ -29,7 +29,7 @@ const providerDetails: Record<string, {
     maxSpeed: '2.3 Gbps',
     startingPrice: '$50/mo',
     pros: ['No contracts required', 'Excellent reliability', 'Great customer service'],
-    cons: ['Limited to East Coast', 'Router rental fee'],
+    cons: ['Check address for availability', 'Router rental fee'],
     rating: 4.6,
   },
   'google-fiber': {

@@ -24,10 +24,11 @@ export function LocationAwareRankings({
   const router = useRouter()
   const pathname = usePathname()
   const [hasRedirected, setHasRedirected] = useState(false)
+  const [showLocalOnly, setShowLocalOnly] = useState(true)
 
   // Auto-redirect when location is available and we haven't filtered yet
   useEffect(() => {
-    if (!isLoading && location?.zipCode && !currentZip && !hasRedirected) {
+    if (!isLoading && location?.zipCode && !currentZip && !hasRedirected && showLocalOnly) {
       // Use timeout to satisfy lint (setState in callback)
       const timer = setTimeout(() => {
         setHasRedirected(true)
@@ -35,7 +36,20 @@ export function LocationAwareRankings({
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [isLoading, location?.zipCode, currentZip, hasRedirected, router, pathname])
+  }, [isLoading, location?.zipCode, currentZip, hasRedirected, router, pathname, showLocalOnly])
+
+  // Handle toggle change
+  const handleToggle = () => {
+    if (showLocalOnly && isFiltered) {
+      // Switch to showing all providers (remove zip param)
+      setShowLocalOnly(false)
+      router.push(pathname)
+    } else if (!showLocalOnly && location?.zipCode) {
+      // Switch to showing local providers
+      setShowLocalOnly(true)
+      router.push(`${pathname}?zip=${location.zipCode}`)
+    }
+  }
 
   // Show loading state
   if (isLoading) {
@@ -50,34 +64,57 @@ export function LocationAwareRankings({
     )
   }
 
-  // If filtered by location
-  if (isFiltered && currentZip) {
+  // Show toggle when we have location info
+  if (location?.zipCode) {
     return (
-      <div className="inline-flex flex-wrap items-center justify-center gap-3">
-        <div className="flex items-center gap-2 px-4 py-2 bg-green-900/30 border border-green-800/50 rounded-full text-sm">
-          <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <span className="text-green-300">
-            {cityName ? `${cityName} (${currentZip})` : `ZIP ${currentZip}`}
+      <div className="flex flex-col items-center gap-4">
+        {/* Toggle Switch */}
+        <div className="flex items-center gap-3">
+          <span className={`text-sm ${!isFiltered ? 'text-white font-medium' : 'text-gray-500'}`}>
+            All Providers
           </span>
-          <span className="text-green-400 font-medium">
-            {providerCount} {technology.toLowerCase()} {providerCount === 1 ? 'provider' : 'providers'} available
+          <button
+            onClick={handleToggle}
+            className={`relative w-14 h-7 rounded-full transition-colors duration-200 ${
+              isFiltered ? 'bg-cyan-600' : 'bg-gray-700'
+            }`}
+          >
+            <span
+              className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                isFiltered ? 'translate-x-8' : 'translate-x-1'
+              }`}
+            />
+          </button>
+          <span className={`text-sm ${isFiltered ? 'text-white font-medium' : 'text-gray-500'}`}>
+            My Area
           </span>
         </div>
-        <Link
-          href={pathname}
-          className="text-sm text-gray-400 hover:text-white transition-colors"
-        >
-          View all providers
-        </Link>
+
+        {/* Location Info */}
+        {isFiltered && currentZip ? (
+          <div className="flex items-center gap-2 px-4 py-2 bg-green-900/30 border border-green-800/50 rounded-full text-sm">
+            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-green-300">
+              {cityName ? `${cityName} (${currentZip})` : `ZIP ${currentZip}`}
+            </span>
+            <span className="text-green-400 font-medium">
+              • {providerCount} {technology.toLowerCase()} {providerCount === 1 ? 'provider' : 'providers'}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-full text-sm text-gray-400">
+            <span>Showing all {technology.toLowerCase()} providers nationwide</span>
+          </div>
+        )}
       </div>
     )
   }
 
-  // If we have location but not filtered (should auto-redirect)
-  if (location?.zipCode && !currentZip) {
+  // If we have location but not filtered and showLocalOnly (should auto-redirect)
+  if (location?.zipCode && !currentZip && showLocalOnly) {
     return (
       <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-full text-sm text-gray-400">
         <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
