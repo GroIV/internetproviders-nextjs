@@ -162,7 +162,7 @@ export function ChatWindow({
   const [justSent, setJustSent] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  const [hasInteracted, setHasInteracted] = useState(false)
+  const [_hasInteracted, setHasInteracted] = useState(false) // Track if user has interacted - for future analytics
   const prevMessagesLength = useRef(messages.length)
   const prevPathname = useRef(pathname)
   const shouldScrollOnNextMessage = useRef(false)

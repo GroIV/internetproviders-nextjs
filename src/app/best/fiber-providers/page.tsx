@@ -144,7 +144,7 @@ export default async function BestFiberProvidersPage({
 }) {
   const params = await searchParams
   const zipCode = params.zip
-  const { avgCoverage, totalZips } = await getFiberCoverageStats()
+  const { avgCoverage } = await getFiberCoverageStats()
 
   // Get providers based on location or show national list
   let providers: Array<{

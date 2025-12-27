@@ -25,7 +25,7 @@ const guideTemplates: Record<string, {
     description: (city) => `Compare the top-rated internet providers available in ${city}. Find the best coverage, speeds, and prices.`,
     icon: '🏆',
     color: 'text-blue-400',
-    content: (city, zipCode) => `
+    content: (city, _zipCode) => `
       <h2>Top Internet Providers in ${city}</h2>
       <p>Finding the best internet provider depends on your specific needs: speed requirements, budget, and what's available at your address. Here's how to evaluate your options:</p>
 
@@ -73,7 +73,7 @@ const guideTemplates: Record<string, {
     description: (city) => `Find the best internet for gaming in ${city}. Low latency and fast speeds for competitive gaming.`,
     icon: '🎮',
     color: 'text-purple-400',
-    content: (city, zipCode) => `
+    content: (city, _zipCode) => `
       <h2>What Makes Great Gaming Internet?</h2>
       <p>For online gaming in ${city}, you need more than just fast download speeds. The key factors are:</p>
       <ul>
@@ -106,7 +106,7 @@ const guideTemplates: Record<string, {
     description: (city) => `Find affordable internet in ${city}. Compare low-cost plans and money-saving tips.`,
     icon: '💰',
     color: 'text-green-400',
-    content: (city, zipCode) => `
+    content: (city, _zipCode) => `
       <h2>How to Save on Internet in ${city}</h2>
       <p>Getting affordable internet doesn't mean sacrificing quality. Here's how to find the best deals:</p>
       <h3>1. Choose the Right Speed</h3>
@@ -139,7 +139,7 @@ const guideTemplates: Record<string, {
     description: (city) => `Calculate the right internet speed for your household in ${city}.`,
     icon: '⚡',
     color: 'text-cyan-400',
-    content: (city, zipCode) => `
+    content: (city, _zipCode) => `
       <h2>Internet Speed Guide for ${city}</h2>
       <p>Choosing the right internet speed depends on how many people and devices are in your home, and what you use the internet for.</p>
 
@@ -174,7 +174,7 @@ const guideTemplates: Record<string, {
     description: (city) => `Compare fiber and cable internet options in ${city}. Which is better for you?`,
     icon: '🔌',
     color: 'text-blue-400',
-    content: (city, zipCode) => `
+    content: (city, _zipCode) => `
       <h2>Fiber vs Cable: Which is Better in ${city}?</h2>
 
       <h3>Fiber Internet</h3>
@@ -222,7 +222,7 @@ const guideTemplates: Record<string, {
     description: (city) => `Internet providers in ${city} with no annual contracts. Month-to-month flexibility.`,
     icon: '📝',
     color: 'text-orange-400',
-    content: (city, zipCode) => `
+    content: (city, _zipCode) => `
       <h2>No Contract Internet Options in ${city}</h2>
       <p>Many providers now offer month-to-month plans with no long-term commitment. Here's what to know:</p>
 
@@ -258,7 +258,7 @@ const guideTemplates: Record<string, {
     description: (city) => `Find the perfect internet for Netflix, YouTube, and streaming in ${city}.`,
     icon: '📺',
     color: 'text-red-400',
-    content: (city, zipCode) => `
+    content: (city, _zipCode) => `
       <h2>Best Internet for Streaming in ${city}</h2>
 
       <h3>Speed Requirements by Quality</h3>
@@ -296,7 +296,7 @@ const guideTemplates: Record<string, {
     description: (city) => `Reliable internet for remote work in ${city}. Video calls, VPN, and productivity.`,
     icon: '💼',
     color: 'text-indigo-400',
-    content: (city, zipCode) => `
+    content: (city, _zipCode) => `
       <h2>Work From Home Internet Guide for ${city}</h2>
 
       <h3>Requirements for Remote Work</h3>
@@ -336,7 +336,7 @@ const guideTemplates: Record<string, {
     description: (city) => `Internet plans that handle multiple devices and users in ${city}.`,
     icon: '👨‍👩‍👧‍👦',
     color: 'text-pink-400',
-    content: (city, zipCode) => `
+    content: (city, _zipCode) => `
       <h2>Best Internet for Families in ${city}</h2>
 
       <h3>How Many Devices Does Your Family Use?</h3>

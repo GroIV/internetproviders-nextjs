@@ -12,7 +12,8 @@ interface Props {
   params: Promise<{ state: string }>
 }
 
-async function getStateProviders(stateCode: string) {
+// TODO: Use stateCode to filter ZIP codes by state
+async function getStateProviders(_stateCode: string) {
   const supabase = createAdminClient()
 
   // Get a sample of ZIP codes for this state to find providers
@@ -54,8 +55,9 @@ async function getStateProviders(stateCode: string) {
   // Aggregate providers and their coverage
   const providerMap = new Map<string, { name: string; totalCoverage: number; count: number }>()
 
-  cbsaProviders.forEach((cp: any) => {
-    const name = cp.fcc_providers?.name
+  cbsaProviders.forEach((cp) => {
+    const provider = Array.isArray(cp.fcc_providers) ? cp.fcc_providers[0] : cp.fcc_providers
+    const name = provider?.name
     if (!name) return
 
     const existing = providerMap.get(name)

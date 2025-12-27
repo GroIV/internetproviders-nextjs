@@ -154,7 +154,7 @@ export default async function BestCableProvidersPage({
 }) {
   const params = await searchParams
   const zipCode = params.zip
-  const { avgCoverage, totalZips } = await getCableCoverageStats()
+  const { avgCoverage } = await getCableCoverageStats()
 
   // Get providers based on location or show national list
   let providers: Array<{

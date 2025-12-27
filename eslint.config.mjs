@@ -15,7 +15,20 @@ const eslintConfig = defineConfig([
     // PWA generated files
     "public/sw.js",
     "public/workbox-*.js",
+    // One-off scripts don't need strict type checking
+    "scripts/**",
   ]),
+  // Custom rules
+  {
+    rules: {
+      // Allow underscore prefix for intentionally unused variables
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }],
+    },
+  },
 ]);
 
 export default eslintConfig;

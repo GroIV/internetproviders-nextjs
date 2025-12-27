@@ -82,6 +82,7 @@ function useAnimatedNumber(value: number, duration: number = 300) {
         cancelAnimationFrame(animationRef.current)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- displayValue intentionally read once at animation start
   }, [value, duration])
 
   return displayValue

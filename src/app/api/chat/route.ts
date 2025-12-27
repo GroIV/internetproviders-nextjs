@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// API route uses complex Anthropic SDK streaming types - any types used for SDK responses
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
-import { getAffiliateUrl, getActiveAffiliateProviders, COMPARISON_ELIGIBLE_PROVIDERS, providerDisplayNames, getComparisonUrl } from '@/lib/affiliates'
+import { getAffiliateUrl, COMPARISON_ELIGIBLE_PROVIDERS, providerDisplayNames, getComparisonUrl } from '@/lib/affiliates'
 import { featuredPlans, getBestValuePlans, getAllFeaturedPlans, type FeaturedPlan } from '@/lib/featuredPlans'
 
 // Plan with provider info for suggestions

@@ -85,8 +85,8 @@ export function PageChatSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
   const prevPathname = useRef<string | null>(null)
 
-  // Get page title
-  const pageTitle = useMemo(() => getPageTitle(pathname), [pathname])
+  // Get page title - available for future use in chat context
+  const _pageTitle = useMemo(() => getPageTitle(pathname), [pathname])
 
   // Don't show on homepage (has its own embedded chat) or AI assistant page
   const isHomepage = pathname === '/'

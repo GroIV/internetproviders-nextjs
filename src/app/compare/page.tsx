@@ -71,6 +71,17 @@ interface Provider {
   coverage: number
 }
 
+// Supabase response types
+interface CbsaProviderRow {
+  provider_id: number
+  coverage_pct: number
+}
+
+interface FccProviderRow {
+  provider_id: number
+  name: string
+}
+
 async function getCoverageByZip(zipCode: string): Promise<CoverageData | null> {
   if (!zipCode || !/^\d{5}$/.test(zipCode)) {
     return null
@@ -151,7 +162,7 @@ async function getProvidersByZip(zipCode: string): Promise<Provider[]> {
   }
 
   // Step 3: Get provider names
-  const providerIds = cbsaData.map((p: any) => p.provider_id)
+  const providerIds = cbsaData.map((p: CbsaProviderRow) => p.provider_id)
   const { data: providerNames, error: namesError } = await supabase
     .from('fcc_providers')
     .select('provider_id, name')
@@ -162,7 +173,7 @@ async function getProvidersByZip(zipCode: string): Promise<Provider[]> {
   }
 
   // Create lookup map for names
-  const nameMap = new Map(providerNames.map((p: any) => [p.provider_id, p.name]))
+  const nameMap = new Map(providerNames.map((p: FccProviderRow) => [p.provider_id, p.name]))
 
   // Helper to check if provider is satellite (should be deprioritized)
   const isSatelliteProvider = (name: string) => {
@@ -176,7 +187,7 @@ async function getProvidersByZip(zipCode: string): Promise<Provider[]> {
 
   // Combine and format
   const providers: Provider[] = cbsaData
-    .map((cp: any) => ({
+    .map((cp: CbsaProviderRow) => ({
       name: nameMap.get(cp.provider_id) || 'Unknown Provider',
       coverage: Math.round(cp.coverage_pct * 100),
     }))

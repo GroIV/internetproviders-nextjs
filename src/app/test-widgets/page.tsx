@@ -13,6 +13,7 @@ export default function WidgetTestPage() {
   useEffect(() => {
     if (scriptLoaded && typeof window !== 'undefined') {
       // Try to find and call any init function the script might expose
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- external widget script
       const win = window as any
       if (win.myFinance?.init) {
         win.myFinance.init()

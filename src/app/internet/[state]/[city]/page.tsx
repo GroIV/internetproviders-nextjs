@@ -81,11 +81,17 @@ async function getProviders(zipCode: string) {
   if (!cbsaProviders) return []
 
   return cbsaProviders
-    .filter((cp: any) => cp.fcc_providers?.name)
-    .map((cp: any) => ({
-      name: cp.fcc_providers.name,
-      coverage: Math.round(cp.coverage_pct * 100),
-    }))
+    .filter((cp) => {
+      const provider = Array.isArray(cp.fcc_providers) ? cp.fcc_providers[0] : cp.fcc_providers
+      return provider?.name
+    })
+    .map((cp) => {
+      const provider = Array.isArray(cp.fcc_providers) ? cp.fcc_providers[0] : cp.fcc_providers
+      return {
+        name: provider!.name,
+        coverage: Math.round(cp.coverage_pct * 100),
+      }
+    })
 }
 
 function getProviderType(name: string): { type: string; color: string } {

@@ -22,7 +22,7 @@ const phaseColors: Record<TestPhase, { stroke: string; fill: string }> = {
 export function LiveGraph({ phase, dataPoints, maxValue = 500 }: LiveGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const animationRef = useRef<number | undefined>(undefined)
+  // const animationRef = useRef<number | undefined>(undefined) // Reserved for future animation
   const [dimensions, setDimensions] = useState({ width: 400, height: 150 })
 
   // Handle resize

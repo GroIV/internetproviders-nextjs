@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -13,9 +13,18 @@ export default function InterstitialPage() {
   const source = searchParams.get('source') || providerSlug
 
   const [countdown, setCountdown] = useState(3)
-  const [redirectUrl, setRedirectUrl] = useState<string | null>(null)
-  const [hasLink, setHasLink] = useState(true)
 
+  // Compute affiliate URL and link status synchronously (not in effect)
+  const { redirectUrl, hasLink } = useMemo(() => {
+    if (!hasAffiliateLink(providerSlug)) {
+      return { redirectUrl: null, hasLink: false }
+    }
+    const url = getAffiliateUrl(providerSlug, source)
+    if (!url) {
+      return { redirectUrl: null, hasLink: false }
+    }
+    return { redirectUrl: url, hasLink: true }
+  }, [providerSlug, source])
 
   // Get provider display name
   const providerName = providerDisplayNames[providerSlug] || providerSlug
@@ -24,20 +33,9 @@ export default function InterstitialPage() {
     .join(' ')
 
   useEffect(() => {
-    // Check if provider has affiliate link
-    if (!hasAffiliateLink(providerSlug)) {
-      setHasLink(false)
+    if (!hasLink || !redirectUrl) {
       return
     }
-
-    // Get the affiliate URL
-    const url = getAffiliateUrl(providerSlug, source)
-    if (!url) {
-      setHasLink(false)
-      return
-    }
-
-    setRedirectUrl(url)
 
     // Start countdown
     const timer = setInterval(() => {
@@ -45,7 +43,7 @@ export default function InterstitialPage() {
         if (prev <= 1) {
           clearInterval(timer)
           // Redirect
-          window.location.href = url
+          window.location.href = redirectUrl
           return 0
         }
         return prev - 1
@@ -53,7 +51,7 @@ export default function InterstitialPage() {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [providerSlug, source])
+  }, [hasLink, redirectUrl])
 
   // Provider not found or no affiliate link
   if (!hasLink) {
