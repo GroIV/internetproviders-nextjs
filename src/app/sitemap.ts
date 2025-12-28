@@ -139,7 +139,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  // 6. Provider "go" interstitial pages (affiliate landing)
+  // 6. City pages from database (/internet/[state]/[city])
+  const { data: cities } = await supabase
+    .from('city_definitions')
+    .select('state_slug, city_slug, updated_at')
+    .order('state_slug')
+    .order('city_slug')
+
+  const cityEntries: MetadataRoute.Sitemap = (cities || [])
+    .filter((c) => c.state_slug && c.city_slug)
+    .map((city) => ({
+      url: `${BASE_URL}/internet/${city.state_slug}/${city.city_slug}`,
+      lastModified: city.updated_at || now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.5,
+    }))
+
+  // 7. Provider "go" interstitial pages (affiliate landing)
   const goPageEntries: MetadataRoute.Sitemap = (providers || [])
     .filter((p) => p.slug)
     .map((provider) => ({
@@ -156,6 +172,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...guideEntries,
     ...comparisonEntries,
     ...stateEntries,
+    ...cityEntries,
     ...goPageEntries,
   ]
 }

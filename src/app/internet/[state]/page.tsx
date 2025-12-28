@@ -8,6 +8,7 @@ import { ProviderLink } from '@/components/ProviderLink'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { RelatedRankings } from '@/components/RelatedRankings'
 import { cleanProviderName, getProviderSlug } from '@/lib/providers'
+import { JsonLd, generateBreadcrumbSchema } from '@/lib/seo'
 
 interface Props {
   params: Promise<{ state: string }>
@@ -97,6 +98,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `Internet Providers in ${stateInfo.name} | Compare ${stateInfo.code} ISPs`,
     description: `Find and compare the best internet providers in ${stateInfo.name}. Compare fiber, cable, and 5G plans. Check availability in ${stateInfo.topCities[0]?.name}, ${stateInfo.topCities[1]?.name}, and more.`,
+    alternates: {
+      canonical: `/internet/${state}`,
+    },
+    openGraph: {
+      title: `Internet Providers in ${stateInfo.name}`,
+      description: `Compare the best internet providers in ${stateInfo.name}. Find fiber, cable, and wireless options.`,
+      url: `/internet/${state}`,
+    },
   }
 }
 
@@ -141,6 +150,13 @@ export default async function StatePage({ params }: Props) {
 
   const { providers } = await getStateProviders(stateInfo.code)
 
+  // Generate structured data
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: '/' },
+    { name: 'Internet by State', url: '/internet' },
+    { name: stateInfo.name, url: `/internet/${state}` },
+  ])
+
   // Categorize providers
   const fiberProviders = providers.filter(p => {
     const type = getProviderType(p.name).type
@@ -156,16 +172,18 @@ export default async function StatePage({ params }: Props) {
   })
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-5xl mx-auto">
-        {/* Breadcrumb */}
-        <nav className="mb-8 text-sm text-gray-400">
-          <Link href="/" className="hover:text-white">Home</Link>
-          <span className="mx-2">/</span>
-          <Link href="/internet" className="hover:text-white">Internet by State</Link>
-          <span className="mx-2">/</span>
-          <span className="text-white">{stateInfo.name}</span>
-        </nav>
+    <>
+      <JsonLd data={breadcrumbSchema} />
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-5xl mx-auto">
+          {/* Breadcrumb */}
+          <nav className="mb-8 text-sm text-gray-400" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-white">Home</Link>
+            <span className="mx-2">/</span>
+            <Link href="/internet" className="hover:text-white">Internet by State</Link>
+            <span className="mx-2">/</span>
+            <span className="text-white">{stateInfo.name}</span>
+          </nav>
 
         {/* Header */}
         <div className="text-center mb-12">
@@ -356,7 +374,8 @@ export default async function StatePage({ params }: Props) {
             </Link>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -122,7 +122,19 @@ export async function getCityProviders(
     cbsaCode = zipData?.cbsa_code || null
   }
 
+  return getProvidersByCbsa(cbsaCode, limit)
+}
+
+/**
+ * Get providers by CBSA code directly (avoids redundant city lookup)
+ */
+export async function getProvidersByCbsa(
+  cbsaCode: string | null,
+  limit: number = 15
+): Promise<CityProvider[]> {
   if (!cbsaCode) return []
+
+  const supabase = createAdminClient()
 
   // Query cbsa_top_providers_v1 for providers with deterministic slug mapping
   const { data: providers, error } = await supabase
@@ -157,24 +169,45 @@ export async function getCityProviders(
 
 /**
  * Get all city data in one call (definition, availability, providers)
+ * Optimized: Uses city's cbsa_code to fetch providers in parallel (avoids redundant lookups)
  */
 export async function getCityData(
   stateSlug: string,
   citySlug: string
 ): Promise<CityData | null> {
-  const city = await getCityDefinition(stateSlug, citySlug)
+  const supabase = createAdminClient()
 
-  if (!city) {
+  // Single query to get city definition with cbsa_code
+  const { data: city, error } = await supabase
+    .from('city_definitions')
+    .select('*')
+    .eq('state_slug', stateSlug)
+    .eq('city_slug', citySlug)
+    .single()
+
+  if (error || !city) {
     return null
   }
 
+  // Resolve cbsa_code if not on city record
+  let cbsaCode = city.cbsa_code
+  if (!cbsaCode && city.representative_zip) {
+    const { data: zipData } = await supabase
+      .from('zip_cbsa_mapping')
+      .select('cbsa_code')
+      .eq('zip_code', city.representative_zip)
+      .single()
+    cbsaCode = zipData?.cbsa_code || null
+  }
+
+  // Parallel fetch: availability + providers (using resolved cbsa_code)
   const [availability, providers] = await Promise.all([
     getCityAvailability(stateSlug, citySlug),
-    getCityProviders(stateSlug, citySlug),
+    getProvidersByCbsa(cbsaCode),
   ])
 
   return {
-    city,
+    city: city as CityDefinition,
     availability,
     providers,
   }
