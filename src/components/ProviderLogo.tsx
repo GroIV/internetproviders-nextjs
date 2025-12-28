@@ -13,19 +13,19 @@ interface ProviderLogoProps {
 
 // Wide containers for horizontal text logos
 const sizeClasses = {
-  sm: 'w-20 h-16',
-  md: 'w-28 h-20',
-  lg: 'w-36 h-24',
-  xl: 'w-44 h-28',
-  '2xl': 'w-52 h-32',
+  sm: 'w-28 h-16',
+  md: 'w-40 h-20',
+  lg: 'w-48 h-24',
+  xl: 'w-56 h-28',
+  '2xl': 'w-64 h-32',
 }
 
 const sizePx = {
-  sm: 80,
-  md: 112,
-  lg: 144,
-  xl: 176,
-  '2xl': 208,
+  sm: 112,
+  md: 160,
+  lg: 192,
+  xl: 224,
+  '2xl': 256,
 }
 
 const textSizes = {
