@@ -11,24 +11,25 @@ interface ProviderLogoProps {
   className?: string
 }
 
+// Wide containers for horizontal text logos
 const sizeClasses = {
-  sm: 'w-14 h-14',
-  md: 'w-20 h-20',
-  lg: 'w-28 h-28',
-  xl: 'w-36 h-36',
-  '2xl': 'w-44 h-44',
+  sm: 'w-20 h-16',
+  md: 'w-28 h-20',
+  lg: 'w-36 h-24',
+  xl: 'w-44 h-28',
+  '2xl': 'w-52 h-32',
 }
 
 const sizePx = {
-  sm: 56,
-  md: 80,
-  lg: 112,
-  xl: 144,
-  '2xl': 176,
+  sm: 80,
+  md: 112,
+  lg: 144,
+  xl: 176,
+  '2xl': 208,
 }
 
 const textSizes = {
-  sm: 'text-base',
+  sm: 'text-lg',
   md: 'text-xl',
   lg: 'text-2xl',
   xl: 'text-3xl',
@@ -56,7 +57,7 @@ export function ProviderLogo({ slug, name, size = 'md', className = '' }: Provid
   const bgClass = logoInfo.needsLightBg ? 'bg-white' : 'bg-gray-800'
 
   return (
-    <div className={`${containerClass} ${bgClass} p-1.5`}>
+    <div className={`${containerClass} ${bgClass} p-2`}>
       <Image
         src={logoInfo.logoPath!}
         alt={`${name} logo`}
