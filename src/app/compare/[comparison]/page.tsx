@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { RelatedRankings } from '@/components/RelatedRankings'
 import { ProviderLogo } from '@/components/ProviderLogo'
+import { getContentByPath } from '@/lib/getContent'
+import { JsonLd } from '@/lib/seo'
 
 interface Props {
   params: Promise<{ comparison: string }>
@@ -211,6 +213,37 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { comparison } = await params
+
+  // Check for editorial content override
+  const content = await getContentByPath(`/compare/${comparison}`)
+  if (content) {
+    const { metadata } = content
+    return {
+      title: metadata.title,
+      description: metadata.description,
+      keywords: metadata.keywords,
+      authors: metadata.author ? [{ name: metadata.author }] : undefined,
+      alternates: {
+        canonical: content.canonical_url,
+      },
+      openGraph: {
+        title: metadata.title,
+        description: metadata.description,
+        url: content.canonical_url,
+        type: 'article',
+        publishedTime: content.published_at || undefined,
+        modifiedTime: content.updated_at || undefined,
+        images: metadata.image ? [metadata.image] : undefined,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: metadata.title,
+        description: metadata.description,
+      },
+    }
+  }
+
+  // Fallback to dynamic metadata
   const parsed = parseComparison(comparison)
 
   if (!parsed) {
@@ -265,6 +298,98 @@ function parsePrice(price: string): number {
 
 export default async function ProviderComparisonPage({ params }: Props) {
   const { comparison } = await params
+
+  // Check for editorial content override first
+  const content = await getContentByPath(`/compare/${comparison}`)
+  if (content) {
+    // Render pre-generated editorial content
+    const { metadata, html } = content
+
+    const articleSchema = metadata.jsonLd || {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: metadata.title,
+      description: metadata.description,
+      url: content.canonical_url,
+      datePublished: content.published_at,
+      dateModified: content.updated_at || content.published_at,
+      author: {
+        '@type': 'Organization',
+        name: 'InternetProviders.ai',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'InternetProviders.ai',
+        url: 'https://www.internetproviders.ai',
+      },
+    }
+
+    const breadcrumbSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: 'https://www.internetproviders.ai',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Compare',
+          item: 'https://www.internetproviders.ai/compare',
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: metadata.title,
+          item: content.canonical_url,
+        },
+      ],
+    }
+
+    return (
+      <>
+        <JsonLd data={[articleSchema, breadcrumbSchema]} />
+        <div className="min-h-screen">
+          <div className="container mx-auto px-4 py-12">
+            <div className="max-w-4xl mx-auto">
+              {/* Breadcrumb */}
+              <nav className="ipai-breadcrumb" aria-label="Breadcrumb">
+                <Link href="/">Home</Link>
+                <span className="ipai-breadcrumb__separator">/</span>
+                <Link href="/compare">Compare</Link>
+                <span className="ipai-breadcrumb__separator">/</span>
+                <span className="ipai-breadcrumb__current">{metadata.title}</span>
+              </nav>
+
+              {/* Content rendered from pre-generated HTML */}
+              <article
+                className="ipai-prose"
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
+
+              {/* Back to compare */}
+              <div className="mt-12 pt-8 border-t border-gray-800">
+                <Link
+                  href="/compare"
+                  className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to Compare Providers
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Fallback to dynamic comparison page
   const parsed = parseComparison(comparison)
 
   if (!parsed) {

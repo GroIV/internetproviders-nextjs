@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./ipai-styles.css";
 
 :root {
   --background: #030712;
