@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { states } from '@/data/states'
 import { ZipSearch } from '@/components/ZipSearch'
 import { ProviderLink } from '@/components/ProviderLink'
+import { ProviderLogo } from '@/components/ProviderLogo'
 import { RelatedRankings } from '@/components/RelatedRankings'
 import { cleanProviderName, getProviderSlug } from '@/lib/providers'
 import {
@@ -322,11 +323,7 @@ export default async function CityPage({ params }: Props) {
                 const cardContent = (
                   <>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
-                        <span className={`text-lg font-bold ${slug ? 'text-gray-500 group-hover:text-blue-400 transition-colors' : 'text-gray-500'}`}>
-                          {displayName.charAt(0)}
-                        </span>
-                      </div>
+                      <ProviderLogo slug={slug || ''} name={displayName} size="sm" />
                       <div>
                         <div className={`font-medium ${slug ? 'group-hover:text-blue-400 transition-colors' : ''}`}>
                           {displayName}

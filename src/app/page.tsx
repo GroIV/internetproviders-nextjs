@@ -6,6 +6,7 @@ import { ChatWindow } from '@/components/ChatWindow'
 import { useLocation } from '@/contexts/LocationContext'
 import Link from 'next/link'
 import { sortByTechPriority } from '@/lib/techPriority'
+import { ProviderLogo } from '@/components/ProviderLogo'
 
 interface Provider {
   id: number
@@ -294,11 +295,9 @@ export default function Home() {
                           </div>
 
                           <div className="flex items-start gap-4 relative">
-                            {/* Provider Icon/Initial */}
-                            <div className={`relative w-14 h-14 rounded-xl bg-gradient-to-br ${details.color} flex items-center justify-center flex-shrink-0 shadow-lg group-hover:shadow-xl transition-shadow duration-300`}>
-                              <span className="text-xl font-bold text-white drop-shadow-md">
-                                {provider.name.charAt(0)}
-                              </span>
+                            {/* Provider Logo */}
+                            <div className="relative flex-shrink-0">
+                              <ProviderLogo slug={provider.slug} name={provider.name} size="lg" />
                               {/* Glow effect */}
                               <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${details.color} opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300`} />
                             </div>

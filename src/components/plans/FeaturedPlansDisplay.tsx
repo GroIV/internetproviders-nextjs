@@ -6,6 +6,7 @@ import { PlanCard } from './PlanCard'
 import { featuredPlans, type ProviderFeaturedPlans } from '@/lib/featuredPlans'
 import { useLocation } from '@/contexts/LocationContext'
 import { sortByTechPriority } from '@/lib/techPriority'
+import { ProviderLogo } from '@/components/ProviderLogo'
 
 type ViewMode = 'providers' | 'tiers' | 'value'
 type TierFilter = 'all' | 'budget' | 'value' | 'premium'
@@ -471,9 +472,7 @@ function ProviderSection({
       {/* Provider header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-xl font-bold text-white border border-gray-600">
-            {provider.providerName.charAt(0)}
-          </div>
+          <ProviderLogo slug={provider.slug} name={provider.providerName} size="md" />
           <div>
             <h2 className="text-2xl font-bold text-white">{provider.providerName}</h2>
             <p className="text-gray-400 text-sm">{provider.plans.length} Featured Plans</p>

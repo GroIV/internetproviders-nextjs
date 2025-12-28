@@ -562,12 +562,8 @@ export default async function ProviderPage({ params }: Props) {
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex -space-x-2">
-                          <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${details.color} flex items-center justify-center text-sm font-bold text-white shadow-lg`}>
-                            {provider.name.charAt(0)}
-                          </div>
-                          <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${compDetails.color} flex items-center justify-center text-sm font-bold text-white shadow-lg`}>
-                            {displayName.charAt(0)}
-                          </div>
+                          <ProviderLogo slug={slug} name={provider.name} size="sm" className="shadow-lg" />
+                          <ProviderLogo slug={compSlug} name={displayName} size="sm" className="shadow-lg" />
                         </div>
                         <span className="font-medium text-gray-300 group-hover:text-orange-400 transition-colors">
                           vs {displayName}
@@ -604,9 +600,7 @@ export default async function ProviderPage({ params }: Props) {
                     >
                       <div className="relative mx-auto mb-3">
                         <div className={`absolute inset-0 bg-gradient-to-br ${relatedDetails.color} rounded-xl blur-md opacity-40 group-hover:opacity-60 transition-opacity`} />
-                        <div className={`relative w-14 h-14 rounded-xl bg-gradient-to-br ${relatedDetails.color} flex items-center justify-center text-xl font-bold text-white shadow-lg mx-auto`}>
-                          {p.name.charAt(0)}
-                        </div>
+                        <ProviderLogo slug={p.slug} name={p.name} size="lg" className="relative shadow-lg mx-auto" />
                       </div>
                       <h3 className="font-medium text-white group-hover:text-purple-400 transition-colors">{p.name}</h3>
                       {p.technologies && p.technologies.length > 0 && (

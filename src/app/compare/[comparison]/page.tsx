@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { RelatedRankings } from '@/components/RelatedRankings'
+import { ProviderLogo } from '@/components/ProviderLogo'
 
 interface Props {
   params: Promise<{ comparison: string }>
@@ -369,15 +370,15 @@ export default async function ProviderComparisonPage({ params }: Props) {
         {/* Provider Headers */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <div className={`bg-gradient-to-br ${details1.color} rounded-xl p-6 text-center`}>
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">
-              {provider1.name.charAt(0)}
+            <div className="mx-auto mb-4">
+              <ProviderLogo slug={slug1} name={provider1.name} size="xl" />
             </div>
             <h2 className="text-2xl font-bold mb-1">{provider1.name}</h2>
             <p className="text-white/80 text-sm">{details1.tagline}</p>
           </div>
           <div className={`bg-gradient-to-br ${details2.color} rounded-xl p-6 text-center`}>
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">
-              {provider2.name.charAt(0)}
+            <div className="mx-auto mb-4">
+              <ProviderLogo slug={slug2} name={provider2.name} size="xl" />
             </div>
             <h2 className="text-2xl font-bold mb-1">{provider2.name}</h2>
             <p className="text-white/80 text-sm">{details2.tagline}</p>

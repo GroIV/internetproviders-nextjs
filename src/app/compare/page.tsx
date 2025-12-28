@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { CompareAutoRedirect } from '@/components/CompareAutoRedirect'
 import { getProviderSlug, cleanProviderName } from '@/lib/providers'
 import { RelatedRankings } from '@/components/RelatedRankings'
+import { ProviderLogo } from '@/components/ProviderLogo'
 import { JsonLd, generateBreadcrumbSchema } from '@/lib/seo'
 
 export async function generateMetadata({
@@ -308,11 +309,7 @@ function ProviderCard({ provider }: { provider: Provider }) {
   const content = (
     <div className="flex items-center justify-between p-4 futuristic-card rounded-lg group glow-burst-hover">
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center">
-          <span className={`text-xl font-bold ${slug ? 'text-gray-500 group-hover:text-blue-400 transition-colors' : 'text-gray-500'}`}>
-            {displayName.charAt(0)}
-          </span>
-        </div>
+        <ProviderLogo slug={slug || ''} name={displayName} size="md" />
         <div>
           <h4 className={`font-semibold ${slug ? 'group-hover:text-blue-400 transition-colors' : ''}`}>{displayName}</h4>
           <p className={`text-sm ${color}`}>{type}</p>

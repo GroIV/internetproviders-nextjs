@@ -6,6 +6,7 @@ import { useLocation } from '@/contexts/LocationContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ScrollReveal, StaggerContainer, AnimatedToggle, LoadingSpinner } from '@/components/ui'
 import { sortByTechPriority } from '@/lib/techPriority'
+import { ProviderLogo } from '@/components/ProviderLogo'
 
 interface Provider {
   id: number
@@ -369,11 +370,9 @@ function ProviderCard({
       )}
 
       <div className="flex items-start gap-4 relative">
-        {/* Provider Icon */}
-        <div className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${details.color} flex items-center justify-center flex-shrink-0 shadow-lg group-hover:shadow-xl transition-shadow duration-300`}>
-          <span className="text-lg font-bold text-white drop-shadow-md">
-            {provider.name.charAt(0)}
-          </span>
+        {/* Provider Logo */}
+        <div className="relative flex-shrink-0">
+          <ProviderLogo slug={provider.slug} name={provider.name} size="md" />
           <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${details.color} opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-300`} />
         </div>
 
