@@ -207,7 +207,7 @@ export default async function FrontierFiberAvailabilityPage() {
                 <p className="text-gray-400">Enter your ZIP code to see exact availability and plans</p>
               </div>
               <Link
-                href="/providers/frontier-fiber"
+                href="/go/frontier-fiber?source=frontier-hub&campaign=frontier_cbsa_ge20"
                 className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
               >
                 Check Availability

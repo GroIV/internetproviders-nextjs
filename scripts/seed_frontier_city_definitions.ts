@@ -46,8 +46,12 @@ const ZIP_PREFIX_TO_STATE: Record<string, { abbr: string; name: string; slug: st
   // New Jersey
   '07': { abbr: 'NJ', name: 'New Jersey', slug: 'new-jersey' },
   '08': { abbr: 'NJ', name: 'New Jersey', slug: 'new-jersey' },
-  // Puerto Rico
-  '00': { abbr: 'PR', name: 'Puerto Rico', slug: 'puerto-rico' },
+  // New York (includes special IRS ZIPs like 00501)
+  '005': { abbr: 'NY', name: 'New York', slug: 'new-york' },
+  // Puerto Rico (006xx–009xx)
+  '006': { abbr: 'PR', name: 'Puerto Rico', slug: 'puerto-rico' },
+  '007': { abbr: 'PR', name: 'Puerto Rico', slug: 'puerto-rico' },
+  '009': { abbr: 'PR', name: 'Puerto Rico', slug: 'puerto-rico' },
   // New York
   '10': { abbr: 'NY', name: 'New York', slug: 'new-york' },
   '11': { abbr: 'NY', name: 'New York', slug: 'new-york' },
@@ -211,6 +215,20 @@ const ZIP_PREFIX_TO_STATE: Record<string, { abbr: string; name: string; slug: st
   '968': { abbr: 'HI', name: 'Hawaii', slug: 'hawaii' },
 };
 
+// Fallback dictionary for the 9 CBSAs that have no ZIP mappings
+// These are manually researched city names for CBSAs missing from zip_cbsa_mapping
+const CBSA_FALLBACK: Record<string, { city_names: string[]; state_abbr: string; state_slug: string }> = {
+  '12120': { city_names: ['Atmore'], state_abbr: 'AL', state_slug: 'alabama' },
+  '19000': { city_names: ['Cullowhee'], state_abbr: 'NC', state_slug: 'north-carolina' },
+  '23860': { city_names: ['Georgetown'], state_abbr: 'SC', state_slug: 'south-carolina' },
+  '27160': { city_names: ['Jackson'], state_abbr: 'OH', state_slug: 'ohio' },
+  '34350': { city_names: ['Mount Gay', 'Shamrock'], state_abbr: 'WV', state_slug: 'west-virginia' },
+  '35860': { city_names: ['North Vernon'], state_abbr: 'IN', state_slug: 'indiana' },
+  '38580': { city_names: ['Point Pleasant'], state_abbr: 'WV', state_slug: 'west-virginia' },
+  '39100': { city_names: ['Poughkeepsie', 'Newburgh', 'Middletown'], state_abbr: 'NY', state_slug: 'new-york' },
+  '42500': { city_names: ['Scottsburg'], state_abbr: 'IN', state_slug: 'indiana' },
+};
+
 // Get state info from ZIP code
 function getStateFromZip(zip: string): { abbr: string; name: string; slug: string } | null {
   // Try 3-digit prefix first (more specific)
@@ -312,6 +330,7 @@ async function main() {
   const cityDefinitions: CityDefinition[] = [];
   const skippedCbsas: { cbsa_code: string; reason: string }[] = [];
   const seenCities = new Set<string>(); // Track state_slug + city_slug to avoid duplicates
+  let fallbackUsedCount = 0;
 
   for (const market of targetCbsas) {
     // Get all ZIPs in this CBSA
@@ -320,28 +339,59 @@ async function main() {
       .select('zip_code')
       .eq('cbsa_code', market.cbsa_code);
 
+    let bestZip: ZipCityData | null = null;
+    let usedFallback = false;
+
     if (zipError || !cbsaZips || cbsaZips.length === 0) {
-      skippedCbsas.push({ cbsa_code: market.cbsa_code, reason: 'No ZIPs in zip_cbsa_mapping' });
-      continue;
+      // FALLBACK PATH: No ZIP mappings for this CBSA
+      const fallbackInfo = CBSA_FALLBACK[market.cbsa_code];
+      if (!fallbackInfo) {
+        skippedCbsas.push({ cbsa_code: market.cbsa_code, reason: 'No ZIPs in zip_cbsa_mapping and no fallback defined' });
+        continue;
+      }
+
+      // Try each city name in the fallback until we find a match
+      for (const cityGuess of fallbackInfo.city_names) {
+        const { data: fallbackZips, error: fallbackError } = await supabase
+          .from('zip_broadband_coverage')
+          .select('zip_code, city, total_housing_units')
+          .ilike('city', `%${cityGuess}%`)
+          .not('city', 'is', null)
+          .order('total_housing_units', { ascending: false })
+          .limit(1);
+
+        if (!fallbackError && fallbackZips && fallbackZips.length > 0) {
+          bestZip = fallbackZips[0];
+          usedFallback = true;
+          break;
+        }
+      }
+
+      if (!bestZip) {
+        skippedCbsas.push({ cbsa_code: market.cbsa_code, reason: `Fallback search failed for cities: ${fallbackInfo.city_names.join(', ')}` });
+        continue;
+      }
+    } else {
+      // PRIMARY PATH: Got ZIP codes from zip_cbsa_mapping
+      const zipCodes = cbsaZips.map(z => z.zip_code);
+
+      // Get city and housing data for these ZIPs
+      const { data: zipData, error: coverageError } = await supabase
+        .from('zip_broadband_coverage')
+        .select('zip_code, city, total_housing_units')
+        .in('zip_code', zipCodes)
+        .not('city', 'is', null)
+        .order('total_housing_units', { ascending: false })
+        .limit(1);
+
+      if (coverageError || !zipData || zipData.length === 0) {
+        skippedCbsas.push({ cbsa_code: market.cbsa_code, reason: 'No city data in zip_broadband_coverage' });
+        continue;
+      }
+
+      bestZip = zipData[0];
     }
 
-    const zipCodes = cbsaZips.map(z => z.zip_code);
-
-    // Get city and housing data for these ZIPs
-    const { data: zipData, error: coverageError } = await supabase
-      .from('zip_broadband_coverage')
-      .select('zip_code, city, total_housing_units')
-      .in('zip_code', zipCodes)
-      .not('city', 'is', null)
-      .order('total_housing_units', { ascending: false })
-      .limit(1);
-
-    if (coverageError || !zipData || zipData.length === 0) {
-      skippedCbsas.push({ cbsa_code: market.cbsa_code, reason: 'No city data in zip_broadband_coverage' });
-      continue;
-    }
-
-    const bestZip = zipData[0];
     const cityName = extractPrimaryCity(bestZip.city);
 
     if (!cityName) {
@@ -349,8 +399,17 @@ async function main() {
       continue;
     }
 
-    // Get state from ZIP
-    const stateInfo = getStateFromZip(bestZip.zip_code);
+    // Get state from ZIP (or use fallback state info if available)
+    let stateInfo: { abbr: string; name?: string; slug: string } | null = getStateFromZip(bestZip.zip_code);
+
+    // If ZIP-based state resolution fails and we have fallback, use that
+    if (!stateInfo && usedFallback) {
+      const fallbackInfo = CBSA_FALLBACK[market.cbsa_code];
+      if (fallbackInfo) {
+        stateInfo = { abbr: fallbackInfo.state_abbr, slug: fallbackInfo.state_slug };
+      }
+    }
+
     if (!stateInfo) {
       skippedCbsas.push({ cbsa_code: market.cbsa_code, reason: `Cannot resolve state for ZIP ${bestZip.zip_code}` });
       continue;
@@ -370,6 +429,10 @@ async function main() {
     }
     seenCities.add(cityKey);
 
+    if (usedFallback) {
+      fallbackUsedCount++;
+    }
+
     cityDefinitions.push({
       state_slug: stateInfo.slug,
       state_abbr: stateInfo.abbr,
@@ -382,6 +445,8 @@ async function main() {
   }
 
   console.log(`Resolved ${cityDefinitions.length} city definitions`);
+  console.log(`  - Primary path: ${cityDefinitions.length - fallbackUsedCount}`);
+  console.log(`  - Fallback used: ${fallbackUsedCount}`);
   console.log(`Skipped ${skippedCbsas.length} CBSAs (see details below)`);
 
   // Step 3: Upsert into city_definitions
@@ -425,9 +490,10 @@ async function main() {
   console.log('\n[5/5] Summary');
   console.log('='.repeat(70));
 
-  console.log(`\nFrontier CBSA targets (≥20% coverage): ${targetCbsas.length}`);
-  console.log(`City definitions created/updated: ${cityDefinitions.length}`);
-  console.log(`CBSAs skipped: ${skippedCbsas.length}`);
+  console.log(`\nTotal CBSA targets (≥20% coverage): ${targetCbsas.length}`);
+  console.log(`Inserted/Updated: ${cityDefinitions.length}`);
+  console.log(`Fallback used: ${fallbackUsedCount}`);
+  console.log(`Remaining missing CBSAs: ${skippedCbsas.length}`);
 
   console.log('\n--- Sample 10 Generated URLs ---');
   cityDefinitions.slice(0, 10).forEach(c => {
@@ -435,23 +501,13 @@ async function main() {
   });
 
   if (skippedCbsas.length > 0) {
-    console.log('\n--- Skipped CBSAs ---');
+    console.log('\n--- Remaining Missing CBSAs ---');
     skippedCbsas.forEach(s => {
       console.log(`  CBSA ${s.cbsa_code}: ${s.reason}`);
     });
+  } else {
+    console.log('\n--- All CBSAs successfully mapped! ---');
   }
-
-  // Show coverage distribution
-  console.log('\n--- Frontier Coverage Distribution ---');
-  const coverageBuckets = {
-    '80-100%': targetCbsas.filter(m => m.coverage_pct >= 80).length,
-    '60-79%': targetCbsas.filter(m => m.coverage_pct >= 60 && m.coverage_pct < 80).length,
-    '40-59%': targetCbsas.filter(m => m.coverage_pct >= 40 && m.coverage_pct < 60).length,
-    '20-39%': targetCbsas.filter(m => m.coverage_pct >= 20 && m.coverage_pct < 40).length,
-  };
-  Object.entries(coverageBuckets).forEach(([bucket, count]) => {
-    console.log(`  ${bucket}: ${count} CBSAs`);
-  });
 
   console.log('\n' + '='.repeat(70));
   console.log('Done!');

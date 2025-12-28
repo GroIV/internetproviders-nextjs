@@ -43,6 +43,8 @@ const staticPages: Array<{
 }> = [
   { path: '/', priority: 1.0, changeFrequency: 'daily' },
   { path: '/providers', priority: 0.9, changeFrequency: 'weekly' },
+  // High-intent monetization hub (Frontier Fiber)
+  { path: '/providers/frontier-fiber/availability', priority: 0.85, changeFrequency: 'weekly' },
   { path: '/guides', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/compare', priority: 0.8, changeFrequency: 'weekly' },
   { path: '/plans', priority: 0.8, changeFrequency: 'weekly' },
@@ -155,15 +157,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     }))
 
-  // 7. Provider "go" interstitial pages (affiliate landing)
-  const goPageEntries: MetadataRoute.Sitemap = (providers || [])
-    .filter((p) => p.slug)
-    .map((provider) => ({
-      url: `${BASE_URL}/go/${provider.slug}`,
-      lastModified: now,
-      changeFrequency: 'monthly' as const,
-      priority: 0.4,
-    }))
+  // NOTE: /go/* interstitial pages are intentionally EXCLUDED from sitemap
+  // They are affiliate redirects, not content pages for search engines
 
   // Combine all entries
   return [
@@ -173,6 +168,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...comparisonEntries,
     ...stateEntries,
     ...cityEntries,
-    ...goPageEntries,
   ]
 }

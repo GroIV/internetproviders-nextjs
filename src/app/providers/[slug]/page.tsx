@@ -510,7 +510,7 @@ export default async function ProviderPage({ params }: Props) {
                 </p>
               </div>
               <Link
-                href="/providers/frontier-fiber/availability"
+                href="/providers/frontier-fiber/availability?source=frontier-provider"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -339,13 +339,13 @@ export default async function CityPage({ params }: Props) {
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
                 <Link
-                  href="/providers/frontier-fiber"
+                  href={`/providers/frontier-fiber?source=frontier-city&loc=${state}-${citySlugParam}`}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
                 >
                   Learn More
                 </Link>
                 <Link
-                  href="/go/frontier-fiber"
+                  href={`/go/frontier-fiber?source=frontier-city&campaign=frontier_cbsa_ge20&loc=${state}-${citySlugParam}`}
                   className="px-4 py-2 border border-red-600 text-red-400 hover:bg-red-600 hover:text-white text-sm font-medium rounded-lg transition-colors"
                 >
                   Check Availability

@@ -10,7 +10,28 @@ export default function InterstitialPage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const providerSlug = params.provider as string
-  const source = searchParams.get('source') || providerSlug
+  const baseSource = searchParams.get('source') || providerSlug
+  const campaign = searchParams.get('campaign')
+  const loc = searchParams.get('loc')
+
+  // Build a single affiliate sub_id source string. Our affiliate integration primarily supports one sub_id,
+  // so we encode campaign/location into the source string to preserve attribution end-to-end.
+  const source = useMemo(() => {
+    const safe = (val: string) =>
+      val
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, '-') // keep URL-safe token chars
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 80) // keep components short to avoid overly-long sub_id values
+
+    const parts = [safe(baseSource)]
+    if (campaign) parts.push(`c_${safe(campaign)}`)
+    if (loc) parts.push(`l_${safe(loc)}`)
+
+    // Avoid empty segments
+    return parts.filter(Boolean).join('__').slice(0, 90)
+  }, [baseSource, campaign, loc])
 
   const [countdown, setCountdown] = useState(3)
 
