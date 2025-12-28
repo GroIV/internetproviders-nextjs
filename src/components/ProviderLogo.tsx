@@ -7,29 +7,32 @@ import { getProviderLogoInfo } from '@/lib/providerLogos'
 interface ProviderLogoProps {
   slug: string
   name: string
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
   className?: string
 }
 
 const sizeClasses = {
-  sm: 'w-8 h-8',
-  md: 'w-12 h-12',
-  lg: 'w-16 h-16',
-  xl: 'w-20 h-20',
+  sm: 'w-10 h-10',
+  md: 'w-14 h-14',
+  lg: 'w-20 h-20',
+  xl: 'w-24 h-24',
+  '2xl': 'w-32 h-32',
 }
 
 const sizePx = {
-  sm: 32,
-  md: 48,
-  lg: 64,
-  xl: 80,
+  sm: 40,
+  md: 56,
+  lg: 80,
+  xl: 96,
+  '2xl': 128,
 }
 
 const textSizes = {
-  sm: 'text-xs',
-  md: 'text-sm',
-  lg: 'text-lg',
-  xl: 'text-xl',
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-xl',
+  xl: 'text-2xl',
+  '2xl': 'text-3xl',
 }
 
 export function ProviderLogo({ slug, name, size = 'md', className = '' }: ProviderLogoProps) {

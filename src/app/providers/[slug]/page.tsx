@@ -277,7 +277,7 @@ export default async function ProviderPage({ params }: Props) {
             {/* Large Provider Logo */}
             <div className="relative">
               <div className={`absolute inset-0 bg-gradient-to-br ${details.color} rounded-2xl blur-lg opacity-50`} />
-              <ProviderLogo slug={slug} name={provider.name} size="xl" className="relative shadow-xl" />
+              <ProviderLogo slug={slug} name={provider.name} size="2xl" className="relative shadow-xl" />
             </div>
 
             <div className="flex-1">
