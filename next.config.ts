@@ -146,8 +146,9 @@ const nextConfig: NextConfig = {
 
       // Provider state/city pages → Internet location pages
       // e.g., /providers/texas/austin → /internet/texas/austin
+      // Excludes provider slugs (which contain hyphens) like frontier-fiber
       {
-        source: '/providers/:state/:city',
+        source: '/providers/:state([a-z]+)/:city',
         destination: '/internet/:state/:city',
         permanent: true,
       },
