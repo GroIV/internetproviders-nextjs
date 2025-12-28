@@ -12,27 +12,27 @@ interface ProviderLogoProps {
 }
 
 const sizeClasses = {
-  sm: 'w-10 h-10',
-  md: 'w-14 h-14',
-  lg: 'w-20 h-20',
-  xl: 'w-24 h-24',
-  '2xl': 'w-32 h-32',
+  sm: 'w-14 h-14',
+  md: 'w-20 h-20',
+  lg: 'w-28 h-28',
+  xl: 'w-36 h-36',
+  '2xl': 'w-44 h-44',
 }
 
 const sizePx = {
-  sm: 40,
-  md: 56,
-  lg: 80,
-  xl: 96,
-  '2xl': 128,
+  sm: 56,
+  md: 80,
+  lg: 112,
+  xl: 144,
+  '2xl': 176,
 }
 
 const textSizes = {
-  sm: 'text-sm',
-  md: 'text-base',
-  lg: 'text-xl',
-  xl: 'text-2xl',
-  '2xl': 'text-3xl',
+  sm: 'text-base',
+  md: 'text-xl',
+  lg: 'text-2xl',
+  xl: 'text-3xl',
+  '2xl': 'text-4xl',
 }
 
 export function ProviderLogo({ slug, name, size = 'md', className = '' }: ProviderLogoProps) {
