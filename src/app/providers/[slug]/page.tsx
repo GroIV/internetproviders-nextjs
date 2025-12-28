@@ -496,6 +496,33 @@ export default async function ProviderPage({ params }: Props) {
           providerSlug={slug}
         />
 
+        {/* Frontier Fiber Availability Hub Link */}
+        {slug === 'frontier-fiber' && (
+          <div className="relative bg-gradient-to-r from-red-900/30 to-orange-900/30 rounded-2xl p-8 mb-8 border border-red-800/50 overflow-hidden">
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-red-500 to-orange-500 rounded-full blur-3xl opacity-20" />
+            <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+              <div>
+                <h2 className="text-2xl font-bold mb-2 text-white">
+                  Where Frontier Fiber is Available
+                </h2>
+                <p className="text-gray-300">
+                  Explore all cities where Frontier Fiber offers service with coverage data from the FCC.
+                </p>
+              </div>
+              <Link
+                href="/providers/frontier-fiber/availability"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                View All Cities
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* About Section */}
         <div className="relative bg-gray-900/60 backdrop-blur-sm rounded-2xl p-8 mb-8 border border-gray-700/50 overflow-hidden">
           <div className="absolute -top-20 -left-20 w-40 h-40 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full blur-3xl opacity-10" />

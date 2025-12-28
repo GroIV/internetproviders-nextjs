@@ -326,6 +326,35 @@ export default async function CityPage({ params }: Props) {
           </div>
         )}
 
+        {/* Frontier Fiber Module - shown when Frontier is in provider list */}
+        {providers.some(p => p.providerSlug === 'frontier-fiber') && (
+          <div className="bg-gradient-to-r from-red-900/20 to-orange-900/20 border border-red-800/30 rounded-xl p-6 mb-12">
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <ProviderLogo slug="frontier-fiber" name="Frontier Fiber" size="lg" />
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-lg font-semibold mb-1">Frontier Fiber in {cityName}</h3>
+                <p className="text-gray-400 text-sm">
+                  Frontier Fiber offers high-speed fiber internet in {cityName}. Check availability at your address.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Link
+                  href="/providers/frontier-fiber"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Learn More
+                </Link>
+                <Link
+                  href="/go/frontier-fiber"
+                  className="px-4 py-2 border border-red-600 text-red-400 hover:bg-red-600 hover:text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Check Availability
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Related Rankings */}
         <RelatedRankings title={`Internet Rankings for ${cityName}`} />
 
