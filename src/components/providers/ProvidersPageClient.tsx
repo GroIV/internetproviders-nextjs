@@ -377,7 +377,7 @@ function ProviderCard({
         </div>
 
         {/* Provider Info */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pr-20">
           <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors truncate">
             {provider.name}
           </h3>
