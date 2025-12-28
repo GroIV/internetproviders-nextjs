@@ -8,6 +8,8 @@ import { OrderButton } from '@/components/OrderButton'
 import { hasAffiliateLink } from '@/lib/affiliates'
 import { ProviderPlansSection, TVPlansSection } from '@/components/plans'
 import { getFeaturedPlansForProvider } from '@/lib/featuredPlans'
+import { getProviderPlans } from '@/lib/getProviderPlans'
+import { RealPlansSection } from '@/components/RealPlansSection'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import {
   JsonLd,
@@ -203,8 +205,13 @@ export default async function ProviderPage({ params }: Props) {
   }
 
   const technologies = provider.technologies || []
+  const isTV = provider.category === 'TV' || provider.category === 'Satellite TV'
 
-  // Get featured plans data for this provider
+  // Get real plans from broadband_plans table (FCC Broadband Labels)
+  const realPlans = await getProviderPlans(slug)
+  const hasRealPlans = !realPlans.hasFallback && realPlans.allPlans.length > 0
+
+  // Get featured plans data for fallback
   const featuredPlanSlug = getFeaturedPlanSlug(slug)
   const providerPlans = getFeaturedPlansForProvider(featuredPlanSlug)
 
@@ -212,20 +219,41 @@ export default async function ProviderPage({ params }: Props) {
   const relatedProviders = await getRelatedProviders(slug, technologies, provider.category || '')
   const comparisonSlugs = comparisonPairs[slug] || []
 
-  // Calculate stats from featured plans
-  const startingPrice = providerPlans?.plans.length
-    ? Math.min(...providerPlans.plans.map(p => p.price))
-    : null
-  const maxSpeed = providerPlans?.plans.length
-    ? Math.max(...providerPlans.plans.map(p => p.downloadSpeed))
-    : null
+  // Calculate stats - prefer real data, fallback to featured plans
+  let startingPrice: number | null = null
+  let maxSpeed: number | null = null
+  let planCount = 0
 
-  // Format max speed display
-  const formatMaxSpeed = (speed: number | null) => {
-    if (!speed) return technologies.includes('Fiber') ? '5 Gbps' : '1 Gbps'
-    if (speed >= 1000) return `${(speed / 1000).toFixed(speed >= 10000 ? 0 : 1)} Gbps`
-    return `${speed} Mbps`
+  if (hasRealPlans) {
+    // Use real plans data
+    startingPrice = Math.min(...realPlans.allPlans.map(p => p.monthlyPrice))
+    maxSpeed = Math.max(...realPlans.allPlans.filter(p => p.downloadSpeed).map(p => p.downloadSpeed!))
+    planCount = realPlans.allPlans.length
+  } else if (providerPlans?.plans.length) {
+    // Fallback to static featured plans
+    startingPrice = Math.min(...providerPlans.plans.map(p => p.price))
+    maxSpeed = Math.max(...providerPlans.plans.map(p => p.downloadSpeed))
+    planCount = providerPlans.plans.length
   }
+
+  // Format speed for display
+  const formatSpeedDisplay = (speedMbps: number | null): string => {
+    if (!speedMbps) return isTV ? 'N/A' : 'Varies by location'
+    if (speedMbps >= 1000) {
+      const gbps = speedMbps / 1000
+      return `${gbps % 1 === 0 ? gbps.toFixed(0) : gbps.toFixed(1)} Gbps`
+    }
+    return `${speedMbps} Mbps`
+  }
+
+  // Format price for display
+  const formatPriceDisplay = (price: number | null): string => {
+    if (price === null || price === undefined) return isTV ? 'N/A' : 'Varies by location'
+    return `$${price.toFixed(price % 1 === 0 ? 0 : 2)}`
+  }
+
+  const displayMaxSpeed = formatSpeedDisplay(maxSpeed)
+  const displayStartingPrice = formatPriceDisplay(startingPrice)
 
   // Generate structured data
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -242,16 +270,24 @@ export default async function ProviderPage({ params }: Props) {
     category: provider.category || 'Internet',
   })
 
-  // Get provider-specific details
-  const details = providerDetails[slug] || {
-    maxSpeed: formatMaxSpeed(maxSpeed),
+  // Get provider-specific details - merge real data with static fallbacks
+  const staticDetails = providerDetails[slug] || {
+    maxSpeed: displayMaxSpeed,
     speedMbps: maxSpeed || 500,
-    startingPrice: startingPrice ? `$${startingPrice}` : '$50',
+    startingPrice: displayStartingPrice,
     color: 'from-gray-500 to-gray-600',
     description: `${provider.name} provides internet service across the United States.`
   }
+
+  // Override static values with real data when available
+  const details = {
+    ...staticDetails,
+    maxSpeed: hasRealPlans ? displayMaxSpeed : (isTV ? staticDetails.maxSpeed : 'Varies by location'),
+    speedMbps: hasRealPlans && maxSpeed ? maxSpeed : 0,
+    startingPrice: hasRealPlans ? displayStartingPrice : (isTV ? staticDetails.startingPrice : 'Varies by location'),
+  }
+
   const speedPercent = getSpeedPercent(details.speedMbps)
-  const isTV = provider.category === 'TV' || provider.category === 'Satellite TV'
 
   return (
     <>
@@ -361,7 +397,10 @@ export default async function ProviderPage({ params }: Props) {
                 <span className="text-sm text-gray-400">Starting Price</span>
               </div>
               <div className="text-2xl font-bold text-white">
-                {details.startingPrice}<span className="text-sm font-normal text-gray-400">/mo*</span>
+                {details.startingPrice}
+                {details.startingPrice.startsWith('$') && (
+                  <span className="text-sm font-normal text-gray-400">/mo*</span>
+                )}
               </div>
             </div>
           </div>
@@ -394,9 +433,11 @@ export default async function ProviderPage({ params }: Props) {
                 <span className="text-sm text-gray-400">Available Plans</span>
               </div>
               <div className="text-2xl font-bold text-white">
-                {providerPlans ? providerPlans.plans.length : '-'}
+                {planCount > 0 ? planCount : '-'}
               </div>
-              <div className="text-xs text-gray-500">featured plans</div>
+              <div className="text-xs text-gray-500">
+                {hasRealPlans ? 'verified plans' : 'featured plans'}
+              </div>
             </div>
           </div>
         </div>
@@ -431,11 +472,23 @@ export default async function ProviderPage({ params }: Props) {
           </div>
         </div>
 
-        {/* Featured Plans Section */}
-        <ProviderPlansSection
-          providerSlug={getFeaturedPlanSlug(slug)}
-          providerName={provider.name}
-        />
+        {/* Plans Section - Real data preferred, fallback to static featured plans */}
+        {hasRealPlans ? (
+          <RealPlansSection
+            providerName={provider.name}
+            providerSlug={slug}
+            budget={realPlans.budget}
+            value={realPlans.value}
+            premium={realPlans.premium}
+            hasFallback={false}
+            collectedAt={realPlans.collectedAt}
+          />
+        ) : (
+          <ProviderPlansSection
+            providerSlug={getFeaturedPlanSlug(slug)}
+            providerName={provider.name}
+          />
+        )}
 
         {/* TV Plans Section (for TV providers like DIRECTV, DISH) */}
         <TVPlansSection

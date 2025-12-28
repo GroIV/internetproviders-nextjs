@@ -33,102 +33,45 @@ export async function getProvidersByZip(
     return []
   }
 
-  // Step 2: Get provider IDs and coverage for this CBSA
-  const { data: cbsaProviders } = await supabase
-    .from('cbsa_providers')
-    .select('provider_id, coverage_pct')
+  // Step 2: Use deterministic mapping via cbsa_top_providers_v1 (backed by provider_fcc_map)
+  // Note: coverage_pct in this view is already a 0-100 percentage.
+  const { data: mappedProviders } = await supabase
+    .from('cbsa_top_providers_v1')
+    .select('our_provider_id, provider_slug, provider_name, technologies, coverage_pct')
     .eq('cbsa_code', zipData.cbsa_code)
+    .gt('coverage_pct', 5) // filter noise: only providers with >5% CBSA coverage
     .order('coverage_pct', { ascending: false })
+    .limit(50)
 
-  if (!cbsaProviders || cbsaProviders.length === 0) {
+  if (!mappedProviders || mappedProviders.length === 0) {
     return []
   }
 
-  // Step 3: Get provider names from fcc_providers
-  const providerIds = cbsaProviders.map(p => p.provider_id)
-  const { data: fccProviders } = await supabase
-    .from('fcc_providers')
-    .select('provider_id, name')
-    .in('provider_id', providerIds)
+  // Deduplicate by provider_slug (multiple FCC entities can map to the same provider)
+  const bySlug = new Map<string, ProviderWithCoverage>()
 
-  if (!fccProviders) {
-    return []
-  }
-
-  // Create name lookup map
-  const fccNameMap = new Map(fccProviders.map(p => [p.provider_id, p.name]))
-
-  // Step 4: Get our provider records with technology info
-  const { data: ourProviders } = await supabase
-    .from('providers')
-    .select('id, name, slug, technologies, category')
-
-  if (!ourProviders) {
-    return []
-  }
-
-  // Create lookup by name (normalized)
-  const providerMap = new Map<string, typeof ourProviders[0]>()
-  ourProviders.forEach(p => {
-    providerMap.set(p.name.toLowerCase(), p)
-    // Also add common variations
-    if (p.name === 'Spectrum') providerMap.set('charter communications', p)
-    if (p.name === 'Xfinity') providerMap.set('comcast', p)
-    if (p.name === 'AT&T Internet') providerMap.set('at&t', p)
-    if (p.name === 'AT&T Internet') providerMap.set('at&t services', p)
-    // NOTE: Don't map generic "verizon" to "Verizon Fios" - FCC "Verizon Communications Inc."
-    // includes DSL, 5G Home, AND Fios. Verizon Fios is only available in specific East Coast states.
-    // Map to Verizon 5G Home instead if that provider exists, otherwise skip.
-    if (p.name === 'Verizon 5G Home') providerMap.set('verizon', p)
-    if (p.name === 'Cox Internet') providerMap.set('cox communications', p)
-    if (p.slug === 'frontier') providerMap.set('frontier communications', p)
-  })
-
-  // Step 5: Match FCC providers to our providers and include coverage
-  const results: ProviderWithCoverage[] = []
-  const seenSlugs = new Set<string>()
-
-  for (const cbsaProvider of cbsaProviders) {
-    const fccName = fccNameMap.get(cbsaProvider.provider_id)
-    if (!fccName) continue
-
-    // Try to match to our provider
-    const normalizedName = fccName.toLowerCase()
-      .replace(/,?\s*(inc\.?|corporation|corp\.?|llc|l\.l\.c\.?|holdings|services|communications?)$/gi, '')
-      .trim()
-
-    let ourProvider = providerMap.get(normalizedName)
-
-    // Try partial matching if direct match fails
-    if (!ourProvider) {
-      for (const [key, value] of providerMap) {
-        if (normalizedName.includes(key) || key.includes(normalizedName)) {
-          ourProvider = value
-          break
-        }
-      }
-    }
-
-    if (!ourProvider) continue
-
-    // Skip duplicates
-    if (seenSlugs.has(ourProvider.slug)) continue
-    seenSlugs.add(ourProvider.slug)
+  for (const p of mappedProviders) {
+    const slug = p.provider_slug as string
+    const coveragePercent = Math.round(p.coverage_pct as number)
+    const technologies = (p.technologies as string[] | null) || []
 
     // Filter by technology if specified
-    if (technology && !ourProvider.technologies?.includes(technology)) {
-      continue
-    }
+    if (technology && !technologies.includes(technology)) continue
 
-    results.push({
-      id: ourProvider.id,
-      name: ourProvider.name,
-      slug: ourProvider.slug,
-      technologies: ourProvider.technologies || [],
-      category: ourProvider.category || '',
-      coveragePercent: Math.round(cbsaProvider.coverage_pct * 100),
+    const existing = bySlug.get(slug)
+    if (existing && existing.coveragePercent >= coveragePercent) continue
+
+    bySlug.set(slug, {
+      id: p.our_provider_id as number,
+      name: p.provider_name as string,
+      slug,
+      technologies,
+      category: 'internet',
+      coveragePercent,
     })
   }
+
+  const results = [...bySlug.values()]
 
   // Smart sorting: prioritize by technology quality, then by coverage
   // Fiber/Cable/5G should appear before Satellite/DSL in metro areas
@@ -210,6 +153,40 @@ export async function getProvidersByTechnology(
  */
 export async function getProviderCoverageCount(providerName: string): Promise<number> {
   const supabase = createAdminClient()
+
+  // Prefer deterministic FCC mapping when available
+  const { data: provider } = await supabase
+    .from('providers')
+    .select('id')
+    .eq('name', providerName)
+    .single()
+
+  if (provider?.id) {
+    const { data: fccMappings } = await supabase
+      .from('provider_fcc_map')
+      .select('fcc_provider_id')
+      .eq('provider_id', provider.id)
+
+    const fccIds = (fccMappings || []).map(m => m.fcc_provider_id).filter(Boolean)
+
+    if (fccIds.length > 0) {
+      const { data: cbsaData } = await supabase
+        .from('cbsa_providers')
+        .select('cbsa_code')
+        .in('provider_id', fccIds)
+
+      const uniqueCbsaCodes = [...new Set((cbsaData || []).map(d => d.cbsa_code))]
+
+      if (uniqueCbsaCodes.length > 0) {
+        const { count } = await supabase
+          .from('zip_cbsa_mapping')
+          .select('*', { count: 'exact', head: true })
+          .in('cbsa_code', uniqueCbsaCodes)
+
+        return count || 0
+      }
+    }
+  }
 
   // Provider name variations for FCC database search
   const nameVariations: Record<string, string[]> = {

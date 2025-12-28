@@ -12,13 +12,13 @@ export const metadata: Metadata = {
 }
 
 export default function InternetByStatePage() {
-  // Group states by region
+  // Group states by region (using state-name slugs)
   const regions = {
-    'Northeast': ['ct', 'me', 'ma', 'nh', 'nj', 'ny', 'pa', 'ri', 'vt'],
-    'Southeast': ['al', 'ar', 'fl', 'ga', 'ky', 'la', 'md', 'ms', 'nc', 'sc', 'tn', 'va', 'wv', 'dc'],
-    'Midwest': ['il', 'in', 'ia', 'ks', 'mi', 'mn', 'mo', 'ne', 'nd', 'oh', 'sd', 'wi'],
-    'Southwest': ['az', 'nm', 'ok', 'tx'],
-    'West': ['ak', 'ca', 'co', 'hi', 'id', 'mt', 'nv', 'or', 'ut', 'wa', 'wy'],
+    'Northeast': ['connecticut', 'maine', 'massachusetts', 'new-hampshire', 'new-jersey', 'new-york', 'pennsylvania', 'rhode-island', 'vermont'],
+    'Southeast': ['alabama', 'arkansas', 'florida', 'georgia', 'kentucky', 'louisiana', 'maryland', 'mississippi', 'north-carolina', 'south-carolina', 'tennessee', 'virginia', 'west-virginia', 'district-of-columbia'],
+    'Midwest': ['illinois', 'indiana', 'iowa', 'kansas', 'michigan', 'minnesota', 'missouri', 'nebraska', 'north-dakota', 'ohio', 'south-dakota', 'wisconsin'],
+    'Southwest': ['arizona', 'new-mexico', 'oklahoma', 'texas'],
+    'West': ['alaska', 'california', 'colorado', 'hawaii', 'idaho', 'montana', 'nevada', 'oregon', 'utah', 'washington', 'wyoming'],
   }
 
   return (
