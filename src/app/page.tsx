@@ -287,13 +287,6 @@ export default function Home() {
                           {/* Gradient overlay on hover */}
                           <div className={`absolute inset-0 bg-gradient-to-br ${details.color} opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300`} />
 
-                          {/* Coverage badge */}
-                          <div className="absolute top-4 right-4">
-                            <div className="px-2 py-1 bg-gray-800/80 rounded-full text-xs text-gray-400 border border-gray-700/50">
-                              {provider.coveragePercent}% coverage
-                            </div>
-                          </div>
-
                           <div className="flex items-start gap-4 relative">
                             {/* Provider Logo */}
                             <div className="relative flex-shrink-0">
@@ -303,10 +296,16 @@ export default function Home() {
                             </div>
 
                             {/* Provider Info */}
-                            <div className="flex-1 min-w-0 pr-24">
-                              <h3 className="font-semibold text-lg text-white group-hover:text-cyan-400 transition-colors truncate">
-                                {provider.name}
-                              </h3>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <h3 className="font-semibold text-lg text-white group-hover:text-cyan-400 transition-colors truncate">
+                                  {provider.name}
+                                </h3>
+                                {/* Coverage badge */}
+                                <span className="flex-shrink-0 px-2 py-0.5 bg-gray-800/80 text-gray-400 text-xs rounded-full border border-gray-700/50">
+                                  {provider.coveragePercent}%
+                                </span>
+                              </div>
 
                               {/* Tech badges */}
                               <div className="flex flex-wrap gap-1.5 mt-2">

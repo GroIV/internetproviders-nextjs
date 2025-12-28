@@ -360,15 +360,6 @@ function ProviderCard({
       {/* Gradient overlay on hover */}
       <div className={`absolute inset-0 bg-gradient-to-br ${details.color} opacity-0 group-hover:opacity-5 rounded-2xl transition-opacity duration-300`} />
 
-      {/* Coverage badge */}
-      {coveragePercent !== undefined && (
-        <div className="absolute top-3 right-3">
-          <span className="px-2 py-1 bg-gray-800/80 text-gray-400 text-xs rounded-full border border-gray-700/50">
-            {coveragePercent}% coverage
-          </span>
-        </div>
-      )}
-
       <div className="flex items-start gap-4 relative">
         {/* Provider Logo */}
         <div className="relative flex-shrink-0">
@@ -377,10 +368,18 @@ function ProviderCard({
         </div>
 
         {/* Provider Info */}
-        <div className="flex-1 min-w-0 pr-20">
-          <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors truncate">
-            {provider.name}
-          </h3>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors truncate">
+              {provider.name}
+            </h3>
+            {/* Coverage badge */}
+            {coveragePercent !== undefined && (
+              <span className="flex-shrink-0 px-2 py-0.5 bg-gray-800/80 text-gray-400 text-xs rounded-full border border-gray-700/50">
+                {coveragePercent}%
+              </span>
+            )}
+          </div>
 
           {/* Tech badges */}
           {provider.technologies && provider.technologies.length > 0 && (
