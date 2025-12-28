@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ProviderLogo } from './ProviderLogo'
 
 interface Provider {
   id: number
@@ -6,7 +7,7 @@ interface Provider {
   slug: string
   category: string
   technologies: string[]
-  logo: string | null
+  logo?: string | null
 }
 
 interface ProviderCardProps {
@@ -31,10 +32,8 @@ export function ProviderCard({ provider, zipCode }: ProviderCardProps) {
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-3">
-            {/* Provider Logo Placeholder */}
-            <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center text-xl font-bold text-gray-400">
-              {provider.name.charAt(0)}
-            </div>
+            {/* Provider Logo */}
+            <ProviderLogo slug={provider.slug} name={provider.name} size="md" />
             <div>
               <h3 className="text-xl font-semibold">
                 <Link href={`/providers/${provider.slug}`} className="hover:text-blue-400 transition-colors">

@@ -8,6 +8,7 @@ import { OrderButton } from '@/components/OrderButton'
 import { hasAffiliateLink } from '@/lib/affiliates'
 import { ProviderPlansSection, TVPlansSection } from '@/components/plans'
 import { getFeaturedPlansForProvider } from '@/lib/featuredPlans'
+import { ProviderLogo } from '@/components/ProviderLogo'
 import {
   JsonLd,
   generateBreadcrumbSchema,
@@ -273,14 +274,10 @@ export default async function ProviderPage({ params }: Props) {
           <div className={`absolute -top-20 -right-20 w-60 h-60 bg-gradient-to-br ${details.color} rounded-full blur-3xl opacity-20`} />
 
           <div className="relative flex flex-col md:flex-row items-start gap-6">
-            {/* Large Provider Icon */}
+            {/* Large Provider Logo */}
             <div className="relative">
               <div className={`absolute inset-0 bg-gradient-to-br ${details.color} rounded-2xl blur-lg opacity-50`} />
-              <div className={`relative w-24 h-24 rounded-2xl bg-gradient-to-br ${details.color} flex items-center justify-center shadow-xl`}>
-                <span className="text-4xl font-bold text-white drop-shadow-lg">
-                  {provider.name.charAt(0)}
-                </span>
-              </div>
+              <ProviderLogo slug={slug} name={provider.name} size="xl" className="relative shadow-xl" />
             </div>
 
             <div className="flex-1">
