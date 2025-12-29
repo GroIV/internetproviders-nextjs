@@ -3,13 +3,16 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getContentByPath, getAllContentPaths } from '@/lib/getContent'
 import { JsonLd } from '@/lib/seo'
+import { AnimatedArticle, AnimatedFooter } from '@/components/content/AnimatedContentWrapper'
+import { AuroraBlobs } from '@/components/effects/AuroraBlobs'
+import { CircuitPattern } from '@/components/effects/CircuitPattern'
 
 interface Props {
   params: Promise<{ category: string; slug: string }>
 }
 
 // Valid guide categories
-const VALID_CATEGORIES = ['technology', 'how-to', 'best-of', 'education'] as const
+const VALID_CATEGORIES = ['technology', 'how-to', 'best-of', 'education', 'choosing', 'setup'] as const
 type GuideCategory = typeof VALID_CATEGORIES[number]
 
 const CATEGORY_LABELS: Record<GuideCategory, string> = {
@@ -17,6 +20,8 @@ const CATEGORY_LABELS: Record<GuideCategory, string> = {
   'how-to': 'How-To Guides',
   'best-of': 'Best Of Guides',
   'education': 'Education',
+  'choosing': 'Choosing Guides',
+  'setup': 'Setup & Installation',
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -149,7 +154,11 @@ export default async function GuideCategoryPage({ params }: Props) {
     <>
       <JsonLd data={[articleSchema, breadcrumbSchema]} />
 
-      <div className="min-h-screen">
+      {/* Animated backgrounds */}
+      <AuroraBlobs opacity={0.08} />
+      <CircuitPattern opacity={0.04} animated={true} />
+
+      <div className="min-h-screen relative z-10">
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-4xl mx-auto">
             {/* Breadcrumb */}
@@ -163,14 +172,11 @@ export default async function GuideCategoryPage({ params }: Props) {
               <span className="ipai-breadcrumb__current">{metadata.title}</span>
             </nav>
 
-            {/* Content rendered from pre-generated HTML */}
-            <article
-              className="ipai-prose"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
+            {/* Content with scroll-triggered animation */}
+            <AnimatedArticle html={html} />
 
-            {/* Back to guides */}
-            <div className="mt-12 pt-8 border-t border-gray-800">
+            {/* Back to guides with fade-in animation */}
+            <AnimatedFooter>
               <Link
                 href="/guides"
                 className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
@@ -180,7 +186,7 @@ export default async function GuideCategoryPage({ params }: Props) {
                 </svg>
                 Back to All Guides
               </Link>
-            </div>
+            </AnimatedFooter>
           </div>
         </div>
       </div>
