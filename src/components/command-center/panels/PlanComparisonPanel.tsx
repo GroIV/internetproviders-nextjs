@@ -30,6 +30,9 @@ export function PlanComparisonPanel({ data }: { data?: { providers?: string[] } 
   const [plans, setPlans] = useState<Plan[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  // Stable provider key to prevent re-fetching
+  const providerKey = providers.slice(0, 2).sort().join(',')
+
   useEffect(() => {
     if (!context.zipCode || providers.length < 2) return
 
@@ -38,20 +41,45 @@ export function PlanComparisonPanel({ data }: { data?: { providers?: string[] } 
       try {
         // Fetch plans for comparison
         const res = await fetch(`/api/plans/featured?zip=${context.zipCode}`)
-        const data = await res.json()
+        const apiData = await res.json()
 
-        if (data.plans) {
-          // Filter to only the compared providers
+        if (apiData.providers) {
+          // Extract plans from providers array
+          const allPlans: Plan[] = []
           const providerSlugs = providers.map(p =>
             p.toLowerCase().replace(/\s+/g, '-').replace('&', '')
           )
-          const filtered = data.plans.filter((plan: Plan) =>
-            providerSlugs.some(slug =>
-              plan.providerSlug.includes(slug) ||
-              plan.providerName.toLowerCase().includes(slug.replace('-', ' '))
+
+          for (const provider of apiData.providers) {
+            // Check if this provider matches one we're comparing
+            const providerSlug = provider.slug?.toLowerCase() || ''
+            const providerName = provider.name?.toLowerCase() || ''
+
+            const isMatch = providerSlugs.some(slug =>
+              providerSlug.includes(slug) ||
+              providerName.includes(slug.replace('-', ' ')) ||
+              slug.includes(providerSlug.split('-')[0]) ||
+              providerName.includes(slug.split('-')[0])
             )
-          )
-          setPlans(filtered.slice(0, 4))
+
+            if (isMatch && provider.plans) {
+              // Get the "value" tier plan, or first plan if not available
+              const valuePlan = provider.plans.find((p: { tier: string }) => p.tier === 'value') || provider.plans[0]
+              if (valuePlan) {
+                allPlans.push({
+                  providerName: provider.name,
+                  providerSlug: provider.slug,
+                  planName: valuePlan.planName,
+                  price: valuePlan.price,
+                  downloadSpeed: valuePlan.downloadSpeed,
+                  uploadSpeed: valuePlan.uploadSpeed || 0,
+                  technology: valuePlan.technology,
+                  tier: valuePlan.tier,
+                })
+              }
+            }
+          }
+          setPlans(allPlans.slice(0, 2))
         }
       } catch (error) {
         console.error('Failed to fetch plans:', error)
@@ -61,7 +89,7 @@ export function PlanComparisonPanel({ data }: { data?: { providers?: string[] } 
     }
 
     fetchPlans()
-  }, [context.zipCode, providers])
+  }, [context.zipCode, providerKey, providers])
 
   if (providers.length < 2) {
     return (
