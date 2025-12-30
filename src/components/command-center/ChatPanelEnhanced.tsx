@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef, useState } from 'react'
 import { ChatWindow } from '@/components/ChatWindow'
 import { useChat } from '@/contexts/ChatContext'
 import { useCommandCenter } from '@/contexts/CommandCenterContext'
@@ -10,28 +10,62 @@ export function ChatPanelEnhanced() {
   const { messages, hasWelcomed, initializeChat } = useChat()
   const { processMessage, setZipCode, context } = useCommandCenter()
   const { location } = useLocation()
+  const [hasInitialized, setHasInitialized] = useState(false)
+  const processedMessagesRef = useRef<Set<string>>(new Set())
+  const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Initialize chat when location is detected
   useEffect(() => {
-    if (location?.zipCode && location?.city && !hasWelcomed) {
+    if (location?.zipCode && location?.city && !hasWelcomed && !hasInitialized) {
+      // Clear fallback timer if location detected
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current)
+        fallbackTimerRef.current = null
+      }
       initializeChat(location.zipCode, location.city)
       setZipCode(location.zipCode)
+      setHasInitialized(true)
     }
-  }, [location?.zipCode, location?.city, hasWelcomed, initializeChat, setZipCode])
+  }, [location?.zipCode, location?.city, hasWelcomed, hasInitialized, initializeChat, setZipCode])
 
-  // Process messages for panel triggers
-  const lastMessage = messages[messages.length - 1]
-  const processedMessageRef = useCallback((msg: typeof lastMessage) => {
-    if (msg) {
-      processMessage(msg.content, msg.role === 'assistant')
+  // Fallback greeting if location isn't detected within 2 seconds
+  useEffect(() => {
+    if (!hasWelcomed && !hasInitialized && messages.length === 0) {
+      fallbackTimerRef.current = setTimeout(() => {
+        // If still no welcome after 2 seconds, show a generic greeting
+        if (!hasWelcomed && messages.length === 0) {
+          // Use a generic location to trigger the greeting
+          initializeChat('00000', '')
+          setHasInitialized(true)
+        }
+      }, 2000)
+
+      return () => {
+        if (fallbackTimerRef.current) {
+          clearTimeout(fallbackTimerRef.current)
+        }
+      }
     }
-  }, [processMessage])
+  }, [hasWelcomed, hasInitialized, messages.length, initializeChat])
+
+  // Process USER messages for panel triggers (not AI messages - they shouldn't auto-trigger panels)
+  const lastMessage = messages[messages.length - 1]
+  const processUserMessage = useCallback((msg: typeof lastMessage) => {
+    if (msg && msg.role === 'user') {
+      // Create a unique key for this message
+      const msgKey = `${msg.role}-${msg.content.substring(0, 50)}-${messages.length}`
+      if (!processedMessagesRef.current.has(msgKey)) {
+        processedMessagesRef.current.add(msgKey)
+        processMessage(msg.content, false)
+      }
+    }
+  }, [processMessage, messages.length])
 
   useEffect(() => {
     if (lastMessage && messages.length > 0) {
-      processedMessageRef(lastMessage)
+      processUserMessage(lastMessage)
     }
-  }, [lastMessage, messages.length, processedMessageRef])
+  }, [lastMessage, messages.length, processUserMessage])
 
   // Sync ZIP from location context to command center
   useEffect(() => {
