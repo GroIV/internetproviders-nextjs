@@ -4,10 +4,18 @@ import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getAffiliateUrl, COMPARISON_ELIGIBLE_PROVIDERS, providerDisplayNames, getComparisonUrl } from '@/lib/affiliates'
-import { featuredPlans, getBestValuePlans, getAllFeaturedPlans, type FeaturedPlan } from '@/lib/featuredPlans'
+import { getPlansForZip, buildPlansContextForZip, getProviderSlug, type RealPlan } from '@/lib/getPlansForZip'
 
-// Plan with provider info for suggestions
-interface SuggestedPlan extends FeaturedPlan {
+// Plan with provider info for suggestions (compatible with frontend)
+interface SuggestedPlan {
+  planName: string
+  price: number
+  downloadSpeed: number
+  uploadSpeed: number
+  technology: string
+  tier: 'budget' | 'value' | 'premium'
+  features: string[]
+  bestFor: string
   providerName: string
   providerSlug: string
 }
@@ -30,114 +38,83 @@ function isPlanQuery(message: string): boolean {
   return PLAN_KEYWORDS.some(keyword => lowerMessage.includes(keyword))
 }
 
-// Map database provider names to featured plan slugs
-function mapProviderNameToSlug(providerName: string): string | null {
-  const nameLower = providerName.toLowerCase()
-  if (nameLower.includes('at&t')) return 'att-internet'
-  if (nameLower.includes('spectrum') || nameLower.includes('charter')) return 'spectrum'
-  if (nameLower.includes('frontier')) return 'frontier-fiber'
-  if (nameLower.includes('t-mobile')) return 't-mobile'
-  if (nameLower.includes('wow')) return 'wow'
-  if (nameLower.includes('google fiber') || nameLower.includes('gfiber')) return 'google-fiber'
-  if (nameLower.includes('starlink')) return 'starlink'
-  if (nameLower.includes('viasat')) return 'viasat'
-  if (nameLower.includes('xfinity') || nameLower.includes('comcast')) return 'xfinity'
-  if (nameLower.includes('metronet')) return 'metronet'
-  return null
-}
+// Convert RealPlan to SuggestedPlan format for frontend compatibility
+function realPlanToSuggestedPlan(plan: RealPlan): SuggestedPlan {
+  const features: string[] = []
+  if (!plan.contractRequired) features.push('No contract')
+  if (plan.dataCapGb === null) features.push('Unlimited data')
+  if (plan.latency && plan.latency < 20) features.push(`${plan.latency}ms latency`)
+  if (plan.uploadSpeed === plan.downloadSpeed) features.push('Symmetric speeds')
+  if (plan.introPrice) features.push(`$${plan.introPrice}/mo intro rate`)
 
-// Get relevant plans based on user query and available providers
-function getSuggestedPlans(message: string, availableProviderNames?: string[]): SuggestedPlan[] {
-  const lowerMessage = message.toLowerCase()
-  let allPlans = getAllFeaturedPlans()
-
-  // FIRST: Filter by available providers in user's ZIP (if we have that data)
-  if (availableProviderNames && availableProviderNames.length > 0) {
-    const availableSlugs = availableProviderNames
-      .map(name => mapProviderNameToSlug(name))
-      .filter((slug): slug is string => slug !== null)
-
-    if (availableSlugs.length > 0) {
-      allPlans = allPlans.filter(p => availableSlugs.includes(p.providerSlug))
-    }
+  const tierDescriptions = {
+    budget: 'Budget-friendly option',
+    value: 'Best value for most users',
+    premium: 'Premium high-speed option'
   }
 
-  // If no plans available after ZIP filtering, return empty (don't show irrelevant plans)
-  if (allPlans.length === 0) {
-    return []
+  return {
+    planName: plan.planName,
+    price: plan.price,
+    downloadSpeed: plan.downloadSpeed,
+    uploadSpeed: plan.uploadSpeed,
+    technology: plan.technology,
+    tier: plan.tier,
+    features,
+    bestFor: tierDescriptions[plan.tier],
+    providerName: plan.providerName,
+    providerSlug: getProviderSlug(plan.providerName),
+  }
+}
+
+// Get relevant plans based on user query and ZIP code (uses REAL database data)
+async function getSuggestedPlans(message: string, zipCode?: string): Promise<SuggestedPlan[]> {
+  if (!zipCode) return []
+
+  const lowerMessage = message.toLowerCase()
+
+  // Determine filters based on user message
+  let technology: 'Fiber' | 'Cable' | '5G' | 'Satellite' | undefined
+  let tier: 'budget' | 'value' | 'premium' | undefined
+  let providerName: string | undefined
+
+  // Check for technology preferences
+  if (lowerMessage.includes('fiber')) technology = 'Fiber'
+  else if (lowerMessage.includes('5g') || lowerMessage.includes('wireless')) technology = '5G'
+  else if (lowerMessage.includes('cable')) technology = 'Cable'
+  else if (lowerMessage.includes('satellite') || lowerMessage.includes('starlink') || lowerMessage.includes('viasat')) technology = 'Satellite'
+
+  // Check for tier preferences
+  if (lowerMessage.includes('cheap') || lowerMessage.includes('budget') || lowerMessage.includes('affordable')) {
+    tier = 'budget'
+  } else if (lowerMessage.includes('fast') || lowerMessage.includes('premium') || lowerMessage.includes('gaming')) {
+    tier = 'premium'
   }
 
   // Check for specific provider mentions
-  const mentionedProviders: string[] = []
-  if (lowerMessage.includes('frontier')) mentionedProviders.push('frontier-fiber')
-  if (lowerMessage.includes('at&t') || lowerMessage.includes('att')) mentionedProviders.push('att-internet')
-  if (lowerMessage.includes('spectrum')) mentionedProviders.push('spectrum')
-  if (lowerMessage.includes('t-mobile') || lowerMessage.includes('tmobile')) mentionedProviders.push('t-mobile')
-  if (lowerMessage.includes('wow')) mentionedProviders.push('wow')
-  if (lowerMessage.includes('google fiber') || lowerMessage.includes('gfiber')) mentionedProviders.push('google-fiber')
-  if (lowerMessage.includes('starlink')) mentionedProviders.push('starlink')
-  if (lowerMessage.includes('viasat')) mentionedProviders.push('viasat')
-  if (lowerMessage.includes('xfinity') || lowerMessage.includes('comcast')) mentionedProviders.push('xfinity')
-  if (lowerMessage.includes('metronet')) mentionedProviders.push('metronet')
+  if (lowerMessage.includes('frontier')) providerName = 'Frontier'
+  else if (lowerMessage.includes('at&t') || lowerMessage.includes('att')) providerName = 'AT&T'
+  else if (lowerMessage.includes('spectrum')) providerName = 'Spectrum'
+  else if (lowerMessage.includes('xfinity') || lowerMessage.includes('comcast')) providerName = 'Xfinity'
+  else if (lowerMessage.includes('t-mobile') || lowerMessage.includes('tmobile')) providerName = 'T-Mobile'
+  else if (lowerMessage.includes('verizon')) providerName = 'Verizon'
+  else if (lowerMessage.includes('google fiber')) providerName = 'Google Fiber'
 
-  // Check for tier preferences
-  const wantsBudget = lowerMessage.includes('cheap') || lowerMessage.includes('budget') || lowerMessage.includes('affordable')
-  const wantsPremium = lowerMessage.includes('fast') || lowerMessage.includes('premium') || lowerMessage.includes('best speed') || lowerMessage.includes('gaming')
-  const wantsValue = lowerMessage.includes('value') || lowerMessage.includes('recommend') || lowerMessage.includes('best')
+  try {
+    // Get REAL plans from database
+    const realPlans = await getPlansForZip(zipCode, {
+      technology,
+      tier,
+      providerName,
+      limit: 8
+    })
 
-  // Check for technology preferences
-  const wantsFiber = lowerMessage.includes('fiber')
-  const wants5G = lowerMessage.includes('5g') || lowerMessage.includes('wireless')
-  const wantsCable = lowerMessage.includes('cable')
-  const wantsSatellite = lowerMessage.includes('satellite') || lowerMessage.includes('rural') ||
-                         lowerMessage.includes('starlink') || lowerMessage.includes('viasat')
-
-  let filteredPlans = allPlans
-
-  // Filter by mentioned providers (only if they're available in user's area)
-  if (mentionedProviders.length > 0) {
-    const availableMentioned = filteredPlans.filter(p => mentionedProviders.includes(p.providerSlug))
-    if (availableMentioned.length > 0) {
-      filteredPlans = availableMentioned
-    }
-    // If mentioned provider not available, we'll show what IS available
+    // Convert to frontend format and limit to 4
+    return realPlans.slice(0, 4).map(realPlanToSuggestedPlan)
+  } catch (error) {
+    console.error('Error fetching plans:', error)
+    return []
   }
-
-  // Filter by technology
-  if (wantsFiber) {
-    const fiberPlans = filteredPlans.filter(p => p.technology === 'Fiber')
-    if (fiberPlans.length > 0) filteredPlans = fiberPlans
-  } else if (wants5G) {
-    const fiveGPlans = filteredPlans.filter(p => p.technology === '5G')
-    if (fiveGPlans.length > 0) filteredPlans = fiveGPlans
-  } else if (wantsCable) {
-    const cablePlans = filteredPlans.filter(p => p.technology === 'Cable')
-    if (cablePlans.length > 0) filteredPlans = cablePlans
-  } else if (wantsSatellite) {
-    const satellitePlans = filteredPlans.filter(p => p.technology === 'Satellite')
-    if (satellitePlans.length > 0) filteredPlans = satellitePlans
-  }
-
-  // Filter by tier preference
-  if (wantsBudget) {
-    const budgetPlans = filteredPlans.filter(p => p.tier === 'budget')
-    if (budgetPlans.length > 0) filteredPlans = budgetPlans
-  } else if (wantsPremium) {
-    const premiumPlans = filteredPlans.filter(p => p.tier === 'premium')
-    if (premiumPlans.length > 0) filteredPlans = premiumPlans
-  } else if (wantsValue) {
-    // For general "best" queries, prioritize value tier but include others
-    const valuePlans = filteredPlans.filter(p => p.tier === 'value')
-    if (valuePlans.length > 0) {
-      filteredPlans = valuePlans
-    }
-  }
-
-  // Sort by value score (speed per dollar)
-  filteredPlans.sort((a, b) => (b.downloadSpeed / b.price) - (a.downloadSpeed / a.price))
-
-  // Limit to 4 plans max for display
-  return filteredPlans.slice(0, 4) as SuggestedPlan[]
 }
 
 const anthropic = new Anthropic({
@@ -194,39 +171,19 @@ Example responses for general questions (not ordering yet):
 Only include order links when contextually appropriate - but when someone wants to order, make it easy!`
 }
 
-// Build featured plans section with real pricing data
+// Build featured plans section - now dynamic based on ZIP
+// This is called with ZIP-specific data injected into the prompt
 function buildFeaturedPlansSection(): string {
-  const lines = [
-    '\n\nFEATURED RESIDENTIAL INTERNET PLANS (Real FCC-Verified Pricing):',
-    'When users ask about plans, pricing, or recommendations, use this accurate data:\n'
-  ]
+  // Base guidance for the AI - actual plans are injected dynamically per ZIP
+  return `
 
-  for (const provider of featuredPlans) {
-    lines.push(`**${provider.providerName}** (${provider.plans[0].technology}):`)
-    for (const plan of provider.plans) {
-      const speedStr = plan.uploadSpeed === plan.downloadSpeed
-        ? `${plan.downloadSpeed}/${plan.uploadSpeed} Mbps symmetric`
-        : `${plan.downloadSpeed}/${plan.uploadSpeed} Mbps`
-      const tierLabel = plan.tier === 'budget' ? 'Budget' : plan.tier === 'value' ? 'Best Value' : 'Premium'
-      lines.push(`  - ${plan.planName}: $${plan.price}/mo - ${speedStr} [${tierLabel}]`)
-    }
-    lines.push('')
-  }
-
-  // Add best value rankings
-  const valueRanked = getBestValuePlans()
-  lines.push('BEST VALUE RANKINGS (by speed per dollar):')
-  valueRanked.slice(0, 4).forEach((plan, i) => {
-    lines.push(`${i + 1}. ${plan.providerName} ${plan.planName} - $${plan.price}/mo for ${plan.downloadSpeed} Mbps`)
-  })
-
-  lines.push('\nWhen recommending plans:')
-  lines.push('- Always mention specific plan names and accurate prices')
-  lines.push('- Highlight symmetric upload speeds for fiber plans (great for video calls, uploads)')
-  lines.push('- Frontier Fiber 500 at $54.99 is the best value in most markets')
-  lines.push('- Include the order link for the provider when suggesting a plan')
-
-  return lines.join('\n')
+PLAN RECOMMENDATION GUIDANCE:
+When recommending plans, use the ZIP-specific plan data provided in the context.
+- Always mention specific plan names and accurate prices from the data
+- Highlight symmetric upload speeds for fiber plans (great for video calls, uploads)
+- Prioritize fiber > cable > 5G > satellite
+- Include the order link for the provider when suggesting a plan
+- If no plans are shown for a ZIP, recommend checking with major providers directly`
 }
 
 const SYSTEM_PROMPT = `You are an expert internet service advisor for InternetProviders.ai. Your role is to help users find the best internet service for their needs AND convert them into customers by directing them to order links.
@@ -412,6 +369,10 @@ export async function POST(request: NextRequest) {
 - ${fiberPct}% have fiber internet access
 - ${cablePct}% have cable internet access`
       }
+
+      // Add REAL plan data from broadband_plans table
+      const plansContext = await buildPlansContextForZip(zipCode)
+      providerContext += plansContext
     }
 
     const systemPrompt = SYSTEM_PROMPT + providerContext
@@ -433,9 +394,9 @@ export async function POST(request: NextRequest) {
     // Get the last user message to check for plan queries
     const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || ''
 
-    // Determine if we should show suggested plans (only if we have ZIP-based availability data)
+    // Determine if we should show suggested plans (uses REAL database data)
     const shouldShowPlans = isPlanQuery(lastUserMessage)
-    const suggestedPlans = shouldShowPlans ? getSuggestedPlans(lastUserMessage, availableProviderNames) : []
+    const suggestedPlans = shouldShowPlans ? await getSuggestedPlans(lastUserMessage, zipCode) : []
 
     return NextResponse.json({
       message: assistantMessage,
