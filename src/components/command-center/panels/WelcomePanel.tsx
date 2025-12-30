@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, ReactNode } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { useCommandCenter } from '@/contexts/CommandCenterContext'
 import { useLocation } from '@/contexts/LocationContext'
@@ -27,11 +27,13 @@ export function WelcomePanel() {
     await detectFromGPS()
   }
 
-  // If location is already known, auto-trigger
-  if (location?.zipCode && !isLoading) {
-    // Auto-set ZIP from detected location
-    setTimeout(() => setZipCode(location.zipCode!), 500)
-  }
+  // If location is already known, auto-trigger (only once)
+  useEffect(() => {
+    if (location?.zipCode && !isLoading) {
+      const timer = setTimeout(() => setZipCode(location.zipCode!), 500)
+      return () => clearTimeout(timer)
+    }
+  }, [location?.zipCode, isLoading, setZipCode])
 
   return (
     <PanelWrapper

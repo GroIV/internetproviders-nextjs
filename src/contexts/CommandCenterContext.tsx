@@ -91,9 +91,9 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
   const [layout, setLayout] = useState<'split' | 'stacked'>('split')
   const [mobileTab, setMobileTab] = useState<'chat' | 'panels'>('chat')
 
-  // Show a panel (adds to active panels)
+  // Show a panel (adds to active panels, replaces existing of same type)
   const showPanel = useCallback((type: PanelType, data?: Record<string, unknown>) => {
-    const id = `${type}-${Date.now()}`
+    const id = `${type}-panel` // Consistent ID per type
     const priority = activePanels.length
 
     setActivePanels(prev => {
@@ -118,15 +118,23 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
     setContext(prev => ({ ...prev, ...updates }))
   }, [])
 
-  // Set ZIP code and trigger recommendations
+  // Set ZIP code and trigger recommendations (idempotent - won't duplicate)
   const setZipCode = useCallback((zip: string) => {
-    setContext(prev => ({ ...prev, zipCode: zip }))
+    setContext(prev => {
+      // Skip if ZIP is already set to this value
+      if (prev.zipCode === zip) return prev
+      return { ...prev, zipCode: zip }
+    })
 
-    // When ZIP is set, show recommendations panel
+    // When ZIP is set, show recommendations panel (only one)
     setActivePanels(prev => {
+      // Don't add if we already have a recommendations panel
+      if (prev.some(p => p.type === 'recommendations')) {
+        return prev
+      }
       const filtered = prev.filter(p => p.type !== 'welcome')
       return [...filtered, {
-        id: `recommendations-${Date.now()}`,
+        id: 'recommendations-panel',
         type: 'recommendations',
         data: { zipCode: zip },
         priority: 1
