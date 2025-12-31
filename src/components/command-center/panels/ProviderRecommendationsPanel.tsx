@@ -133,9 +133,15 @@ export function ProviderRecommendationsPanel({ data }: { data?: { zipCode?: stri
                   <ProviderLogo slug={provider.slug} name={provider.name} size="lg" />
                 </div>
 
-                {/* Provider name */}
+                {/* Provider name and coverage */}
                 <div className="text-center">
-                  <div className="text-base font-semibold text-white mb-3">{provider.name}</div>
+                  <div className="text-base font-semibold text-white">{provider.name}</div>
+                  {provider.coveragePercent < 100 && (
+                    <div className="text-[10px] text-gray-500 mb-2">
+                      {Math.round(provider.coveragePercent)}% area coverage
+                    </div>
+                  )}
+                  {provider.coveragePercent >= 100 && <div className="mb-3" />}
 
                   {/* Price and Speed side by side */}
                   {hasRealData ? (
@@ -205,6 +211,13 @@ export function ProviderRecommendationsPanel({ data }: { data?: { zipCode?: stri
               </svg>
               Speed Test
             </button>
+          </div>
+
+          {/* Disclaimer */}
+          <div className="col-span-2 pt-2">
+            <p className="text-[10px] text-gray-500 text-center">
+              Coverage based on FCC data for your metro area. Availability may vary by specific address.
+            </p>
           </div>
         </div>
       )}
