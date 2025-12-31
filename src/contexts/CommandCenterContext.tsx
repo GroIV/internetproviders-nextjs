@@ -2,68 +2,74 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 
-// Panel types
+// Panel types - single panel at a time
 export type PanelType =
   | 'welcome'
   | 'recommendations'
+  | 'providerDetail'
   | 'comparison'
   | 'coverage'
-  | 'speedPrice'
+  | 'speedTest'
+  | 'quiz'
 
 export interface PanelConfig {
-  id: string
   type: PanelType
   data?: Record<string, unknown>
-  priority: number
 }
 
 export interface ConversationContext {
   zipCode: string | null
+  lastProvider: string | null // For provider detail panel
   mentionedProviders: string[]
   mentionedTechnologies: string[]
   comparisonRequested: boolean
-  intent: 'explore' | 'compare' | 'recommend' | 'details' | null
+  intent: 'explore' | 'compare' | 'recommend' | 'details' | 'speedtest' | 'quiz' | null
 }
 
 interface CommandCenterState {
-  activePanels: PanelConfig[]
+  activePanel: PanelConfig
   context: ConversationContext
-  layout: 'split' | 'stacked'
-  mobileTab: 'chat' | 'panels'
+  mobileTab: 'chat' | 'panel'
 }
 
 interface CommandCenterContextType extends CommandCenterState {
-  // Panel management
+  // Panel management - single panel
   showPanel: (type: PanelType, data?: Record<string, unknown>) => void
-  hidePanel: (id: string) => void
-  clearPanels: () => void
+  goBack: () => void // Go back to recommendations or welcome
 
   // Context updates
   updateContext: (updates: Partial<ConversationContext>) => void
   setZipCode: (zip: string) => void
 
   // Layout
-  setLayout: (layout: 'split' | 'stacked') => void
-  setMobileTab: (tab: 'chat' | 'panels') => void
+  setMobileTab: (tab: 'chat' | 'panel') => void
 
-  // Process AI message for panel triggers
-  processMessage: (message: string, isAI: boolean) => void
+  // Process user message for panel triggers
+  processMessage: (message: string) => void
 }
 
 const CommandCenterContext = createContext<CommandCenterContextType | null>(null)
 
-// Provider name patterns for detection
+// Provider name patterns for detection - expanded with slugs
 const PROVIDER_PATTERNS = [
-  { pattern: /\b(at&t|att)\b/i, name: 'AT&T' },
-  { pattern: /\bspectrum\b/i, name: 'Spectrum' },
-  { pattern: /\bxfinity\b/i, name: 'Xfinity' },
-  { pattern: /\bfrontier\b/i, name: 'Frontier' },
-  { pattern: /\bt-mobile|tmobile\b/i, name: 'T-Mobile' },
-  { pattern: /\bverizon\b/i, name: 'Verizon' },
-  { pattern: /\bgoogle fiber\b/i, name: 'Google Fiber' },
-  { pattern: /\bcox\b/i, name: 'Cox' },
-  { pattern: /\bstarlink\b/i, name: 'Starlink' },
-  { pattern: /\boptimum\b/i, name: 'Optimum' },
+  { pattern: /\b(at&t|att)\b/i, name: 'AT&T', slug: 'att-internet' },
+  { pattern: /\bspectrum\b/i, name: 'Spectrum', slug: 'spectrum' },
+  { pattern: /\bxfinity\b/i, name: 'Xfinity', slug: 'xfinity' },
+  { pattern: /\bfrontier\b/i, name: 'Frontier', slug: 'frontier' },
+  { pattern: /\bt-mobile|tmobile\b/i, name: 'T-Mobile', slug: 't-mobile' },
+  { pattern: /\bverizon\s*(fios)?\b/i, name: 'Verizon', slug: 'verizon-fios' },
+  { pattern: /\bgoogle\s*fiber\b/i, name: 'Google Fiber', slug: 'google-fiber' },
+  { pattern: /\bcox\b/i, name: 'Cox', slug: 'cox' },
+  { pattern: /\bstarlink\b/i, name: 'Starlink', slug: 'starlink' },
+  { pattern: /\boptimum\b/i, name: 'Optimum', slug: 'optimum' },
+  { pattern: /\bcenturylink\b/i, name: 'CenturyLink', slug: 'centurylink' },
+  { pattern: /\bwindstream\b/i, name: 'Windstream', slug: 'windstream' },
+  { pattern: /\bmetronet\b/i, name: 'Metronet', slug: 'metronet' },
+  { pattern: /\bziply\b/i, name: 'Ziply Fiber', slug: 'ziply-fiber' },
+  { pattern: /\bbrightspeed\b/i, name: 'Brightspeed', slug: 'brightspeed' },
+  { pattern: /\bbreezeline\b/i, name: 'Breezeline', slug: 'breezeline' },
+  { pattern: /\bviasat\b/i, name: 'Viasat', slug: 'viasat' },
+  { pattern: /\bhughesnet\b/i, name: 'HughesNet', slug: 'hughesnet' },
 ]
 
 // Technology patterns
@@ -76,90 +82,68 @@ const TECH_PATTERNS = [
 ]
 
 export function CommandCenterProvider({ children }: { children: ReactNode }) {
-  const [activePanels, setActivePanels] = useState<PanelConfig[]>([
-    { id: 'welcome-1', type: 'welcome', priority: 0 }
-  ])
+  // Single active panel
+  const [activePanel, setActivePanel] = useState<PanelConfig>({ type: 'welcome' })
 
   const [context, setContext] = useState<ConversationContext>({
     zipCode: null,
+    lastProvider: null,
     mentionedProviders: [],
     mentionedTechnologies: [],
     comparisonRequested: false,
     intent: null,
   })
 
-  const [layout, setLayout] = useState<'split' | 'stacked'>('split')
-  const [mobileTab, setMobileTab] = useState<'chat' | 'panels'>('chat')
+  const [mobileTab, setMobileTab] = useState<'chat' | 'panel'>('chat')
 
-  // Show a panel (adds to active panels, replaces existing of same type)
+  // Show a panel (replaces current panel)
   const showPanel = useCallback((type: PanelType, data?: Record<string, unknown>) => {
-    const id = `${type}-panel` // Consistent ID per type
-    const priority = activePanels.length
-
-    setActivePanels(prev => {
-      // Remove existing panel of same type (replace it)
-      const filtered = prev.filter(p => p.type !== type)
-      return [...filtered, { id, type, data, priority }]
-    })
-  }, [activePanels.length])
-
-  // Hide a specific panel
-  const hidePanel = useCallback((id: string) => {
-    setActivePanels(prev => prev.filter(p => p.id !== id))
+    setActivePanel({ type, data })
+    // Switch to panel tab on mobile when showing new panel
+    setMobileTab('panel')
   }, [])
 
-  // Clear all panels (show welcome)
-  const clearPanels = useCallback(() => {
-    setActivePanels([{ id: 'welcome-1', type: 'welcome', priority: 0 }])
-  }, [])
+  // Go back to recommendations (if ZIP set) or welcome
+  const goBack = useCallback(() => {
+    if (context.zipCode) {
+      setActivePanel({ type: 'recommendations', data: { zipCode: context.zipCode } })
+    } else {
+      setActivePanel({ type: 'welcome' })
+    }
+  }, [context.zipCode])
 
   // Update conversation context
   const updateContext = useCallback((updates: Partial<ConversationContext>) => {
     setContext(prev => ({ ...prev, ...updates }))
   }, [])
 
-  // Set ZIP code and trigger recommendations (idempotent - won't duplicate)
+  // Set ZIP code and show recommendations
   const setZipCode = useCallback((zip: string) => {
     setContext(prev => {
-      // Skip if ZIP is already set to this value
       if (prev.zipCode === zip) return prev
       return { ...prev, zipCode: zip }
     })
-
-    // When ZIP is set, show recommendations panel (only one)
-    setActivePanels(prev => {
-      // Don't add if we already have a recommendations panel
-      if (prev.some(p => p.type === 'recommendations')) {
-        return prev
-      }
-      const filtered = prev.filter(p => p.type !== 'welcome')
-      return [...filtered, {
-        id: 'recommendations-panel',
-        type: 'recommendations',
-        data: { zipCode: zip },
-        priority: 1
-      }]
-    })
-
-    // Switch to panels tab on mobile
-    setMobileTab('panels')
+    // Show recommendations panel
+    setActivePanel({ type: 'recommendations', data: { zipCode: zip } })
+    setMobileTab('panel')
   }, [])
 
-  // Process a message to detect intents and trigger panels
-  const processMessage = useCallback((message: string, isAI: boolean) => {
+  // Process a user message to detect intents and trigger panels
+  const processMessage = useCallback((message: string) => {
     const lowerMessage = message.toLowerCase()
 
     // Detect ZIP code
     const zipMatch = message.match(/\b(\d{5})\b/)
     if (zipMatch && !context.zipCode) {
       setZipCode(zipMatch[1])
+      return // ZIP detection is highest priority
     }
 
     // Detect providers mentioned
-    const mentionedProviders: string[] = []
-    for (const { pattern, name } of PROVIDER_PATTERNS) {
+    const detectedProviders: { name: string; slug: string }[] = []
+    for (const { pattern, name, slug } of PROVIDER_PATTERNS) {
       if (pattern.test(message)) {
-        mentionedProviders.push(name)
+        detectedProviders.push({ name, slug })
       }
     }
 
@@ -172,53 +156,85 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
     }
 
     // Update context with detected entities
-    if (mentionedProviders.length > 0 || mentionedTechnologies.length > 0) {
+    if (detectedProviders.length > 0 || mentionedTechnologies.length > 0) {
       setContext(prev => ({
         ...prev,
-        mentionedProviders: [...new Set([...prev.mentionedProviders, ...mentionedProviders])],
+        mentionedProviders: [...new Set([...prev.mentionedProviders, ...detectedProviders.map(p => p.name)])],
         mentionedTechnologies: [...new Set([...prev.mentionedTechnologies, ...mentionedTechnologies])],
+        lastProvider: detectedProviders.length > 0 ? detectedProviders[0].slug : prev.lastProvider,
       }))
     }
 
-    // Detect comparison intent
-    if (/compare|vs|versus|difference|better/i.test(lowerMessage)) {
-      const providers = [...context.mentionedProviders, ...mentionedProviders]
-      if (providers.length >= 2) {
+    // === INTENT DETECTION (in priority order) ===
+
+    // 1. Speed test intent
+    if (/speed\s*test|test.*speed|how fast|check.*speed|run.*test/i.test(lowerMessage)) {
+      setContext(prev => ({ ...prev, intent: 'speedtest' }))
+      showPanel('speedTest')
+      return
+    }
+
+    // 2. Quiz/recommendation helper intent
+    if (/quiz|help me (choose|pick|decide)|which (provider|one|internet)|recommend.*for me|what.*should.*get/i.test(lowerMessage)) {
+      setContext(prev => ({ ...prev, intent: 'quiz' }))
+      showPanel('quiz')
+      return
+    }
+
+    // 3. Comparison intent (need 2 providers)
+    if (/compare|vs\.?|versus|difference|better|which is/i.test(lowerMessage)) {
+      const allProviders = [...context.mentionedProviders, ...detectedProviders.map(p => p.name)]
+      const uniqueProviders = [...new Set(allProviders)]
+      if (uniqueProviders.length >= 2) {
         setContext(prev => ({ ...prev, comparisonRequested: true, intent: 'compare' }))
-        showPanel('comparison', { providers: providers.slice(0, 2) })
+        showPanel('comparison', { providers: uniqueProviders.slice(0, 2) })
+        return
       }
     }
 
-    // Detect recommendation intent
-    if (/recommend|suggest|best|options|available|show me/i.test(lowerMessage) && context.zipCode) {
+    // 4. Provider detail intent (asking about specific provider)
+    if (detectedProviders.length === 1) {
+      const provider = detectedProviders[0]
+      // Check if asking about the provider specifically
+      if (/about|tell me|info|plans|pricing|review|good|worth|details/i.test(lowerMessage)) {
+        setContext(prev => ({ ...prev, intent: 'details', lastProvider: provider.slug }))
+        showPanel('providerDetail', { providerSlug: provider.slug, providerName: provider.name })
+        return
+      }
+    }
+
+    // 5. Coverage/stats intent
+    if (/coverage|available|statistics|how many|percent|what.*available/i.test(lowerMessage) && context.zipCode) {
+      showPanel('coverage', { zipCode: context.zipCode })
+      return
+    }
+
+    // 6. General recommendations (with ZIP)
+    if (/recommend|suggest|best|options|show me|what.*have|providers/i.test(lowerMessage) && context.zipCode) {
       setContext(prev => ({ ...prev, intent: 'recommend' }))
       showPanel('recommendations', { zipCode: context.zipCode })
+      return
     }
 
-    // Detect coverage/stats intent
-    if (/coverage|available|statistics|how many|percent/i.test(lowerMessage) && context.zipCode) {
-      showPanel('coverage', { zipCode: context.zipCode })
+    // 7. If single provider mentioned without specific question, show detail
+    if (detectedProviders.length === 1 && context.zipCode) {
+      const provider = detectedProviders[0]
+      setContext(prev => ({ ...prev, intent: 'details', lastProvider: provider.slug }))
+      showPanel('providerDetail', { providerSlug: provider.slug, providerName: provider.name })
     }
 
-    // Detect value/price analysis intent
-    if (/value|price|cheap|budget|worth|speed per dollar/i.test(lowerMessage) && context.zipCode) {
-      showPanel('speedPrice', { zipCode: context.zipCode })
-    }
   }, [context.zipCode, context.mentionedProviders, setZipCode, showPanel])
 
   return (
     <CommandCenterContext.Provider
       value={{
-        activePanels,
+        activePanel,
         context,
-        layout,
         mobileTab,
         showPanel,
-        hidePanel,
-        clearPanels,
+        goBack,
         updateContext,
         setZipCode,
-        setLayout,
         setMobileTab,
         processMessage,
       }}

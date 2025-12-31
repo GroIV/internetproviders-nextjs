@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect, ReactNode } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useCommandCenter } from '@/contexts/CommandCenterContext'
 import { useLocation } from '@/contexts/LocationContext'
 import { PanelWrapper } from './PanelWrapper'
 
 export function WelcomePanel() {
-  const { setZipCode } = useCommandCenter()
+  const { setZipCode, showPanel } = useCommandCenter()
   const { location, detectFromGPS, isLoading } = useLocation()
   const [zipInput, setZipInput] = useState('')
   const [isValidating, setIsValidating] = useState(false)
@@ -164,38 +164,26 @@ export function WelcomePanel() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          <QuickAction
-            icon={
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            }
-            label="Speed Test"
-            href="/tools/speed-test"
-          />
-          <QuickAction
-            icon={
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            }
-            label="Take Quiz"
-            href="/tools/quiz"
-          />
+          <button
+            onClick={() => showPanel('speedTest')}
+            className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-400 text-sm hover:text-white hover:border-gray-600 transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Speed Test
+          </button>
+          <button
+            onClick={() => showPanel('quiz')}
+            className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-400 text-sm hover:text-white hover:border-gray-600 transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Take Quiz
+          </button>
         </motion.div>
       </div>
     </PanelWrapper>
-  )
-}
-
-function QuickAction({ icon, label, href }: { icon: ReactNode; label: string; href: string }) {
-  return (
-    <a
-      href={href}
-      className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-400 text-sm hover:text-white hover:border-gray-600 transition-all"
-    >
-      {icon}
-      {label}
-    </a>
   )
 }

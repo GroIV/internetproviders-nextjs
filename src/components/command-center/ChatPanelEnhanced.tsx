@@ -1,14 +1,40 @@
 'use client'
 
 import { useEffect, useCallback, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import { ChatWindow } from '@/components/ChatWindow'
 import { useChat } from '@/contexts/ChatContext'
 import { useCommandCenter } from '@/contexts/CommandCenterContext'
 import { useLocation } from '@/contexts/LocationContext'
 
+// Quick action chip component
+function QuickActionChip({
+  icon,
+  label,
+  onClick,
+  gradient
+}: {
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
+  gradient: string
+}) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-white bg-gradient-to-r ${gradient} shadow-lg hover:shadow-xl transition-shadow`}
+    >
+      {icon}
+      {label}
+    </motion.button>
+  )
+}
+
 export function ChatPanelEnhanced() {
-  const { messages, hasWelcomed, initializeChat } = useChat()
-  const { processMessage, setZipCode, context } = useCommandCenter()
+  const { messages, hasWelcomed, initializeChat, updateCurrentZip } = useChat()
+  const { processMessage, setZipCode, context, showPanel } = useCommandCenter()
   const { location } = useLocation()
   const [hasInitialized, setHasInitialized] = useState(false)
   const processedMessagesRef = useRef<Set<string>>(new Set())
@@ -56,7 +82,7 @@ export function ChatPanelEnhanced() {
       const msgKey = `${msg.role}-${msg.content.substring(0, 50)}-${messages.length}`
       if (!processedMessagesRef.current.has(msgKey)) {
         processedMessagesRef.current.add(msgKey)
-        processMessage(msg.content, false)
+        processMessage(msg.content)
       }
     }
   }, [processMessage, messages.length])
@@ -67,12 +93,17 @@ export function ChatPanelEnhanced() {
     }
   }, [lastMessage, messages.length, processUserMessage])
 
-  // Sync ZIP from location context to command center
+  // Sync ZIP from location context to command center and chat (always keep in sync)
   useEffect(() => {
-    if (location?.zipCode && !context.zipCode) {
-      setZipCode(location.zipCode)
+    if (location?.zipCode) {
+      // Update command center if different
+      if (location.zipCode !== context.zipCode) {
+        setZipCode(location.zipCode)
+      }
+      // Always update chat context's current ZIP
+      updateCurrentZip(location.zipCode)
     }
-  }, [location?.zipCode, context.zipCode, setZipCode])
+  }, [location?.zipCode, context.zipCode, setZipCode, updateCurrentZip])
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-gray-900 to-gray-950">
@@ -93,6 +124,48 @@ export function ChatPanelEnhanced() {
               {context.zipCode ? `Helping with ZIP ${context.zipCode}` : 'Ready to help you find the best internet'}
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Quick Action Chips - Try these to see panel update */}
+      <div className="flex-shrink-0 px-4 py-2 border-b border-gray-800/30 bg-gray-900/50">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <span className="text-[10px] text-gray-500 uppercase tracking-wide flex-shrink-0">Try:</span>
+
+          <QuickActionChip
+            icon={
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            }
+            label="Speed Test"
+            onClick={() => showPanel('speedTest')}
+            gradient="from-purple-500 to-pink-500"
+          />
+
+          <QuickActionChip
+            icon={
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            }
+            label="Coverage"
+            onClick={() => showPanel('coverage', { zipCode: context.zipCode })}
+            gradient="from-green-500 to-emerald-500"
+          />
+
+          {context.zipCode && (
+            <QuickActionChip
+              icon={
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              }
+              label="Providers"
+              onClick={() => showPanel('recommendations', { zipCode: context.zipCode })}
+              gradient="from-cyan-500 to-blue-500"
+            />
+          )}
         </div>
       </div>
 

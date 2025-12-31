@@ -115,6 +115,7 @@ export async function getPlansForZip(
     minSpeed?: number
     providerName?: string
     limit?: number
+    skipDedup?: boolean  // Skip deduplication - use for API aggregation
   }
 ): Promise<RealPlan[]> {
   const supabase = createAdminClient()
@@ -137,17 +138,29 @@ export async function getPlansForZip(
     .gt('monthly_price', 0)
 
   // Filter by providers available in the ZIP
-  // Match provider names (case-insensitive partial match)
+  // Match FCC provider names to broadband_plans provider names
   const providerMatches = availableProviders.map(name => {
-    // Normalize provider names for matching
-    if (name.toLowerCase().includes('at&t')) return 'AT&T'
-    if (name.toLowerCase().includes('comcast') || name.toLowerCase().includes('xfinity')) return 'Xfinity'
-    if (name.toLowerCase().includes('charter') || name.toLowerCase().includes('spectrum')) return 'Spectrum'
-    if (name.toLowerCase().includes('frontier')) return 'Frontier'
-    if (name.toLowerCase().includes('t-mobile')) return 'T-Mobile'
-    if (name.toLowerCase().includes('verizon')) return 'Verizon Fios'
-    if (name.toLowerCase().includes('google fiber')) return 'Google Fiber'
-    if (name.toLowerCase().includes('wow')) return 'WOW!'
+    const lower = name.toLowerCase()
+    // Normalize FCC provider names to match broadband_plans table
+    if (lower.includes('at&t')) return 'AT&T'
+    if (lower.includes('comcast') || lower.includes('xfinity')) return 'Xfinity'
+    if (lower.includes('charter') || lower.includes('spectrum')) return 'Spectrum'
+    if (lower.includes('frontier')) return 'Frontier'
+    if (lower.includes('t-mobile')) return 'T-Mobile'
+    if (lower.includes('verizon')) return 'Verizon Fios'
+    if (lower.includes('google')) return 'Google Fiber' // Google LLC -> Google Fiber
+    if (lower.includes('cox')) return 'Cox'
+    if (lower.includes('centurylink') || lower.includes('lumen')) return 'CenturyLink'
+    if (lower.includes('optimum') || lower.includes('altice')) return 'Optimum'
+    if (lower.includes('windstream')) return 'Windstream'
+    if (lower.includes('mediacom')) return 'Mediacom'
+    if (lower.includes('wow')) return 'WOW!'
+    if (lower.includes('brightspeed')) return 'Brightspeed'
+    if (lower.includes('ziply')) return 'Ziply Fiber'
+    if (lower.includes('metronet')) return 'Metronet'
+    if (lower.includes('starlink') || lower.includes('space exploration') || lower.includes('spacex')) return 'Starlink'
+    if (lower.includes('viasat')) return 'Viasat'
+    if (lower.includes('hughesnet') || lower.includes('echostar')) return 'HughesNet'
     return name
   }).filter(Boolean)
 
@@ -172,9 +185,16 @@ export async function getPlansForZip(
     query = query.ilike('provider_name', `%${options.providerName}%`)
   }
 
-  // Order by value (speed per dollar)
-  query = query.order('typical_download_speed', { ascending: false })
-  query = query.limit(options?.limit || 50)
+  // For skipDedup (API aggregation), we need ALL plans to calculate min/max properly
+  // Don't limit by speed order - get all plans
+  if (!options?.skipDedup) {
+    query = query.order('typical_download_speed', { ascending: false })
+    query = query.limit(options?.limit || 50)
+  } else {
+    // For aggregation, order by price to get cheapest plans first
+    query = query.order('monthly_price', { ascending: true })
+    query = query.limit(1000) // High limit to get all plans for aggregation
+  }
 
   const { data: plans, error } = await query
 
@@ -214,6 +234,11 @@ export async function getPlansForZip(
 
   // Sort by value score (best value first)
   filtered.sort((a, b) => b.valueScore - a.valueScore)
+
+  // Skip deduplication if requested (for API aggregation)
+  if (options?.skipDedup) {
+    return filtered.slice(0, options?.limit || 50)
+  }
 
   // Deduplicate: keep best plan per provider
   const seen = new Set<string>()
@@ -267,6 +292,105 @@ async function getSatellitePlans(): Promise<RealPlan[]> {
  */
 export function getProviderSlug(providerName: string): string {
   return PROVIDER_SLUG_MAP[providerName] || providerName.toLowerCase().replace(/\s+/g, '-')
+}
+
+/**
+ * Get aggregated plan stats (min price, max speed) for multiple providers
+ * Uses SQL aggregation for efficiency with large datasets
+ */
+export async function getPlanStatsForProviders(
+  providerNames: string[]
+): Promise<Map<string, { minPrice: number; maxSpeed: number; planCount: number }>> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('broadband_plans')
+    .select('provider_name')
+    .eq('is_active', true)
+    .eq('service_type', 'residential')
+    .gt('typical_download_speed', 0)
+    .gt('monthly_price', 0)
+    .in('provider_name', providerNames)
+
+  if (error || !data) {
+    console.error('Error fetching plan stats:', error)
+    return new Map()
+  }
+
+  // Group and aggregate in JS since Supabase doesn't support native aggregation
+  // Use RPC function for efficiency with large datasets
+  const { data: stats, error: statsError } = await supabase.rpc('get_provider_plan_stats', {
+    provider_names: providerNames
+  })
+
+  if (statsError || !stats) {
+    // Fallback: do aggregation manually (less efficient but works)
+    const result = new Map<string, { minPrice: number; maxSpeed: number; planCount: number }>()
+
+    for (const name of providerNames) {
+      // Exclude eRate (education rate) and business plans from consumer display
+      const { data: minPriceData } = await supabase
+        .from('broadband_plans')
+        .select('monthly_price')
+        .eq('provider_name', name)
+        .eq('is_active', true)
+        .eq('service_type', 'residential')
+        .gt('typical_download_speed', 0)
+        .gt('monthly_price', 0)
+        .not('service_plan_name', 'ilike', '%eRate%')
+        .not('service_plan_name', 'ilike', '%Business%')
+        .order('monthly_price', { ascending: true })
+        .limit(1)
+        .single()
+
+      const { data: maxSpeedData } = await supabase
+        .from('broadband_plans')
+        .select('typical_download_speed')
+        .eq('provider_name', name)
+        .eq('is_active', true)
+        .eq('service_type', 'residential')
+        .gt('typical_download_speed', 0)
+        .gt('monthly_price', 0)
+        .not('service_plan_name', 'ilike', '%eRate%')
+        .not('service_plan_name', 'ilike', '%Business%')
+        .order('typical_download_speed', { ascending: false })
+        .limit(1)
+        .single()
+
+      const { count } = await supabase
+        .from('broadband_plans')
+        .select('*', { count: 'exact', head: true })
+        .eq('provider_name', name)
+        .eq('is_active', true)
+        .eq('service_type', 'residential')
+        .gt('typical_download_speed', 0)
+        .gt('monthly_price', 0)
+        .not('service_plan_name', 'ilike', '%eRate%')
+        .not('service_plan_name', 'ilike', '%Business%')
+
+      if (minPriceData && maxSpeedData) {
+        result.set(getProviderSlug(name), {
+          minPrice: minPriceData.monthly_price,
+          maxSpeed: maxSpeedData.typical_download_speed,
+          planCount: count || 0
+        })
+      }
+    }
+
+    return result
+  }
+
+  // Process RPC results
+  const result = new Map<string, { minPrice: number; maxSpeed: number; planCount: number }>()
+  for (const stat of stats) {
+    result.set(getProviderSlug(stat.provider_name), {
+      minPrice: stat.min_price,
+      maxSpeed: stat.max_speed,
+      planCount: stat.plan_count
+    })
+  }
+
+  return result
 }
 
 /**

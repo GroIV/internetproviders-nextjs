@@ -33,9 +33,9 @@ export function CommandCenterLayout({ chatPanel, dynamicPanels }: CommandCenterL
             </span>
           </button>
           <button
-            onClick={() => setMobileTab('panels')}
+            onClick={() => setMobileTab('panel')}
             className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
-              mobileTab === 'panels'
+              mobileTab === 'panel'
                 ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-500/5'
                 : 'text-gray-400 hover:text-gray-300'
             }`}
@@ -44,7 +44,7 @@ export function CommandCenterLayout({ chatPanel, dynamicPanels }: CommandCenterL
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
               </svg>
-              Dashboard
+              Panel
             </span>
           </button>
         </div>
@@ -80,7 +80,7 @@ export function CommandCenterLayout({ chatPanel, dynamicPanels }: CommandCenterL
             </motion.div>
           ) : (
             <motion.div
-              key="panels"
+              key="panel"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}

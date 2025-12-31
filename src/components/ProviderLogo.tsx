@@ -7,12 +7,13 @@ import { getProviderLogoInfo } from '@/lib/providerLogos'
 interface ProviderLogoProps {
   slug: string
   name: string
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
   className?: string
 }
 
 // Wide containers for horizontal text logos
 const sizeClasses = {
+  xs: 'w-32 h-20',
   sm: 'w-28 h-16',
   md: 'w-40 h-20',
   lg: 'w-48 h-24',
@@ -21,6 +22,7 @@ const sizeClasses = {
 }
 
 const sizePx = {
+  xs: 128,
   sm: 112,
   md: 160,
   lg: 192,
@@ -29,6 +31,7 @@ const sizePx = {
 }
 
 const textSizes = {
+  xs: 'text-base',
   sm: 'text-lg',
   md: 'text-xl',
   lg: 'text-2xl',

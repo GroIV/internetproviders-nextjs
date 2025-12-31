@@ -42,7 +42,7 @@ function CountUp({ end, suffix = '%' }: { end: number; suffix?: string }) {
 }
 
 export function CoverageStatsPanel({ data }: { data?: { zipCode?: string } }) {
-  const { context, hidePanel } = useCommandCenter()
+  const { context, goBack } = useCommandCenter()
   const zipCode = data?.zipCode || context.zipCode
   const [coverage, setCoverage] = useState<CoverageData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -56,18 +56,19 @@ export function CoverageStatsPanel({ data }: { data?: { zipCode?: string } }) {
       try {
         // Fetch coverage stats from API
         const res = await fetch(`/api/providers/by-zip?zip=${zipCode}`)
-        const data = await res.json()
+        const apiResponse = await res.json()
 
-        if (data.success && data.coverageStats) {
+        if (apiResponse.success && apiResponse.data?.coverage) {
+          const coverage = apiResponse.data.coverage
           setCoverage({
-            fiber: Math.round((data.coverageStats.fiber_100_20 || 0) * 100),
-            cable: Math.round((data.coverageStats.cable_100_20 || 0) * 100),
-            dsl: Math.round((data.coverageStats.dsl_25_3 || 0) * 100),
-            wireless5g: Math.round((data.coverageStats.fixed_wireless_25_3 || 0) * 100),
+            fiber: coverage.fiber?.speed100_20 || 0,
+            cable: coverage.cable?.speed100_20 || 0,
+            dsl: 0, // DSL not in current API response
+            wireless5g: coverage.fixedWireless?.speed25_3 || 0,
             satellite: 100, // Satellite is always available
-            any100: Math.round((data.coverageStats.any_100_20 || 0) * 100),
+            any100: coverage.anyTechnology?.speed100_20 || 0,
           })
-          setCityName(data.coverageStats.city || '')
+          setCityName(apiResponse.data.city || '')
         }
       } catch (error) {
         console.error('Failed to fetch coverage:', error)
@@ -95,7 +96,7 @@ export function CoverageStatsPanel({ data }: { data?: { zipCode?: string } }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       }
-      onClose={() => hidePanel('coverage-panel')}
+      onClose={goBack}
     >
       {isLoading ? (
         <div className="space-y-4">
