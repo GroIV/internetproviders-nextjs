@@ -22,28 +22,12 @@ export async function getProvidersByZip(
 
   const supabase = createAdminClient()
 
-  // Step 1: Get CBSA code for this ZIP
-  const { data: zipData } = await supabase
-    .from('zip_cbsa_mapping')
-    .select('cbsa_code')
-    .eq('zip_code', zipCode)
-    .single()
+  // Use optimized RPC function that combines ZIP lookup with provider query
+  const { data: mappedProviders, error } = await supabase.rpc('get_providers_by_zip', {
+    zip: zipCode
+  })
 
-  if (!zipData?.cbsa_code) {
-    return []
-  }
-
-  // Step 2: Use deterministic mapping via cbsa_top_providers_v1 (backed by provider_fcc_map)
-  // Note: coverage_pct in this view is already a 0-100 percentage.
-  const { data: mappedProviders } = await supabase
-    .from('cbsa_top_providers_v1')
-    .select('our_provider_id, provider_slug, provider_name, technologies, coverage_pct')
-    .eq('cbsa_code', zipData.cbsa_code)
-    .gt('coverage_pct', 5) // filter noise: only providers with >5% CBSA coverage
-    .order('coverage_pct', { ascending: false })
-    .limit(50)
-
-  if (!mappedProviders || mappedProviders.length === 0) {
+  if (error || !mappedProviders || mappedProviders.length === 0) {
     return []
   }
 

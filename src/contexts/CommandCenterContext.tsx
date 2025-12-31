@@ -11,6 +11,7 @@ export type PanelType =
   | 'coverage'
   | 'speedTest'
   | 'quiz'
+  | 'addressAvailability'
 
 export interface PanelConfig {
   type: PanelType
@@ -166,6 +167,14 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
     }
 
     // === INTENT DETECTION (in priority order) ===
+
+    // 0. Address availability intent - detect street addresses
+    const addressPattern = /(?:at|for|check|available|providers at|internet at)\s+(\d+\s+[\w\s]+(?:st|street|ave|avenue|rd|road|dr|drive|ln|lane|blvd|boulevard|way|ct|court|pl|place)[\w\s,]*)/i
+    const addressMatch = message.match(addressPattern)
+    if (addressMatch || /check.*address|my address|exact address|street address/i.test(lowerMessage)) {
+      showPanel('addressAvailability', { address: addressMatch?.[1] || null })
+      return
+    }
 
     // 1. Speed test intent
     if (/speed\s*test|test.*speed|how fast|check.*speed|run.*test/i.test(lowerMessage)) {

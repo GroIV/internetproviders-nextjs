@@ -12,6 +12,7 @@ import {
   PlanComparisonPanel,
   ProviderDetailPanel,
   SpeedTestPanel,
+  AddressAvailabilityPanel,
 } from './panels'
 
 // Panel renderer based on type
@@ -38,6 +39,8 @@ function DynamicPanel({ panel }: { panel: PanelConfig }) {
           </a>
         </div>
       )
+    case 'addressAvailability':
+      return <AddressAvailabilityPanel data={panel.data as { address?: string }} />
     default:
       return null
   }
