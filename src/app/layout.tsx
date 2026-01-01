@@ -2,11 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { ChatProvider } from "@/contexts/ChatContext";
-import { LocationBanner } from "@/components/LocationBanner";
-import { FloatingChatButton } from "@/components/FloatingChatButton";
+import { AppShell } from "@/components/AppShell";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { JsonLd, generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo";
 import { GlobalBackground } from "@/components/effects/GlobalBackground";
@@ -96,12 +94,9 @@ export default function RootLayout({
           <LocationProvider>
             <ChatProvider>
               <Navbar />
-              <LocationBanner />
-              <main className="flex-grow">
+              <AppShell>
                 {children}
-              </main>
-              <Footer />
-              <FloatingChatButton />
+              </AppShell>
               <InstallPrompt />
             </ChatProvider>
           </LocationProvider>

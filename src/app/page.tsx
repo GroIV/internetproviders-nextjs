@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { CommandCenterClient } from '@/components/command-center'
+import { HomePageContent } from '@/components/HomePageContent'
 
 export const metadata: Metadata = {
   title: 'Find Internet Providers - AI-Powered Search | InternetProviders.ai',
@@ -17,5 +17,5 @@ export const metadata: Metadata = {
 }
 
 export default function HomePage() {
-  return <CommandCenterClient />
+  return <HomePageContent />
 }

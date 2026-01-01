@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useCallback, ReactNode } from 'rea
 // Panel types - single panel at a time
 export type PanelType =
   | 'welcome'
+  | 'pageContent'  // Shows the current route's page content
   | 'recommendations'
   | 'providerDetail'
   | 'comparison'
@@ -17,6 +18,17 @@ export interface PanelConfig {
   type: PanelType
   data?: Record<string, unknown>
 }
+
+// Interactive panel types (not page content)
+export const INTERACTIVE_PANELS: PanelType[] = [
+  'recommendations',
+  'providerDetail',
+  'comparison',
+  'coverage',
+  'speedTest',
+  'quiz',
+  'addressAvailability',
+]
 
 export interface ConversationContext {
   zipCode: string | null
@@ -36,7 +48,9 @@ interface CommandCenterState {
 interface CommandCenterContextType extends CommandCenterState {
   // Panel management - single panel
   showPanel: (type: PanelType, data?: Record<string, unknown>) => void
-  goBack: () => void // Go back to recommendations or welcome
+  showPageContent: () => void // Return to showing page content
+  goBack: () => void // Go back to page content or welcome
+  isShowingInteractivePanel: boolean // True if showing an interactive panel (not page content)
 
   // Context updates
   updateContext: (updates: Partial<ConversationContext>) => void
@@ -83,8 +97,8 @@ const TECH_PATTERNS = [
 ]
 
 export function CommandCenterProvider({ children }: { children: ReactNode }) {
-  // Single active panel
-  const [activePanel, setActivePanel] = useState<PanelConfig>({ type: 'welcome' })
+  // Single active panel - default to pageContent (show route content)
+  const [activePanel, setActivePanel] = useState<PanelConfig>({ type: 'pageContent' })
 
   const [context, setContext] = useState<ConversationContext>({
     zipCode: null,
@@ -95,7 +109,10 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
     intent: null,
   })
 
-  const [mobileTab, setMobileTab] = useState<'chat' | 'panel'>('chat')
+  const [mobileTab, setMobileTab] = useState<'chat' | 'panel'>('panel')
+
+  // Check if showing an interactive panel
+  const isShowingInteractivePanel = INTERACTIVE_PANELS.includes(activePanel.type)
 
   // Show a panel (replaces current panel)
   const showPanel = useCallback((type: PanelType, data?: Record<string, unknown>) => {
@@ -104,14 +121,15 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
     setMobileTab('panel')
   }, [])
 
-  // Go back to recommendations (if ZIP set) or welcome
+  // Return to showing page content
+  const showPageContent = useCallback(() => {
+    setActivePanel({ type: 'pageContent' })
+  }, [])
+
+  // Go back to page content (or welcome on homepage)
   const goBack = useCallback(() => {
-    if (context.zipCode) {
-      setActivePanel({ type: 'recommendations', data: { zipCode: context.zipCode } })
-    } else {
-      setActivePanel({ type: 'welcome' })
-    }
-  }, [context.zipCode])
+    setActivePanel({ type: 'pageContent' })
+  }, [])
 
   // Update conversation context
   const updateContext = useCallback((updates: Partial<ConversationContext>) => {
@@ -241,7 +259,9 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
         context,
         mobileTab,
         showPanel,
+        showPageContent,
         goBack,
+        isShowingInteractivePanel,
         updateContext,
         setZipCode,
         setMobileTab,
