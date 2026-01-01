@@ -149,19 +149,12 @@ function ProviderCard({
           </div>
         )}
 
-        {/* Price and stats */}
+        {/* Price */}
         {hasRealData ? (
-          <div className="flex items-center justify-between mb-4 px-2 py-2 bg-gray-900/40 rounded-lg">
-            <div className="text-center">
-              <div className="text-[8px] text-gray-500 uppercase mb-0.5">As low as</div>
-              <div className="text-lg font-bold text-green-400">
-                {provider.isEstimate && <span className="text-xs">~</span>}${provider.startingPrice}<span className="text-xs text-gray-500">/mo</span>
-              </div>
-            </div>
-            <div className="w-px h-8 bg-gray-700" />
-            <div className="text-center">
-              <div className="text-lg font-bold text-white">{provider.planCount || '—'}</div>
-              <div className="text-[9px] text-gray-500 uppercase">Plans</div>
+          <div className="mb-4 px-2 py-2 bg-gray-900/40 rounded-lg text-center">
+            <div className="text-[8px] text-gray-500 uppercase mb-0.5">As low as</div>
+            <div className="text-lg font-bold text-green-400">
+              {provider.isEstimate && <span className="text-xs">~</span>}${provider.startingPrice}<span className="text-xs text-gray-500">/mo</span>
             </div>
           </div>
         ) : (
