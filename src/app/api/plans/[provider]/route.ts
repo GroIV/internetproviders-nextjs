@@ -37,7 +37,9 @@ export async function GET(request: NextRequest, { params }: Props) {
       .select('*')
       .eq('provider_id', providerData.id)
       .eq('is_active', true)
+      .eq('service_type', serviceType || 'residential')  // Default to residential
       .gte('monthly_price', 20)  // Exclude bundle add-on prices
+      .gt('typical_download_speed', 0)  // Must have speed data
       // Exclude low-income/subsidized programs
       .not('service_plan_name', 'ilike', '%Internet Assist%')
       .not('service_plan_name', 'ilike', 'Access from AT&T%')
@@ -52,13 +54,17 @@ export async function GET(request: NextRequest, { params }: Props) {
       .not('service_plan_name', 'ilike', '%Accessibility Plan%')
       .not('service_plan_name', 'ilike', '%By the Gig%')
       .not('service_plan_name', 'ilike', '%Hibernation%')
+      .not('service_plan_name', 'ilike', '%Tablet%')
+      .not('service_plan_name', 'ilike', '%Prepaid%')
+      .not('service_plan_name', 'ilike', '%FirstNet%')
+      .not('service_plan_name', 'ilike', '%OnStar%')
+      .not('service_plan_name', 'ilike', '%Audi%')
+      .not('service_plan_name', 'ilike', '%Connected Car%')
+      .not('service_plan_name', 'ilike', '%Camera%')
+      .not('service_plan_name', 'ilike', '%Wearable%')
       // Exclude business/education plans
       .not('service_plan_name', 'ilike', '%eRate%')
       .not('service_plan_name', 'ilike', '%Business%')
-
-    if (serviceType) {
-      query = query.eq('service_type', serviceType)
-    }
 
     // Apply sorting
     const validSortFields = ['monthly_price', 'typical_download_speed', 'service_plan_name']
