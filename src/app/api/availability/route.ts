@@ -203,8 +203,31 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // Get list of known provider names from our providers table
+    const { data: knownProviders } = await supabase
+      .from('providers')
+      .select('name')
+
+    // Create a set of known provider brand names (case-insensitive matching)
+    const knownBrandNames = new Set(
+      (knownProviders || []).map(p => p.name.toLowerCase())
+    )
+
+    // Filter to only show known/major providers, or all if less than 3 known
+    const filteredData = (data as H3AvailabilityRow[]).filter(row => {
+      const brandLower = row.brand_name.toLowerCase()
+      // Check if brand name contains or matches a known provider
+      return knownBrandNames.has(brandLower) ||
+        [...knownBrandNames].some(known =>
+          brandLower.includes(known) || known.includes(brandLower)
+        )
+    })
+
+    // If we filtered too aggressively and have very few results, include top providers by speed
+    const dataToUse = filteredData.length >= 2 ? filteredData : data as H3AvailabilityRow[]
+
     // Transform the results
-    const providers: ProviderResult[] = (data as H3AvailabilityRow[]).map(row => ({
+    const providers: ProviderResult[] = dataToUse.map(row => ({
       providerId: row.provider_id,
       brandName: row.brand_name,
       technology: TECHNOLOGY_MAP[row.technology] || 'Unknown',
@@ -216,9 +239,9 @@ export async function GET(request: NextRequest) {
       locationCount: row.location_count,
     }))
 
-    // Build summary stats
-    const techCodes = new Set(data.map((r: H3AvailabilityRow) => r.technology))
-    const uniqueProviders = new Set(data.map((r: H3AvailabilityRow) => r.provider_id))
+    // Build summary stats from filtered data
+    const techCodes = new Set(dataToUse.map((r: H3AvailabilityRow) => r.technology))
+    const uniqueProviders = new Set(dataToUse.map((r: H3AvailabilityRow) => r.provider_id))
 
     const summary = {
       totalProviders: uniqueProviders.size,
@@ -228,9 +251,9 @@ export async function GET(request: NextRequest) {
       hasDSL: techCodes.has(10),
       hasFixedWireless: techCodes.has(70) || techCodes.has(71) || techCodes.has(72),
       hasSatellite: techCodes.has(60) || techCodes.has(61),
-      maxDownloadSpeed: Math.max(...data.map((r: H3AvailabilityRow) => r.max_down)),
-      maxUploadSpeed: Math.max(...data.map((r: H3AvailabilityRow) => r.max_up)),
-      state: data[0]?.state_usps || null,
+      maxDownloadSpeed: Math.max(...dataToUse.map((r: H3AvailabilityRow) => r.max_down)),
+      maxUploadSpeed: Math.max(...dataToUse.map((r: H3AvailabilityRow) => r.max_up)),
+      state: dataToUse[0]?.state_usps || null,
     }
 
     // Group providers by technology for easier consumption

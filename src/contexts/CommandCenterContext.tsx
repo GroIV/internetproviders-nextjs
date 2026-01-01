@@ -260,3 +260,8 @@ export function useCommandCenter() {
   }
   return context
 }
+
+// Safe version that returns null if not within CommandCenterProvider
+export function useCommandCenterOptional() {
+  return useContext(CommandCenterContext)
+}

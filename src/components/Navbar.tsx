@@ -2,9 +2,11 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { OfflineIndicator } from './OfflineIndicator'
 import { getComparisonUrl } from '@/lib/affiliates'
+import { useCommandCenterOptional, PanelType } from '@/contexts/CommandCenterContext'
 
 // Animated Logo Component
 function AnimatedLogo() {
@@ -92,6 +94,23 @@ function AnimatedLogo() {
 
 export function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const pathname = usePathname()
+  const isHomePage = pathname === '/'
+  const commandCenter = useCommandCenterOptional()
+
+  // Handler for nav items that should show panels on home page
+  const handlePanelClick = (
+    panelType: PanelType,
+    panelData: Record<string, unknown> | undefined,
+    fallbackHref: string
+  ) => {
+    if (isHomePage && commandCenter) {
+      commandCenter.showPanel(panelType, panelData)
+      setOpenDropdown(null)
+    } else {
+      window.location.href = fallbackHref
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-800/50 bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-gray-950/80 relative">
@@ -126,28 +145,28 @@ export function Navbar() {
                   className="absolute top-full left-0 mt-1 w-56 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-lg shadow-xl shadow-black/50 py-2 glow-border-cyan"
                   style={{ boxShadow: '0 0 20px rgba(6, 182, 212, 0.1), 0 10px 40px rgba(0,0,0,0.5)' }}
                 >
-                  <Link href="/compare" className="block px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
+                  <button onClick={() => handlePanelClick('comparison', undefined, '/compare')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
                     Compare by ZIP Code
-                  </Link>
+                  </button>
                   <div className="border-t border-gray-700/50 my-2" />
                   <div className="px-4 py-1 text-xs text-cyan-500/70 uppercase tracking-wider">Providers</div>
-                  <Link href="/compare/att-internet-vs-spectrum" className="block px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
+                  <button onClick={() => handlePanelClick('comparison', { providers: ['AT&T', 'Spectrum'] }, '/compare/att-internet-vs-spectrum')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
                     AT&T vs Spectrum
-                  </Link>
-                  <Link href="/compare/xfinity-vs-spectrum" className="block px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
+                  </button>
+                  <button onClick={() => handlePanelClick('comparison', { providers: ['Xfinity', 'Spectrum'] }, '/compare/xfinity-vs-spectrum')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
                     Xfinity vs Spectrum
-                  </Link>
-                  <Link href="/compare/att-internet-vs-verizon-fios" className="block px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
+                  </button>
+                  <button onClick={() => handlePanelClick('comparison', { providers: ['AT&T', 'Verizon'] }, '/compare/att-internet-vs-verizon-fios')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
                     AT&T vs Verizon
-                  </Link>
+                  </button>
                   <div className="border-t border-gray-700/50 my-2" />
                   <div className="px-4 py-1 text-xs text-cyan-500/70 uppercase tracking-wider">Technologies</div>
-                  <Link href="/compare/technology/fiber-vs-cable" className="block px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
+                  <button onClick={() => handlePanelClick('comparison', { technologies: ['Fiber', 'Cable'] }, '/compare/technology/fiber-vs-cable')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
                     Fiber vs Cable
-                  </Link>
-                  <Link href="/compare/technology/cable-vs-5g" className="block px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
+                  </button>
+                  <button onClick={() => handlePanelClick('comparison', { technologies: ['Cable', '5G'] }, '/compare/technology/cable-vs-5g')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
                     Cable vs 5G
-                  </Link>
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -175,18 +194,18 @@ export function Navbar() {
                   className="absolute top-full left-0 mt-1 w-48 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-lg shadow-xl shadow-black/50 py-2"
                   style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.1), 0 10px 40px rgba(0,0,0,0.5)' }}
                 >
-                  <Link href="/best/fiber-providers" className="block px-4 py-2 text-sm text-gray-300 hover:text-blue-400 hover:bg-gray-800/50 transition-colors">
+                  <button onClick={() => handlePanelClick('recommendations', { filter: 'fiber', title: 'Best Fiber Providers' }, '/best/fiber-providers')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-blue-400 hover:bg-gray-800/50 transition-colors">
                     Best Fiber Providers
-                  </Link>
-                  <Link href="/best/cable-providers" className="block px-4 py-2 text-sm text-gray-300 hover:text-blue-400 hover:bg-gray-800/50 transition-colors">
+                  </button>
+                  <button onClick={() => handlePanelClick('recommendations', { filter: 'cable', title: 'Best Cable Providers' }, '/best/cable-providers')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-blue-400 hover:bg-gray-800/50 transition-colors">
                     Best Cable Providers
-                  </Link>
-                  <Link href="/fastest/providers" className="block px-4 py-2 text-sm text-gray-300 hover:text-blue-400 hover:bg-gray-800/50 transition-colors">
+                  </button>
+                  <button onClick={() => handlePanelClick('recommendations', { sortBy: 'speed', title: 'Fastest Providers' }, '/fastest/providers')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-blue-400 hover:bg-gray-800/50 transition-colors">
                     Fastest Providers
-                  </Link>
-                  <Link href="/cheapest/providers" className="block px-4 py-2 text-sm text-gray-300 hover:text-blue-400 hover:bg-gray-800/50 transition-colors">
+                  </button>
+                  <button onClick={() => handlePanelClick('recommendations', { sortBy: 'price', title: 'Cheapest Providers' }, '/cheapest/providers')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-blue-400 hover:bg-gray-800/50 transition-colors">
                     Cheapest Providers
-                  </Link>
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -214,42 +233,51 @@ export function Navbar() {
                   className="absolute top-full left-0 mt-1 w-48 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-lg shadow-xl shadow-black/50 py-2"
                   style={{ boxShadow: '0 0 20px rgba(139, 92, 246, 0.1), 0 10px 40px rgba(0,0,0,0.5)' }}
                 >
-                  <Link href="/internet" className="block px-4 py-2 text-sm text-gray-300 hover:text-purple-400 hover:bg-gray-800/50 transition-colors">
+                  <button onClick={() => handlePanelClick('recommendations', { title: 'Internet Providers by State' }, '/internet')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-purple-400 hover:bg-gray-800/50 transition-colors">
                     All States
-                  </Link>
+                  </button>
                   <div className="border-t border-gray-700/50 my-2" />
-                  <Link href="/internet/california" className="block px-4 py-2 text-sm text-gray-300 hover:text-purple-400 hover:bg-gray-800/50 transition-colors">
+                  <button onClick={() => handlePanelClick('recommendations', { state: 'California', title: 'California Providers' }, '/internet/california')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-purple-400 hover:bg-gray-800/50 transition-colors">
                     California
-                  </Link>
-                  <Link href="/internet/texas" className="block px-4 py-2 text-sm text-gray-300 hover:text-purple-400 hover:bg-gray-800/50 transition-colors">
+                  </button>
+                  <button onClick={() => handlePanelClick('recommendations', { state: 'Texas', title: 'Texas Providers' }, '/internet/texas')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-purple-400 hover:bg-gray-800/50 transition-colors">
                     Texas
-                  </Link>
-                  <Link href="/internet/florida" className="block px-4 py-2 text-sm text-gray-300 hover:text-purple-400 hover:bg-gray-800/50 transition-colors">
+                  </button>
+                  <button onClick={() => handlePanelClick('recommendations', { state: 'Florida', title: 'Florida Providers' }, '/internet/florida')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-purple-400 hover:bg-gray-800/50 transition-colors">
                     Florida
-                  </Link>
-                  <Link href="/internet/new-york" className="block px-4 py-2 text-sm text-gray-300 hover:text-purple-400 hover:bg-gray-800/50 transition-colors">
+                  </button>
+                  <button onClick={() => handlePanelClick('recommendations', { state: 'New York', title: 'New York Providers' }, '/internet/new-york')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-purple-400 hover:bg-gray-800/50 transition-colors">
                     New York
-                  </Link>
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          <Link href="/providers" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+          <button
+            onClick={() => handlePanelClick('recommendations', { title: 'All Internet Providers' }, '/providers')}
+            className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+          >
             Providers
-          </Link>
+          </button>
 
-          <Link href="/plans" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+          <button
+            onClick={() => handlePanelClick('recommendations', { view: 'plans', title: 'Internet Plans' }, '/plans')}
+            className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+          >
             Plans
-          </Link>
+          </button>
 
           <Link href="/guides" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
             Guides
           </Link>
 
-          <Link href="/tools" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+          <button
+            onClick={() => handlePanelClick('speedTest', undefined, '/tools')}
+            className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+          >
             Tools
-          </Link>
+          </button>
         </nav>
 
         <div className="flex items-center space-x-4">

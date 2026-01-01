@@ -1,5 +1,7 @@
 'use client'
 
+import { getAffiliateUrl } from '@/lib/affiliates'
+
 // Type definitions (duplicated to avoid server import)
 export interface RealPlan {
   id: number
@@ -258,7 +260,9 @@ export function RealPlansSection({
             at your address to see current plans and promotional offers.
           </p>
           <a
-            href={`/go/${providerSlug}`}
+            href={getAffiliateUrl(providerSlug, `plans-section-${providerSlug}`) || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:from-amber-400 hover:to-orange-500 transition-all duration-300 shadow-lg shadow-amber-500/20"
           >
             Check {providerName} Availability

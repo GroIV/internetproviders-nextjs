@@ -452,3 +452,8 @@ export function useChat() {
   }
   return context
 }
+
+// Safe version that returns null if not within ChatProvider
+export function useChatOptional() {
+  return useContext(ChatContext)
+}

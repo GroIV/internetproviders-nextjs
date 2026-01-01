@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { LocationInfo } from '@/components/LocationInfo'
 import { getProviderCoverageCount } from '@/lib/getProvidersByLocation'
 import { OrderButton } from '@/components/OrderButton'
-import { hasAffiliateLink } from '@/lib/affiliates'
+import { hasAffiliateLink, getAffiliateUrl } from '@/lib/affiliates'
 import { ProviderPlansSection, TVPlansSection } from '@/components/plans'
 import { getFeaturedPlansForProvider } from '@/lib/featuredPlans'
 import { getProviderPlans } from '@/lib/getProviderPlans'
@@ -579,18 +579,20 @@ export default async function ProviderPage({ params }: Props) {
             </p>
             <LocationInfo message={`Checking ${provider.name} availability`} />
 
-            {/* Check Availability Button */}
+            {/* Check Availability Button - Direct to affiliate for address-specific lookup */}
             {hasAffiliateLink(slug) && (
               <div className="mt-6 text-center">
-                <Link
-                  href={`/go/${slug}?source=${slug}`}
+                <a
+                  href={getAffiliateUrl(slug, `provider-page-${slug}`) || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl text-lg font-semibold hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 hover:scale-105"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Check {provider.name} Availability
-                </Link>
+                </a>
               </div>
             )}
           </div>

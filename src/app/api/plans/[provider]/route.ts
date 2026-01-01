@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: Props) {
       .eq('provider_id', providerData.id)
       .eq('is_active', true)
       .eq('service_type', serviceType || 'residential')  // Default to residential
-      .gte('monthly_price', 20)  // Exclude bundle add-on prices
+      .gte('monthly_price', 30)  // Exclude bundle add-on prices (Xfinity has $20 bundle pricing)
       .gt('typical_download_speed', 0)  // Must have speed data
       // Exclude low-income/subsidized programs
       .not('service_plan_name', 'ilike', '%Internet Assist%')
@@ -65,6 +65,9 @@ export async function GET(request: NextRequest, { params }: Props) {
       // Exclude business/education plans
       .not('service_plan_name', 'ilike', '%eRate%')
       .not('service_plan_name', 'ilike', '%Business%')
+      // Exclude backup/secondary and sub-brand plans
+      .not('service_plan_name', 'ilike', '%Backup%')
+      .not('service_plan_name', 'ilike', 'Mint %')
 
     // Apply sorting
     const validSortFields = ['monthly_price', 'typical_download_speed', 'service_plan_name']

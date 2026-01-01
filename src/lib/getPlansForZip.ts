@@ -336,7 +336,7 @@ export async function getPlanStatsForProviders(
         .eq('is_active', true)
         .eq('service_type', 'residential')
         .gt('typical_download_speed', 0)
-        .gte('monthly_price', 20)  // Exclude bundle add-on prices
+        .gte('monthly_price', 30)  // Exclude bundle add-on prices (Xfinity has $20 bundle pricing)
         // Exclude low-income/subsidized programs
         .not('service_plan_name', 'ilike', '%Internet Assist%')
         .not('service_plan_name', 'ilike', 'Access from AT&T%')
@@ -354,6 +354,8 @@ export async function getPlanStatsForProviders(
         // Exclude business/education plans
         .not('service_plan_name', 'ilike', '%eRate%')
         .not('service_plan_name', 'ilike', '%Business%')
+        .not('service_plan_name', 'ilike', '%Backup%')
+        .not('service_plan_name', 'ilike', 'Mint %')
         .order('monthly_price', { ascending: true })
         .limit(1)
         .single()
@@ -365,7 +367,7 @@ export async function getPlanStatsForProviders(
         .eq('is_active', true)
         .eq('service_type', 'residential')
         .gt('typical_download_speed', 0)
-        .gte('monthly_price', 20)
+        .gte('monthly_price', 30)
         .not('service_plan_name', 'ilike', '%Internet Assist%')
         .not('service_plan_name', 'ilike', 'Access from AT&T%')
         .not('service_plan_name', 'ilike', '%Internet Essentials%')
@@ -379,6 +381,8 @@ export async function getPlanStatsForProviders(
         .not('service_plan_name', 'ilike', '%Hibernation%')
         .not('service_plan_name', 'ilike', '%eRate%')
         .not('service_plan_name', 'ilike', '%Business%')
+        .not('service_plan_name', 'ilike', '%Backup%')
+        .not('service_plan_name', 'ilike', 'Mint %')
         .order('typical_download_speed', { ascending: false })
         .limit(1)
         .single()
@@ -390,7 +394,7 @@ export async function getPlanStatsForProviders(
         .eq('is_active', true)
         .eq('service_type', 'residential')
         .gt('typical_download_speed', 0)
-        .gte('monthly_price', 20)
+        .gte('monthly_price', 30)
         .not('service_plan_name', 'ilike', '%Internet Assist%')
         .not('service_plan_name', 'ilike', 'Access from AT&T%')
         .not('service_plan_name', 'ilike', '%Internet Essentials%')
@@ -404,6 +408,8 @@ export async function getPlanStatsForProviders(
         .not('service_plan_name', 'ilike', '%Hibernation%')
         .not('service_plan_name', 'ilike', '%eRate%')
         .not('service_plan_name', 'ilike', '%Business%')
+        .not('service_plan_name', 'ilike', '%Backup%')
+        .not('service_plan_name', 'ilike', 'Mint %')
 
       if (minPriceData && maxSpeedData) {
         result.set(getProviderSlug(name), {
