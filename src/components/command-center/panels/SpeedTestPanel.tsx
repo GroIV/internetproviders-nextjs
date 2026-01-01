@@ -15,6 +15,131 @@ interface Results {
   jitter: number
 }
 
+// Rating thresholds and labels
+function getDownloadRating(speed: number): { label: string; color: string; description: string } {
+  if (speed >= 500) return { label: 'Excellent', color: 'text-emerald-400', description: '4K streaming, large downloads, multiple devices' }
+  if (speed >= 100) return { label: 'Great', color: 'text-green-400', description: 'HD streaming, video calls, gaming' }
+  if (speed >= 25) return { label: 'Good', color: 'text-yellow-400', description: 'Basic streaming, web browsing' }
+  return { label: 'Slow', color: 'text-red-400', description: 'May struggle with video streaming' }
+}
+
+function getUploadRating(speed: number): { label: string; color: string; description: string } {
+  if (speed >= 100) return { label: 'Excellent', color: 'text-emerald-400', description: 'Live streaming, large file uploads' }
+  if (speed >= 20) return { label: 'Great', color: 'text-green-400', description: 'Video calls, cloud backups' }
+  if (speed >= 5) return { label: 'Good', color: 'text-yellow-400', description: 'Basic video calls, photo uploads' }
+  return { label: 'Slow', color: 'text-red-400', description: 'May struggle with video calls' }
+}
+
+function getLatencyRating(ms: number): { label: string; color: string; description: string } {
+  if (ms <= 20) return { label: 'Excellent', color: 'text-emerald-400', description: 'Competitive gaming, real-time apps' }
+  if (ms <= 50) return { label: 'Great', color: 'text-green-400', description: 'Online gaming, video calls' }
+  if (ms <= 100) return { label: 'Good', color: 'text-yellow-400', description: 'Casual gaming, streaming' }
+  return { label: 'High', color: 'text-red-400', description: 'Noticeable lag in real-time apps' }
+}
+
+function getJitterRating(ms: number): { label: string; color: string; description: string } {
+  if (ms <= 5) return { label: 'Stable', color: 'text-emerald-400', description: 'Consistent, reliable connection' }
+  if (ms <= 15) return { label: 'Good', color: 'text-green-400', description: 'Minor fluctuations, barely noticeable' }
+  if (ms <= 30) return { label: 'Fair', color: 'text-yellow-400', description: 'Some inconsistency in speeds' }
+  return { label: 'Unstable', color: 'text-red-400', description: 'Connection quality varies significantly' }
+}
+
+// Enhanced result card with explanation
+function ResultCard({
+  value,
+  unit,
+  label,
+  icon,
+  rating,
+  color,
+  delay
+}: {
+  value: number | string
+  unit: string
+  label: string
+  icon: React.ReactNode
+  rating: { label: string; color: string; description: string }
+  color: string
+  delay: number
+}) {
+  const [showInfo, setShowInfo] = useState(false)
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+      className="relative bg-gray-800/50 rounded-xl p-3 border border-gray-700/50 hover:border-gray-600/50 transition-all"
+      onMouseEnter={() => setShowInfo(true)}
+      onMouseLeave={() => setShowInfo(false)}
+    >
+      {/* Main content */}
+      <div className="flex items-start justify-between mb-1">
+        <div className={`p-1.5 rounded-lg bg-gray-900/50 ${color}`}>
+          {icon}
+        </div>
+        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-900/50 ${rating.color}`}>
+          {rating.label}
+        </span>
+      </div>
+
+      <div className="mt-2">
+        <div className={`text-2xl font-bold ${color}`}>{value}</div>
+        <div className="text-[10px] text-gray-500 uppercase tracking-wide">{unit}</div>
+        <div className="text-xs text-gray-400 mt-1">{label}</div>
+      </div>
+
+      {/* Hover tooltip */}
+      <AnimatePresence>
+        {showInfo && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            className="absolute left-0 right-0 -bottom-1 translate-y-full z-20 p-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl"
+          >
+            <p className="text-[11px] text-gray-300">{rating.description}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
+}
+
+// Overall score calculation
+function getOverallScore(results: Results): { score: number; label: string; color: string; summary: string } {
+  let score = 0
+
+  // Download weight: 40%
+  if (results.download >= 500) score += 40
+  else if (results.download >= 100) score += 30
+  else if (results.download >= 25) score += 20
+  else score += 10
+
+  // Upload weight: 25%
+  if (results.upload >= 100) score += 25
+  else if (results.upload >= 20) score += 20
+  else if (results.upload >= 5) score += 15
+  else score += 5
+
+  // Latency weight: 25%
+  if (results.latency <= 20) score += 25
+  else if (results.latency <= 50) score += 20
+  else if (results.latency <= 100) score += 15
+  else score += 5
+
+  // Jitter weight: 10%
+  if (results.jitter <= 5) score += 10
+  else if (results.jitter <= 15) score += 8
+  else if (results.jitter <= 30) score += 5
+  else score += 2
+
+  if (score >= 90) return { score, label: 'Excellent', color: 'text-emerald-400', summary: 'Your connection is top-tier! Great for any online activity.' }
+  if (score >= 70) return { score, label: 'Great', color: 'text-green-400', summary: 'Solid connection for streaming, gaming, and video calls.' }
+  if (score >= 50) return { score, label: 'Good', color: 'text-yellow-400', summary: 'Handles most tasks well. Consider upgrading for heavy use.' }
+  return { score, label: 'Fair', color: 'text-orange-400', summary: 'Basic browsing works, but you may experience issues with video.' }
+}
+
 // Compact speed gauge for panel
 function CompactGauge({ phase, currentSpeed, progress }: { phase: TestPhase; currentSpeed: number; progress: number }) {
   const isIdle = phase === 'idle'
@@ -22,9 +147,9 @@ function CompactGauge({ phase, currentSpeed, progress }: { phase: TestPhase; cur
   const isRunning = !isIdle && !isComplete
 
   return (
-    <div className="relative flex items-center justify-center py-6">
+    <div className="relative flex items-center justify-center py-4">
       {/* Progress ring */}
-      <svg className="w-32 h-32 -rotate-90" viewBox="0 0 100 100">
+      <svg className="w-28 h-28 -rotate-90" viewBox="0 0 100 100">
         <circle
           cx="50"
           cy="50"
@@ -61,8 +186,8 @@ function CompactGauge({ phase, currentSpeed, progress }: { phase: TestPhase; cur
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="text-3xl font-bold text-white">GO</div>
-            <div className="text-xs text-gray-500">Click to start</div>
+            <div className="text-2xl font-bold text-white">GO</div>
+            <div className="text-[10px] text-gray-500">Click to start</div>
           </motion.div>
         )}
 
@@ -72,10 +197,10 @@ function CompactGauge({ phase, currentSpeed, progress }: { phase: TestPhase; cur
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
           >
-            <div className="text-2xl font-bold text-white">
+            <div className="text-xl font-bold text-white">
               {currentSpeed.toFixed(1)}
             </div>
-            <div className="text-xs text-gray-500">Mbps</div>
+            <div className="text-[10px] text-gray-500">Mbps</div>
           </motion.div>
         )}
 
@@ -85,10 +210,10 @@ function CompactGauge({ phase, currentSpeed, progress }: { phase: TestPhase; cur
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
           >
-            <svg className="w-8 h-8 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-7 h-7 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            <div className="text-xs text-gray-400 mt-1">Complete</div>
+            <div className="text-[10px] text-gray-400 mt-0.5">Complete</div>
           </motion.div>
         )}
       </div>
@@ -190,6 +315,8 @@ export function SpeedTestPanel() {
     setCurrentSpeed(0)
   }, [])
 
+  const overallScore = results ? getOverallScore(results) : null
+
   return (
     <PanelWrapper
       title="Speed Test"
@@ -201,7 +328,7 @@ export function SpeedTestPanel() {
       }
       onClose={goBack}
     >
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Speed Gauge */}
         <div
           className={phase === 'idle' ? 'cursor-pointer' : ''}
@@ -221,33 +348,82 @@ export function SpeedTestPanel() {
 
         {/* Results */}
         <AnimatePresence>
-          {phase === 'complete' && results && (
+          {phase === 'complete' && results && overallScore && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="space-y-3"
             >
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                  <div className="text-xl font-bold text-cyan-400">{results.download}</div>
-                  <div className="text-xs text-gray-500">Download Mbps</div>
+              {/* Overall Score */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="text-center p-3 rounded-xl bg-gradient-to-r from-gray-800/80 to-gray-900/80 border border-gray-700/50"
+              >
+                <div className={`text-lg font-bold ${overallScore.color}`}>
+                  {overallScore.label} Connection
                 </div>
-                <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                  <div className="text-xl font-bold text-purple-400">{results.upload}</div>
-                  <div className="text-xs text-gray-500">Upload Mbps</div>
-                </div>
-                <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                  <div className="text-xl font-bold text-amber-400">{results.latency}</div>
-                  <div className="text-xs text-gray-500">Ping ms</div>
-                </div>
-                <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                  <div className="text-xl font-bold text-pink-400">{results.jitter}</div>
-                  <div className="text-xs text-gray-500">Jitter ms</div>
-                </div>
+                <p className="text-xs text-gray-400 mt-1">{overallScore.summary}</p>
+              </motion.div>
+
+              {/* Result cards */}
+              <div className="grid grid-cols-2 gap-2">
+                <ResultCard
+                  value={results.download}
+                  unit="Mbps"
+                  label="Download"
+                  icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>}
+                  rating={getDownloadRating(results.download)}
+                  color="text-cyan-400"
+                  delay={0.15}
+                />
+                <ResultCard
+                  value={results.upload}
+                  unit="Mbps"
+                  label="Upload"
+                  icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>}
+                  rating={getUploadRating(results.upload)}
+                  color="text-purple-400"
+                  delay={0.2}
+                />
+                <ResultCard
+                  value={results.latency}
+                  unit="ms"
+                  label="Ping"
+                  icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
+                  rating={getLatencyRating(results.latency)}
+                  color="text-amber-400"
+                  delay={0.25}
+                />
+                <ResultCard
+                  value={results.jitter}
+                  unit="ms"
+                  label="Jitter"
+                  icon={<svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
+                  rating={getJitterRating(results.jitter)}
+                  color="text-pink-400"
+                  delay={0.3}
+                />
               </div>
 
+              {/* What do these mean? */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.35 }}
+                className="text-[10px] text-gray-500 text-center"
+              >
+                Hover over each metric to learn more
+              </motion.div>
+
               {/* Actions */}
-              <div className="flex gap-2 pt-2">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="flex gap-2"
+              >
                 <button
                   onClick={resetTest}
                   className="flex-1 py-2 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium rounded-lg hover:from-purple-500 hover:to-pink-500 transition-all"
@@ -260,23 +436,45 @@ export function SpeedTestPanel() {
                 >
                   Full Test
                 </Link>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Start button for idle state */}
         {phase === 'idle' && (
-          <button
-            onClick={runSpeedTest}
-            className="w-full py-3 bg-gradient-to-r from-cyan-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-cyan-500 hover:to-purple-500 transition-all"
-          >
-            Start Speed Test
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={runSpeedTest}
+              className="w-full py-3 bg-gradient-to-r from-cyan-600 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-cyan-500 hover:to-purple-500 transition-all"
+            >
+              Start Speed Test
+            </button>
+
+            {/* Pre-test info */}
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+              <div className="p-2 rounded-lg bg-gray-800/50 border border-gray-700/30">
+                <div className="font-semibold text-cyan-400 mb-0.5">Download</div>
+                <div className="text-gray-500">How fast you receive data (streaming, browsing)</div>
+              </div>
+              <div className="p-2 rounded-lg bg-gray-800/50 border border-gray-700/30">
+                <div className="font-semibold text-purple-400 mb-0.5">Upload</div>
+                <div className="text-gray-500">How fast you send data (video calls, uploads)</div>
+              </div>
+              <div className="p-2 rounded-lg bg-gray-800/50 border border-gray-700/30">
+                <div className="font-semibold text-amber-400 mb-0.5">Ping</div>
+                <div className="text-gray-500">Response time (lower = better for gaming)</div>
+              </div>
+              <div className="p-2 rounded-lg bg-gray-800/50 border border-gray-700/30">
+                <div className="font-semibold text-pink-400 mb-0.5">Jitter</div>
+                <div className="text-gray-500">Connection stability (lower = more stable)</div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Powered by */}
-        <div className="text-center text-xs text-gray-600">
+        <div className="text-center text-[10px] text-gray-600">
           Powered by{' '}
           <a
             href="https://speed.cloudflare.com"
