@@ -156,3 +156,84 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
   }
 }
+
+// PATCH - Batch operations (apply all due, etc.)
+export async function PATCH(request: NextRequest) {
+  try {
+    const supabase = createAdminClient()
+    const body = await request.json()
+
+    const { action, ids } = body
+
+    if (action === 'batch_apply') {
+      // Get all pending updates that are due (effective_date <= today)
+      const today = new Date().toISOString().split('T')[0]
+
+      let query = supabase
+        .from('provider_scheduled_updates')
+        .select('*')
+        .eq('status', 'pending')
+        .lte('effective_date', today)
+
+      // If specific IDs provided, filter to those
+      if (ids && Array.isArray(ids) && ids.length > 0) {
+        query = query.in('id', ids)
+      }
+
+      const { data: dueUpdates, error: fetchError } = await query
+
+      if (fetchError) {
+        return NextResponse.json({ success: false, error: 'Failed to fetch due updates' }, { status: 500 })
+      }
+
+      if (!dueUpdates || dueUpdates.length === 0) {
+        return NextResponse.json({
+          success: true,
+          message: 'No due updates to apply',
+          applied: 0
+        })
+      }
+
+      // Mark all as applied
+      const updateIds = dueUpdates.map(u => u.id)
+      const { error: updateError } = await supabase
+        .from('provider_scheduled_updates')
+        .update({
+          status: 'applied',
+          applied_at: new Date().toISOString(),
+          applied_by: 'admin (batch)',
+          updated_at: new Date().toISOString(),
+        })
+        .in('id', updateIds)
+
+      if (updateError) {
+        return NextResponse.json({ success: false, error: 'Failed to apply updates' }, { status: 500 })
+      }
+
+      // Collect SQL statements that need manual execution
+      const sqlStatements = dueUpdates
+        .filter(u => u.sql_to_execute)
+        .map(u => ({
+          id: u.id,
+          title: u.title,
+          sql: u.sql_to_execute
+        }))
+
+      return NextResponse.json({
+        success: true,
+        message: `${updateIds.length} updates marked as applied`,
+        applied: updateIds.length,
+        sqlStatements: sqlStatements.length > 0 ? sqlStatements : undefined,
+        note: sqlStatements.length > 0
+          ? `${sqlStatements.length} updates have SQL that may need manual execution`
+          : undefined
+      })
+    }
+
+    return NextResponse.json({ success: false, error: 'Unknown action' }, { status: 400 })
+
+  } catch (error) {
+    console.error('API error:', error)
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
+  }
+}

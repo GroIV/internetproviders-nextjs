@@ -62,13 +62,42 @@ function getDaysUntil(dateStr: string): number {
 function UpdateCard({
   update,
   onAction,
+  onExecuteSQL,
 }: {
   update: ScheduledUpdate
   onAction: (id: number, action: 'apply' | 'skip' | 'reopen' | 'delete') => void
+  onExecuteSQL: (id: number, sql: string) => Promise<void>
 }) {
+  const [copied, setCopied] = useState(false)
+  const [executing, setExecuting] = useState(false)
   const daysUntil = getDaysUntil(update.effective_date)
   const isDue = daysUntil <= 0
   const isDueSoon = daysUntil > 0 && daysUntil <= 7
+
+  const handleCopySQL = async () => {
+    if (update.sql_to_execute) {
+      await navigator.clipboard.writeText(update.sql_to_execute)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const handleExecuteSQL = async () => {
+    if (!update.sql_to_execute) return
+
+    const confirmed = confirm(
+      `Execute this SQL?\n\n${update.sql_to_execute.slice(0, 200)}${update.sql_to_execute.length > 200 ? '...' : ''}\n\nThis will update the database and mark this update as applied.`
+    )
+
+    if (confirmed) {
+      setExecuting(true)
+      try {
+        await onExecuteSQL(update.id, update.sql_to_execute)
+      } finally {
+        setExecuting(false)
+      }
+    }
+  }
 
   return (
     <div className={`bg-gray-900/60 backdrop-blur-sm rounded-xl p-5 border transition-all ${
@@ -143,16 +172,72 @@ function UpdateCard({
         </div>
       )}
 
-      {/* SQL Preview */}
+      {/* SQL Preview with Copy/Execute buttons */}
       {update.sql_to_execute && (
-        <details className="mb-3">
-          <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400">
-            View SQL to execute
-          </summary>
-          <pre className="mt-2 p-2 bg-gray-800 rounded text-xs text-gray-300 overflow-x-auto">
-            {update.sql_to_execute}
-          </pre>
-        </details>
+        <div className="mb-3">
+          <details className="group">
+            <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-400 flex items-center gap-2">
+              <svg className="w-3 h-3 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              SQL to execute
+            </summary>
+            <div className="mt-2">
+              <pre className="p-2 bg-gray-800 rounded text-xs text-gray-300 overflow-x-auto mb-2">
+                {update.sql_to_execute}
+              </pre>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCopySQL}
+                  className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
+                    copied
+                      ? 'bg-green-600/20 text-green-400'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  {copied ? (
+                    <>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Copy SQL
+                    </>
+                  )}
+                </button>
+                {update.status === 'pending' && (
+                  <button
+                    onClick={handleExecuteSQL}
+                    disabled={executing}
+                    className="flex items-center gap-1 px-2 py-1 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded transition-colors disabled:opacity-50"
+                  >
+                    {executing ? (
+                      <>
+                        <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Executing...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Execute SQL
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </details>
+        </div>
       )}
 
       {/* Source notes */}
@@ -486,6 +571,13 @@ export default function AdminUpdatesPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'pending' | 'applied' | 'skipped'>('pending')
   const [providerFilter, setProviderFilter] = useState<string>('')
+  const [batchApplying, setBatchApplying] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 4000)
+  }
 
   const fetchUpdates = useCallback(async () => {
     try {
@@ -523,6 +615,83 @@ export default function AdminUpdatesPage() {
     }
   }
 
+  const handleExecuteSQL = async (id: number, sql: string) => {
+    try {
+      const res = await fetch(`/api/admin/updates/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'execute_sql' }),
+      })
+      const data = await res.json()
+
+      if (data.success) {
+        showToast(data.message || 'SQL executed successfully', 'success')
+        fetchUpdates()
+      } else {
+        // If SQL function not configured, show the SQL to copy
+        if (data.error?.includes('function not configured')) {
+          showToast('Auto-execute not available. Please copy and run SQL manually.', 'error')
+        } else {
+          showToast(data.error || 'Failed to execute SQL', 'error')
+        }
+      }
+    } catch (error) {
+      console.error('Execute SQL failed:', error)
+      showToast('Failed to execute SQL', 'error')
+    }
+  }
+
+  const handleBatchApply = async () => {
+    const dueUpdates = updates.filter(u => u.status === 'pending' && getDaysUntil(u.effective_date) <= 0)
+
+    if (dueUpdates.length === 0) {
+      showToast('No due updates to apply', 'error')
+      return
+    }
+
+    const confirmed = confirm(
+      `Mark ${dueUpdates.length} due update${dueUpdates.length > 1 ? 's' : ''} as applied?\n\n` +
+      `Updates:\n${dueUpdates.map(u => `- ${u.title}`).join('\n')}\n\n` +
+      `Note: SQL statements will need to be executed manually.`
+    )
+
+    if (!confirmed) return
+
+    setBatchApplying(true)
+    try {
+      const res = await fetch('/api/admin/updates', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'batch_apply' }),
+      })
+      const data = await res.json()
+
+      if (data.success) {
+        showToast(data.message || `${data.applied} updates applied`, 'success')
+
+        // If there are SQL statements, show them
+        if (data.sqlStatements && data.sqlStatements.length > 0) {
+          const sqlList = data.sqlStatements.map((s: { title: string; sql: string }) =>
+            `-- ${s.title}\n${s.sql}`
+          ).join('\n\n')
+
+          // Copy all SQL to clipboard
+          await navigator.clipboard.writeText(sqlList)
+          showToast(`${data.applied} updates applied. ${data.sqlStatements.length} SQL statements copied to clipboard!`, 'success')
+        }
+
+        fetchUpdates()
+      } else {
+        showToast(data.error || 'Failed to batch apply', 'error')
+      }
+    } catch (error) {
+      console.error('Batch apply failed:', error)
+      showToast('Failed to batch apply updates', 'error')
+    } finally {
+      setBatchApplying(false)
+    }
+  }
+
   const filteredUpdates = updates
     .filter(u => u.status === activeTab)
     .filter(u => !providerFilter || u.provider_slug === providerFilter)
@@ -531,6 +700,26 @@ export default function AdminUpdatesPage() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all ${
+          toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+        }`}>
+          <div className="flex items-center gap-2">
+            {toast.type === 'success' ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+            <span className="text-sm font-medium">{toast.message}</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-gray-900/50 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -548,7 +737,32 @@ export default function AdminUpdatesPage() {
               </div>
               <p className="text-gray-400">Track and manage upcoming provider pricing and product changes</p>
             </div>
-            <AddUpdateForm onSuccess={fetchUpdates} />
+            <div className="flex items-center gap-3">
+              {stats.dueSoon > 0 && (
+                <button
+                  onClick={handleBatchApply}
+                  disabled={batchApplying}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {batchApplying ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Applying...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Batch Apply ({stats.dueSoon})
+                    </>
+                  )}
+                </button>
+              )}
+              <AddUpdateForm onSuccess={fetchUpdates} />
+            </div>
           </div>
         </div>
       </div>
@@ -628,7 +842,12 @@ export default function AdminUpdatesPage() {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredUpdates.map(update => (
-              <UpdateCard key={update.id} update={update} onAction={handleAction} />
+              <UpdateCard
+                key={update.id}
+                update={update}
+                onAction={handleAction}
+                onExecuteSQL={handleExecuteSQL}
+              />
             ))}
           </div>
         )}
