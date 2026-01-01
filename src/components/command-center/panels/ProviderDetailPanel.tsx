@@ -13,8 +13,8 @@ interface ProviderData {
   slug: string
   technologies: string[]
   description?: string
-  maxSpeed?: string
-  startingPrice?: string
+  maxSpeed?: number  // Now numeric from API
+  startingPrice?: number  // Now numeric from API
 }
 
 interface Plan {
@@ -26,25 +26,28 @@ interface Plan {
   tier: string
 }
 
-// Provider details for display
-const providerDetails: Record<string, { maxSpeed: string; startingPrice: string; description: string; pros: string[]; cons: string[] }> = {
-  'xfinity': { maxSpeed: '2 Gbps', startingPrice: '$30', description: 'Leading cable and fiber provider with extensive nationwide coverage', pros: ['Wide availability', 'Bundle options', 'Fast speeds'], cons: ['Price increases after promo', 'Equipment fees'] },
-  'spectrum': { maxSpeed: '1 Gbps', startingPrice: '$50', description: 'Major cable provider known for no contracts and reliable service', pros: ['No contracts', 'Free modem', 'No data caps'], cons: ['Upload speeds limited', 'Price varies by region'] },
-  'att-internet': { maxSpeed: '5 Gbps', startingPrice: '$55', description: 'Nationwide fiber and DSL provider with extensive coverage', pros: ['Fiber available', 'No data caps on fiber', 'Reliable'], cons: ['DSL speeds limited', 'Equipment fees'] },
-  'verizon-fios': { maxSpeed: '2.3 Gbps', startingPrice: '$50', description: 'Premium fiber provider with symmetrical upload/download speeds', pros: ['Symmetrical speeds', 'No data caps', 'Reliable'], cons: ['Limited availability', 'Higher prices'] },
-  'verizon-5g': { maxSpeed: '300 Mbps', startingPrice: '$50', description: '5G home internet with no annual contracts', pros: ['No contracts', 'Easy setup', 'No data caps'], cons: ['Speed varies by location', 'Limited availability'] },
-  'google-fiber': { maxSpeed: '8 Gbps', startingPrice: '$70', description: 'Ultra-fast fiber in select cities with simple pricing', pros: ['Fastest speeds', 'Simple pricing', 'No data caps'], cons: ['Very limited availability', 'No bundles'] },
-  'frontier': { maxSpeed: '5 Gbps', startingPrice: '$50', description: 'Growing fiber network with competitive pricing', pros: ['Competitive pricing', 'No contracts', 'Growing fiber'], cons: ['Limited availability', 'Customer service'] },
-  'cox': { maxSpeed: '2 Gbps', startingPrice: '$50', description: 'Regional cable and fiber provider with strong coverage', pros: ['Reliable speeds', 'Bundle options', 'Good coverage'], cons: ['Data caps', 'Price increases'] },
-  't-mobile': { maxSpeed: '245 Mbps', startingPrice: '$50', description: '5G home internet with no annual contracts', pros: ['No contracts', 'Easy setup', 'Affordable'], cons: ['Speed varies', 'Not available everywhere'] },
-  'starlink': { maxSpeed: '220 Mbps', startingPrice: '$120', description: 'Revolutionary satellite internet available virtually anywhere', pros: ['Available anywhere', 'No contracts', 'Low latency'], cons: ['High upfront cost', 'Weather dependent'] },
-  'viasat': { maxSpeed: '150 Mbps', startingPrice: '$70', description: 'Satellite internet for rural and remote areas', pros: ['Wide coverage', 'Rural availability'], cons: ['Data caps', 'Higher latency'] },
-  'centurylink': { maxSpeed: '940 Mbps', startingPrice: '$50', description: 'Fiber and DSL provider with price-for-life guarantee', pros: ['Price lock guarantee', 'No contracts'], cons: ['Limited fiber areas', 'DSL speeds vary'] },
-  'optimum': { maxSpeed: '8 Gbps', startingPrice: '$40', description: 'Cable and fiber provider in the Northeast', pros: ['Fast fiber options', 'Competitive pricing'], cons: ['Regional only', 'Equipment fees'] },
-  'metronet': { maxSpeed: '5 Gbps', startingPrice: '$50', description: '100% fiber provider expanding across the Midwest', pros: ['100% fiber', 'Symmetrical speeds', 'No data caps'], cons: ['Limited availability', 'Expanding slowly'] },
-  'ziply-fiber': { maxSpeed: '5 Gbps', startingPrice: '$20', description: 'Northwest fiber provider with affordable plans', pros: ['Very affordable', 'True fiber', 'No contracts'], cons: ['Northwest only', 'Limited support'] },
-  'brightspeed': { maxSpeed: '2 Gbps', startingPrice: '$50', description: 'Fiber and DSL provider in the South and Midwest', pros: ['Growing fiber', 'Competitive pricing'], cons: ['New company', 'Limited fiber areas'] },
-  'windstream': { maxSpeed: '2 Gbps', startingPrice: '$40', description: 'Kinetic fiber and DSL service in rural areas', pros: ['Rural availability', 'Affordable'], cons: ['DSL speeds vary', 'Limited fiber'] },
+// Provider editorial content (description, pros, cons) - prices/speeds come from API
+const providerEditorial: Record<string, { description: string; pros: string[]; cons: string[] }> = {
+  'xfinity': { description: 'Leading cable and fiber provider with extensive nationwide coverage', pros: ['Wide availability', 'Bundle options', 'Fast speeds'], cons: ['Price increases after promo', 'Equipment fees'] },
+  'spectrum': { description: 'Major cable provider known for no contracts and reliable service', pros: ['No contracts', 'Free modem', 'No data caps'], cons: ['Upload speeds limited', 'Price varies by region'] },
+  'att-internet': { description: 'Nationwide fiber and DSL provider with extensive coverage', pros: ['Fiber available', 'No data caps on fiber', 'Reliable'], cons: ['DSL speeds limited', 'Equipment fees'] },
+  'verizon-fios': { description: 'Premium fiber provider with symmetrical upload/download speeds', pros: ['Symmetrical speeds', 'No data caps', 'Reliable'], cons: ['Limited availability', 'Higher prices'] },
+  'verizon-5g': { description: '5G home internet with no annual contracts', pros: ['No contracts', 'Easy setup', 'No data caps'], cons: ['Speed varies by location', 'Limited availability'] },
+  'google-fiber': { description: 'Ultra-fast fiber in select cities with simple pricing', pros: ['Fastest speeds', 'Simple pricing', 'No data caps'], cons: ['Very limited availability', 'No bundles'] },
+  'frontier': { description: 'Growing fiber network with competitive pricing', pros: ['Competitive pricing', 'No contracts', 'Growing fiber'], cons: ['Limited availability', 'Customer service'] },
+  'frontier-fiber': { description: 'Growing fiber network with competitive pricing', pros: ['Competitive pricing', 'No contracts', 'Growing fiber'], cons: ['Limited availability', 'Customer service'] },
+  'cox': { description: 'Regional cable and fiber provider with strong coverage', pros: ['Reliable speeds', 'Bundle options', 'Good coverage'], cons: ['Data caps', 'Price increases'] },
+  't-mobile': { description: '5G home internet with no annual contracts', pros: ['No contracts', 'Easy setup', 'Affordable'], cons: ['Speed varies', 'Not available everywhere'] },
+  'starlink': { description: 'Revolutionary satellite internet available virtually anywhere', pros: ['Available anywhere', 'No contracts', 'Low latency'], cons: ['High upfront cost', 'Weather dependent'] },
+  'viasat': { description: 'Satellite internet for rural and remote areas', pros: ['Wide coverage', 'Rural availability'], cons: ['Data caps', 'Higher latency'] },
+  'hughesnet': { description: 'Satellite internet with nationwide coverage', pros: ['Available everywhere', 'No contracts'], cons: ['Data caps', 'Higher latency'] },
+  'centurylink': { description: 'Fiber and DSL provider with price-for-life guarantee', pros: ['Price lock guarantee', 'No contracts'], cons: ['Limited fiber areas', 'DSL speeds vary'] },
+  'optimum': { description: 'Cable and fiber provider in the Northeast', pros: ['Fast fiber options', 'Competitive pricing'], cons: ['Regional only', 'Equipment fees'] },
+  'metronet': { description: '100% fiber provider expanding across the Midwest', pros: ['100% fiber', 'Symmetrical speeds', 'No data caps'], cons: ['Limited availability', 'Expanding slowly'] },
+  'ziply-fiber': { description: 'Northwest fiber provider with affordable plans', pros: ['Very affordable', 'True fiber', 'No contracts'], cons: ['Northwest only', 'Limited support'] },
+  'brightspeed': { description: 'Fiber and DSL provider in the South and Midwest', pros: ['Growing fiber', 'Competitive pricing'], cons: ['New company', 'Limited fiber areas'] },
+  'windstream': { description: 'Kinetic fiber and DSL service in rural areas', pros: ['Rural availability', 'Affordable'], cons: ['DSL speeds vary', 'Limited fiber'] },
+  'wow': { description: 'Regional cable provider in the Midwest and Southeast', pros: ['No contracts', 'Competitive pricing'], cons: ['Limited availability', 'Regional only'] },
 }
 
 const techColors: Record<string, string> = {
@@ -77,30 +80,44 @@ export function ProviderDetailPanel({ data }: { data?: { providerSlug?: string; 
     const fetchProviderData = async () => {
       setIsLoading(true)
       try {
-        // Fetch featured plans which include provider info
-        const res = await fetch('/api/plans/featured')
+        // Fetch real plan data from the provider API
+        const res = await fetch(`/api/plans/${providerSlug}`)
         const apiData = await res.json()
 
-        if (apiData.providers) {
-          const providerData = apiData.providers.find(
-            (p: { slug: string }) => p.slug === providerSlug || p.slug.includes(providerSlug.split('-')[0])
-          )
+        if (apiData.success && apiData.provider) {
+          const editorial = providerEditorial[providerSlug] || {}
 
-          if (providerData) {
-            const details = providerDetails[providerSlug] || {}
-            setProvider({
-              id: 0,
-              name: providerData.name,
-              slug: providerData.slug,
-              technologies: providerData.plans?.map((p: Plan) => p.technology).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i) || [],
-              description: details.description,
-              maxSpeed: details.maxSpeed,
-              startingPrice: details.startingPrice,
-            })
-            // Get ALL plans, sorted by price
-            const allPlans = (providerData.plans || []).sort((a: Plan, b: Plan) => a.price - b.price)
-            setPlans(allPlans)
-          }
+          // Get unique technologies from plans
+          const technologies = apiData.provider.technologies ||
+            [...new Set(apiData.plans?.residential?.map((p: { connectionType: string }) => p.connectionType) || [])]
+
+          setProvider({
+            id: apiData.provider.id,
+            name: apiData.provider.name,
+            slug: apiData.provider.slug,
+            technologies: technologies,
+            description: editorial.description,
+            maxSpeed: apiData.summary?.speedRange?.max,
+            startingPrice: apiData.summary?.priceRange?.min,
+          })
+
+          // Transform and sort plans by price
+          const residentialPlans = (apiData.plans?.residential || []).map((p: {
+            planName: string
+            monthlyPrice: number
+            downloadSpeed: number
+            uploadSpeed?: number
+            connectionType: string
+          }) => ({
+            planName: p.planName,
+            price: p.monthlyPrice,
+            downloadSpeed: p.downloadSpeed,
+            uploadSpeed: p.uploadSpeed,
+            technology: p.connectionType,
+            tier: p.monthlyPrice < 60 ? 'budget' : p.monthlyPrice < 100 ? 'value' : 'premium',
+          })).sort((a: Plan, b: Plan) => a.price - b.price)
+
+          setPlans(residentialPlans)
         }
       } catch (error) {
         console.error('Failed to fetch provider:', error)
@@ -124,7 +141,7 @@ export function ProviderDetailPanel({ data }: { data?: { providerSlug?: string; 
     }
   }
 
-  const details = providerSlug ? providerDetails[providerSlug] : null
+  const editorial = providerSlug ? providerEditorial[providerSlug] : null
   const displayedPlans = showAllPlans ? plans : plans.slice(0, 3)
 
   if (!providerSlug) {
@@ -197,26 +214,30 @@ export function ProviderDetailPanel({ data }: { data?: { providerSlug?: string; 
           <div className="grid grid-cols-2 gap-3">
             {provider.maxSpeed && (
               <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-cyan-400">{provider.maxSpeed}</div>
+                <div className="text-lg font-bold text-cyan-400">
+                  {provider.maxSpeed >= 1000
+                    ? `${(provider.maxSpeed / 1000).toFixed(provider.maxSpeed % 1000 === 0 ? 0 : 1)} Gbps`
+                    : `${provider.maxSpeed} Mbps`}
+                </div>
                 <div className="text-xs text-gray-500">Max Speed</div>
               </div>
             )}
             {provider.startingPrice && (
               <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                <div className="text-lg font-bold text-green-400">{provider.startingPrice}/mo</div>
-                <div className="text-xs text-gray-500">Starting Price</div>
+                <div className="text-[8px] text-gray-500 uppercase mb-0.5">As low as</div>
+                <div className="text-lg font-bold text-green-400">${provider.startingPrice}/mo</div>
               </div>
             )}
           </div>
 
           {/* Pros & Cons */}
-          {details && (details.pros?.length > 0 || details.cons?.length > 0) && (
+          {editorial && (editorial.pros?.length > 0 || editorial.cons?.length > 0) && (
             <div className="grid grid-cols-2 gap-3">
-              {details.pros?.length > 0 && (
+              {editorial.pros?.length > 0 && (
                 <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">
                   <div className="text-xs text-green-400 font-medium mb-2">Pros</div>
                   <ul className="space-y-1">
-                    {details.pros.slice(0, 3).map((pro, i) => (
+                    {editorial.pros.slice(0, 3).map((pro, i) => (
                       <li key={i} className="text-xs text-gray-300 flex items-start gap-1">
                         <svg className="w-3 h-3 text-green-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -227,11 +248,11 @@ export function ProviderDetailPanel({ data }: { data?: { providerSlug?: string; 
                   </ul>
                 </div>
               )}
-              {details.cons?.length > 0 && (
+              {editorial.cons?.length > 0 && (
                 <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-3">
                   <div className="text-xs text-red-400 font-medium mb-2">Cons</div>
                   <ul className="space-y-1">
-                    {details.cons.slice(0, 3).map((con, i) => (
+                    {editorial.cons.slice(0, 3).map((con, i) => (
                       <li key={i} className="text-xs text-gray-300 flex items-start gap-1">
                         <svg className="w-3 h-3 text-red-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />

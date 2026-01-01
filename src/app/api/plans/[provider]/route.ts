@@ -31,12 +31,30 @@ export async function GET(request: NextRequest, { params }: Props) {
       )
     }
 
-    // Build query for plans
+    // Build query for plans - exclude subsidized/low-income and upgrade plans
     let query = supabase
       .from('broadband_plans')
       .select('*')
       .eq('provider_id', providerData.id)
       .eq('is_active', true)
+      .gte('monthly_price', 20)  // Exclude bundle add-on prices
+      // Exclude low-income/subsidized programs
+      .not('service_plan_name', 'ilike', '%Internet Assist%')
+      .not('service_plan_name', 'ilike', 'Access from AT&T%')
+      .not('service_plan_name', 'ilike', '%Internet Essentials%')
+      .not('service_plan_name', 'ilike', '%Lifeline%')
+      .not('service_plan_name', 'ilike', '%ACP%')
+      .not('service_plan_name', 'ilike', '%ASSIST%')
+      // Exclude upgrade add-ons
+      .not('service_plan_name', 'ilike', '%Upgrade%')
+      // Exclude non-home-internet plans
+      .not('service_plan_name', 'ilike', 'Access for%')
+      .not('service_plan_name', 'ilike', '%Accessibility Plan%')
+      .not('service_plan_name', 'ilike', '%By the Gig%')
+      .not('service_plan_name', 'ilike', '%Hibernation%')
+      // Exclude business/education plans
+      .not('service_plan_name', 'ilike', '%eRate%')
+      .not('service_plan_name', 'ilike', '%Business%')
 
     if (serviceType) {
       query = query.eq('service_type', serviceType)
