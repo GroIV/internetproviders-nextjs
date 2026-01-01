@@ -24,6 +24,30 @@ interface ScheduledUpdate {
   created_at: string
 }
 
+interface AuditLogEntry {
+  id: number
+  update_id: number | null
+  update_title: string
+  action: string
+  action_by: string
+  details: Record<string, unknown> | null
+  created_at: string
+}
+
+interface DryRunResult {
+  success: boolean
+  estimatedRows?: number
+  currentValues?: Array<{
+    id: number
+    plan: string
+    provider: string
+    type: string
+    currentPrice: number
+    field: string
+  }>
+  error?: string
+}
+
 interface Stats {
   total: number
   pending: number
@@ -46,9 +70,25 @@ const changeTypeLabels: Record<string, string> = {
   feature_change: 'Feature Change',
 }
 
+const actionLabels: Record<string, { label: string; color: string }> = {
+  applied: { label: 'Applied', color: 'text-green-400' },
+  skipped: { label: 'Skipped', color: 'text-gray-400' },
+  reopened: { label: 'Reopened', color: 'text-blue-400' },
+  deleted: { label: 'Deleted', color: 'text-red-400' },
+  sql_executed: { label: 'SQL Executed', color: 'text-amber-400' },
+  sql_execute_failed: { label: 'SQL Failed', color: 'text-red-400' },
+  dry_run: { label: 'Dry Run', color: 'text-cyan-400' },
+  created: { label: 'Created', color: 'text-green-400' },
+}
+
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr + 'T00:00:00')
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function formatDateTime(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
 function getDaysUntil(dateStr: string): number {
@@ -59,14 +99,272 @@ function getDaysUntil(dateStr: string): number {
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
 
+// Calendar Component
+function CalendarView({
+  updates,
+  currentMonth,
+  onMonthChange,
+  onSelectDate,
+}: {
+  updates: ScheduledUpdate[]
+  currentMonth: Date
+  onMonthChange: (date: Date) => void
+  onSelectDate: (date: string) => void
+}) {
+  const year = currentMonth.getFullYear()
+  const month = currentMonth.getMonth()
+
+  const firstDay = new Date(year, month, 1)
+  const lastDay = new Date(year, month + 1, 0)
+  const startPadding = firstDay.getDay()
+  const daysInMonth = lastDay.getDate()
+
+  const days: (number | null)[] = []
+  for (let i = 0; i < startPadding; i++) days.push(null)
+  for (let i = 1; i <= daysInMonth; i++) days.push(i)
+
+  const updatesByDate: Record<string, ScheduledUpdate[]> = {}
+  for (const update of updates) {
+    const date = update.effective_date
+    if (!updatesByDate[date]) updatesByDate[date] = []
+    updatesByDate[date].push(update)
+  }
+
+  const prevMonth = () => {
+    onMonthChange(new Date(year, month - 1, 1))
+  }
+
+  const nextMonth = () => {
+    onMonthChange(new Date(year, month + 1, 1))
+  }
+
+  const today = new Date().toISOString().split('T')[0]
+
+  return (
+    <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-700/50">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <button onClick={prevMonth} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h3 className="text-lg font-semibold text-white">
+          {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+        </h3>
+        <button onClick={nextMonth} className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} className="text-center text-xs text-gray-500 py-1">{day}</div>
+        ))}
+      </div>
+
+      {/* Days */}
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((day, i) => {
+          if (day === null) {
+            return <div key={i} className="h-12" />
+          }
+
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+          const dayUpdates = updatesByDate[dateStr] || []
+          const isToday = dateStr === today
+          const hasPending = dayUpdates.some(u => u.status === 'pending')
+          const hasApplied = dayUpdates.some(u => u.status === 'applied')
+
+          return (
+            <button
+              key={i}
+              onClick={() => dayUpdates.length > 0 && onSelectDate(dateStr)}
+              disabled={dayUpdates.length === 0}
+              className={`h-12 rounded-lg relative flex flex-col items-center justify-start pt-1 transition-colors ${
+                isToday ? 'bg-cyan-600/20 border border-cyan-500/50' :
+                dayUpdates.length > 0 ? 'bg-gray-800/50 hover:bg-gray-700/50 cursor-pointer' :
+                'text-gray-600'
+              }`}
+            >
+              <span className={`text-sm ${isToday ? 'text-cyan-400 font-bold' : ''}`}>{day}</span>
+              {dayUpdates.length > 0 && (
+                <div className="flex gap-0.5 mt-1">
+                  {hasPending && <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
+                  {hasApplied && <div className="w-1.5 h-1.5 rounded-full bg-green-400" />}
+                </div>
+              )}
+              {dayUpdates.length > 1 && (
+                <span className="absolute bottom-0.5 text-[10px] text-gray-500">+{dayUpdates.length}</span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// Audit Log Panel
+function AuditLogPanel({ auditLog }: { auditLog: AuditLogEntry[] }) {
+  if (!auditLog || auditLog.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <p>No activity recorded yet</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-2 max-h-96 overflow-y-auto">
+      {auditLog.map(entry => {
+        const actionInfo = actionLabels[entry.action] || { label: entry.action, color: 'text-gray-400' }
+        return (
+          <div key={entry.id} className="flex items-start gap-3 p-3 bg-gray-800/30 rounded-lg">
+            <div className={`mt-0.5 ${actionInfo.color}`}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-medium ${actionInfo.color}`}>{actionInfo.label}</span>
+                <span className="text-xs text-gray-500">{formatDateTime(entry.created_at)}</span>
+              </div>
+              <p className="text-sm text-gray-400 truncate">{entry.update_title}</p>
+              {entry.details && Object.keys(entry.details).length > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {JSON.stringify(entry.details)}
+                </p>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// Dry Run Preview Modal
+function DryRunModal({
+  isOpen,
+  onClose,
+  update,
+  dryRunResult,
+  isLoading,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  update: ScheduledUpdate | null
+  dryRunResult: DryRunResult | null
+  isLoading: boolean
+}) {
+  if (!isOpen || !update) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+      <div className="bg-gray-900 rounded-xl border border-gray-700 max-w-2xl w-full max-h-[80vh] overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b border-gray-800">
+          <h3 className="text-lg font-semibold text-white">SQL Preview: {update.title}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-4 overflow-y-auto max-h-[60vh]">
+          {/* SQL */}
+          <div className="mb-4">
+            <h4 className="text-sm font-medium text-gray-400 mb-2">SQL Statement</h4>
+            <pre className="p-3 bg-gray-800 rounded-lg text-xs text-gray-300 overflow-x-auto">
+              {update.sql_to_execute}
+            </pre>
+          </div>
+
+          {/* Dry Run Results */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
+              <span className="ml-2 text-gray-400">Analyzing...</span>
+            </div>
+          ) : dryRunResult ? (
+            <>
+              {dryRunResult.error && (
+                <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                  <p className="text-sm text-red-400">{dryRunResult.error}</p>
+                </div>
+              )}
+
+              {dryRunResult.estimatedRows !== undefined && (
+                <div className="mb-4 p-3 bg-cyan-500/20 border border-cyan-500/30 rounded-lg">
+                  <p className="text-sm text-cyan-400">
+                    <span className="font-bold">{dryRunResult.estimatedRows}</span> rows will be affected
+                  </p>
+                </div>
+              )}
+
+              {dryRunResult.currentValues && dryRunResult.currentValues.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-400 mb-2">Current Values (up to 10 shown)</h4>
+                  <div className="bg-gray-800/50 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-700">
+                          <th className="text-left p-2 text-gray-400">ID</th>
+                          <th className="text-left p-2 text-gray-400">Plan</th>
+                          <th className="text-left p-2 text-gray-400">Provider</th>
+                          <th className="text-left p-2 text-gray-400">Current</th>
+                          <th className="text-left p-2 text-gray-400">New</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dryRunResult.currentValues.map(row => (
+                          <tr key={row.id} className="border-b border-gray-700/50">
+                            <td className="p-2 text-gray-500">{row.id}</td>
+                            <td className="p-2 text-white">{row.plan}</td>
+                            <td className="p-2 text-gray-400">{row.provider}</td>
+                            <td className="p-2 text-red-400">${row.currentPrice}</td>
+                            <td className="p-2 text-green-400">{update.new_value}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-gray-500 text-center py-4">Click &quot;Run Preview&quot; to see affected rows</p>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2 p-4 border-t border-gray-800">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function UpdateCard({
   update,
   onAction,
   onExecuteSQL,
+  onDryRun,
 }: {
   update: ScheduledUpdate
   onAction: (id: number, action: 'apply' | 'skip' | 'reopen' | 'delete') => void
   onExecuteSQL: (id: number, sql: string) => Promise<void>
+  onDryRun: (update: ScheduledUpdate) => void
 }) {
   const [copied, setCopied] = useState(false)
   const [executing, setExecuting] = useState(false)
@@ -172,7 +470,7 @@ function UpdateCard({
         </div>
       )}
 
-      {/* SQL Preview with Copy/Execute buttons */}
+      {/* SQL Preview with Copy/Execute/Preview buttons */}
       {update.sql_to_execute && (
         <div className="mb-3">
           <details className="group">
@@ -186,7 +484,7 @@ function UpdateCard({
               <pre className="p-2 bg-gray-800 rounded text-xs text-gray-300 overflow-x-auto mb-2">
                 {update.sql_to_execute}
               </pre>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={handleCopySQL}
                   className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
@@ -207,32 +505,44 @@ function UpdateCard({
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
-                      Copy SQL
+                      Copy
                     </>
                   )}
                 </button>
                 {update.status === 'pending' && (
-                  <button
-                    onClick={handleExecuteSQL}
-                    disabled={executing}
-                    className="flex items-center gap-1 px-2 py-1 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded transition-colors disabled:opacity-50"
-                  >
-                    {executing ? (
-                      <>
-                        <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Executing...
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        Execute SQL
-                      </>
-                    )}
-                  </button>
+                  <>
+                    <button
+                      onClick={() => onDryRun(update)}
+                      className="flex items-center gap-1 px-2 py-1 text-xs bg-cyan-600/20 text-cyan-400 hover:bg-cyan-600/30 rounded transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Preview
+                    </button>
+                    <button
+                      onClick={handleExecuteSQL}
+                      disabled={executing}
+                      className="flex items-center gap-1 px-2 py-1 text-xs bg-amber-600 hover:bg-amber-500 text-white rounded transition-colors disabled:opacity-50"
+                    >
+                      {executing ? (
+                        <>
+                          <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Running...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          Execute
+                        </>
+                      )}
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -282,14 +592,12 @@ function UpdateCard({
             </button>
           </>
         ) : (
-          <>
-            <button
-              onClick={() => onAction(update.id, 'reopen')}
-              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg transition-colors"
-            >
-              Reopen
-            </button>
-          </>
+          <button
+            onClick={() => onAction(update.id, 'reopen')}
+            className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm rounded-lg transition-colors"
+          >
+            Reopen
+          </button>
         )}
         <button
           onClick={() => {
@@ -377,202 +685,219 @@ function AddUpdateForm({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl p-6 border border-cyan-500/30">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">Add Scheduled Update</h3>
-        <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+      <div className="bg-gray-900 rounded-xl p-6 border border-cyan-500/30 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white">Add Scheduled Update</h3>
+          <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Provider Slug *</label>
+              <input
+                type="text"
+                value={formData.provider_slug}
+                onChange={e => setFormData({ ...formData, provider_slug: e.target.value })}
+                placeholder="spectrum"
+                required
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Provider Name *</label>
+              <input
+                type="text"
+                value={formData.provider_name}
+                onChange={e => setFormData({ ...formData, provider_name: e.target.value })}
+                placeholder="Spectrum"
+                required
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Effective Date *</label>
+              <input
+                type="date"
+                value={formData.effective_date}
+                onChange={e => setFormData({ ...formData, effective_date: e.target.value })}
+                required
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Category *</label>
+              <select
+                value={formData.category}
+                onChange={e => setFormData({ ...formData, category: e.target.value })}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none"
+              >
+                <option value="pricing">Pricing</option>
+                <option value="product">Product</option>
+                <option value="promotion">Promotion</option>
+                <option value="discontinuation">Discontinuation</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Change Type *</label>
+              <select
+                value={formData.change_type}
+                onChange={e => setFormData({ ...formData, change_type: e.target.value })}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none"
+              >
+                <option value="price_increase">Price Increase</option>
+                <option value="price_decrease">Price Decrease</option>
+                <option value="new_product">New Product</option>
+                <option value="end_promo">Promo Ending</option>
+                <option value="feature_change">Feature Change</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Title *</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={e => setFormData({ ...formData, title: e.target.value })}
+              placeholder="Mobile Unlimited Plus price increase"
+              required
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Additional details..."
+              rows={2}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Old Value</label>
+              <input
+                type="text"
+                value={formData.old_value}
+                onChange={e => setFormData({ ...formData, old_value: e.target.value })}
+                placeholder="$40/mo"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">New Value</label>
+              <input
+                type="text"
+                value={formData.new_value}
+                onChange={e => setFormData({ ...formData, new_value: e.target.value })}
+                placeholder="$50/mo"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Affected Table</label>
+              <input
+                type="text"
+                value={formData.affected_table}
+                onChange={e => setFormData({ ...formData, affected_table: e.target.value })}
+                placeholder="broadband_plans"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Field to Update</label>
+              <input
+                type="text"
+                value={formData.field_to_update}
+                onChange={e => setFormData({ ...formData, field_to_update: e.target.value })}
+                placeholder="monthly_price"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">SQL to Execute</label>
+            <textarea
+              value={formData.sql_to_execute}
+              onChange={e => setFormData({ ...formData, sql_to_execute: e.target.value })}
+              placeholder="UPDATE broadband_plans SET monthly_price = 50.00 WHERE ..."
+              rows={3}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none font-mono text-sm resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Source Notes</label>
+            <input
+              type="text"
+              value={formData.source_notes}
+              onChange={e => setFormData({ ...formData, source_notes: e.target.value })}
+              placeholder="Spectrum Marketing Guidelines PDF, received 1/1/2026"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Adding...' : 'Add Update'}
+            </button>
+          </div>
+        </form>
       </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Provider Slug *</label>
-            <input
-              type="text"
-              value={formData.provider_slug}
-              onChange={e => setFormData({ ...formData, provider_slug: e.target.value })}
-              placeholder="spectrum"
-              required
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Provider Name *</label>
-            <input
-              type="text"
-              value={formData.provider_name}
-              onChange={e => setFormData({ ...formData, provider_name: e.target.value })}
-              placeholder="Spectrum"
-              required
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Effective Date *</label>
-            <input
-              type="date"
-              value={formData.effective_date}
-              onChange={e => setFormData({ ...formData, effective_date: e.target.value })}
-              required
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Category *</label>
-            <select
-              value={formData.category}
-              onChange={e => setFormData({ ...formData, category: e.target.value })}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none"
-            >
-              <option value="pricing">Pricing</option>
-              <option value="product">Product</option>
-              <option value="promotion">Promotion</option>
-              <option value="discontinuation">Discontinuation</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Change Type *</label>
-            <select
-              value={formData.change_type}
-              onChange={e => setFormData({ ...formData, change_type: e.target.value })}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none"
-            >
-              <option value="price_increase">Price Increase</option>
-              <option value="price_decrease">Price Decrease</option>
-              <option value="new_product">New Product</option>
-              <option value="end_promo">Promo Ending</option>
-              <option value="feature_change">Feature Change</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Title *</label>
-          <input
-            type="text"
-            value={formData.title}
-            onChange={e => setFormData({ ...formData, title: e.target.value })}
-            placeholder="Mobile Unlimited Plus price increase"
-            required
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Description</label>
-          <textarea
-            value={formData.description}
-            onChange={e => setFormData({ ...formData, description: e.target.value })}
-            placeholder="Additional details about this change..."
-            rows={2}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none resize-none"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Old Value</label>
-            <input
-              type="text"
-              value={formData.old_value}
-              onChange={e => setFormData({ ...formData, old_value: e.target.value })}
-              placeholder="$40/mo"
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">New Value</label>
-            <input
-              type="text"
-              value={formData.new_value}
-              onChange={e => setFormData({ ...formData, new_value: e.target.value })}
-              placeholder="$50/mo"
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Affected Table</label>
-            <input
-              type="text"
-              value={formData.affected_table}
-              onChange={e => setFormData({ ...formData, affected_table: e.target.value })}
-              placeholder="broadband_plans"
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Field to Update</label>
-            <input
-              type="text"
-              value={formData.field_to_update}
-              onChange={e => setFormData({ ...formData, field_to_update: e.target.value })}
-              placeholder="monthly_price"
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">SQL to Execute</label>
-          <textarea
-            value={formData.sql_to_execute}
-            onChange={e => setFormData({ ...formData, sql_to_execute: e.target.value })}
-            placeholder="UPDATE broadband_plans SET monthly_price = 50.00 WHERE ..."
-            rows={3}
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none font-mono text-sm resize-none"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Source Notes</label>
-          <input
-            type="text"
-            value={formData.source_notes}
-            onChange={e => setFormData({ ...formData, source_notes: e.target.value })}
-            placeholder="Spectrum Marketing Guidelines PDF, received 1/1/2026"
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
-          />
-        </div>
-
-        <div className="flex justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Adding...' : 'Add Update'}
-          </button>
-        </div>
-      </form>
     </div>
   )
 }
 
 export default function AdminUpdatesPage() {
   const [updates, setUpdates] = useState<ScheduledUpdate[]>([])
+  const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([])
   const [stats, setStats] = useState<Stats>({ total: 0, pending: 0, dueSoon: 0, upcomingThisMonth: 0 })
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'pending' | 'applied' | 'skipped'>('pending')
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list')
   const [providerFilter, setProviderFilter] = useState<string>('')
+  const [dateFrom, setDateFrom] = useState<string>('')
+  const [dateTo, setDateTo] = useState<string>('')
+  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [showAuditLog, setShowAuditLog] = useState(false)
   const [batchApplying, setBatchApplying] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  // Dry run modal state
+  const [dryRunModal, setDryRunModal] = useState<{
+    isOpen: boolean
+    update: ScheduledUpdate | null
+    result: DryRunResult | null
+    loading: boolean
+  }>({ isOpen: false, update: null, result: null, loading: false })
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type })
@@ -581,18 +906,24 @@ export default function AdminUpdatesPage() {
 
   const fetchUpdates = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/updates')
+      const params = new URLSearchParams()
+      if (dateFrom) params.set('dateFrom', dateFrom)
+      if (dateTo) params.set('dateTo', dateTo)
+      params.set('auditLog', 'true')
+
+      const res = await fetch(`/api/admin/updates?${params}`)
       const data = await res.json()
       if (data.success) {
         setUpdates(data.data)
         setStats(data.stats)
+        setAuditLog(data.auditLog || [])
       }
     } catch (error) {
       console.error('Failed to fetch updates:', error)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [dateFrom, dateTo])
 
   useEffect(() => {
     fetchUpdates()
@@ -615,7 +946,7 @@ export default function AdminUpdatesPage() {
     }
   }
 
-  const handleExecuteSQL = async (id: number, sql: string) => {
+  const handleExecuteSQL = async (id: number) => {
     try {
       const res = await fetch(`/api/admin/updates/${id}`, {
         method: 'PATCH',
@@ -628,7 +959,6 @@ export default function AdminUpdatesPage() {
         showToast(data.message || 'SQL executed successfully', 'success')
         fetchUpdates()
       } else {
-        // If SQL function not configured, show the SQL to copy
         if (data.error?.includes('function not configured')) {
           showToast('Auto-execute not available. Please copy and run SQL manually.', 'error')
         } else {
@@ -638,6 +968,31 @@ export default function AdminUpdatesPage() {
     } catch (error) {
       console.error('Execute SQL failed:', error)
       showToast('Failed to execute SQL', 'error')
+    }
+  }
+
+  const handleDryRun = async (update: ScheduledUpdate) => {
+    setDryRunModal({ isOpen: true, update, result: null, loading: true })
+
+    try {
+      const res = await fetch(`/api/admin/updates/${update.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'dry_run' }),
+      })
+      const data = await res.json()
+
+      setDryRunModal(prev => ({
+        ...prev,
+        loading: false,
+        result: data.dryRun || { success: false, error: data.error },
+      }))
+    } catch (error) {
+      setDryRunModal(prev => ({
+        ...prev,
+        loading: false,
+        result: { success: false, error: 'Failed to run preview' },
+      }))
     }
   }
 
@@ -667,19 +1022,15 @@ export default function AdminUpdatesPage() {
       const data = await res.json()
 
       if (data.success) {
-        showToast(data.message || `${data.applied} updates applied`, 'success')
-
-        // If there are SQL statements, show them
         if (data.sqlStatements && data.sqlStatements.length > 0) {
           const sqlList = data.sqlStatements.map((s: { title: string; sql: string }) =>
             `-- ${s.title}\n${s.sql}`
           ).join('\n\n')
-
-          // Copy all SQL to clipboard
           await navigator.clipboard.writeText(sqlList)
           showToast(`${data.applied} updates applied. ${data.sqlStatements.length} SQL statements copied to clipboard!`, 'success')
+        } else {
+          showToast(data.message || `${data.applied} updates applied`, 'success')
         }
-
         fetchUpdates()
       } else {
         showToast(data.error || 'Failed to batch apply', 'error')
@@ -692,9 +1043,15 @@ export default function AdminUpdatesPage() {
     }
   }
 
+  const clearDateFilter = () => {
+    setDateFrom('')
+    setDateTo('')
+  }
+
   const filteredUpdates = updates
     .filter(u => u.status === activeTab)
     .filter(u => !providerFilter || u.provider_slug === providerFilter)
+    .filter(u => !selectedDate || u.effective_date === selectedDate)
 
   const uniqueProviders = [...new Set(updates.map(u => u.provider_slug))]
 
@@ -720,10 +1077,19 @@ export default function AdminUpdatesPage() {
         </div>
       )}
 
+      {/* Dry Run Modal */}
+      <DryRunModal
+        isOpen={dryRunModal.isOpen}
+        onClose={() => setDryRunModal({ isOpen: false, update: null, result: null, loading: false })}
+        update={dryRunModal.update}
+        dryRunResult={dryRunModal.result}
+        isLoading={dryRunModal.loading}
+      />
+
       {/* Header */}
       <div className="bg-gray-900/50 border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <Link href="/" className="text-gray-400 hover:text-white">
@@ -768,89 +1134,198 @@ export default function AdminUpdatesPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-700/50">
-            <div className="text-3xl font-bold text-white">{stats.total}</div>
-            <div className="text-sm text-gray-400">Total Updates</div>
-          </div>
-          <div className="bg-gray-900/60 rounded-xl p-4 border border-cyan-500/30">
-            <div className="text-3xl font-bold text-cyan-400">{stats.pending}</div>
-            <div className="text-sm text-gray-400">Pending</div>
-          </div>
-          <div className="bg-gray-900/60 rounded-xl p-4 border border-red-500/30">
-            <div className="text-3xl font-bold text-red-400">{stats.dueSoon}</div>
-            <div className="text-sm text-gray-400">Due/Overdue</div>
-          </div>
-          <div className="bg-gray-900/60 rounded-xl p-4 border border-amber-500/30">
-            <div className="text-3xl font-bold text-amber-400">{stats.upcomingThisMonth}</div>
-            <div className="text-sm text-gray-400">This Month</div>
-          </div>
-        </div>
+        <div className="flex gap-8">
+          {/* Main Content */}
+          <div className="flex-1">
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-700/50">
+                <div className="text-3xl font-bold text-white">{stats.total}</div>
+                <div className="text-sm text-gray-400">Total</div>
+              </div>
+              <div className="bg-gray-900/60 rounded-xl p-4 border border-cyan-500/30">
+                <div className="text-3xl font-bold text-cyan-400">{stats.pending}</div>
+                <div className="text-sm text-gray-400">Pending</div>
+              </div>
+              <div className="bg-gray-900/60 rounded-xl p-4 border border-red-500/30">
+                <div className="text-3xl font-bold text-red-400">{stats.dueSoon}</div>
+                <div className="text-sm text-gray-400">Due/Overdue</div>
+              </div>
+              <div className="bg-gray-900/60 rounded-xl p-4 border border-amber-500/30">
+                <div className="text-3xl font-bold text-amber-400">{stats.upcomingThisMonth}</div>
+                <div className="text-sm text-gray-400">This Month</div>
+              </div>
+            </div>
 
-        {/* Filters */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-2">
-            {(['pending', 'applied', 'skipped'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeTab === tab
-                    ? 'bg-cyan-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:text-white'
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                <span className="ml-2 px-2 py-0.5 bg-black/30 rounded text-xs">
-                  {updates.filter(u => u.status === tab).length}
+            {/* Filters */}
+            <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+              <div className="flex gap-2">
+                {/* View Mode Toggle */}
+                <div className="flex bg-gray-800 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`px-3 py-1 rounded text-sm transition-colors ${
+                      viewMode === 'list' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    List
+                  </button>
+                  <button
+                    onClick={() => setViewMode('calendar')}
+                    className={`px-3 py-1 rounded text-sm transition-colors ${
+                      viewMode === 'calendar' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    Calendar
+                  </button>
+                </div>
+
+                {/* Status Tabs */}
+                {viewMode === 'list' && (
+                  <div className="flex gap-1">
+                    {(['pending', 'applied', 'skipped'] as const).map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => { setActiveTab(tab); setSelectedDate(null) }}
+                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                          activeTab === tab
+                            ? 'bg-cyan-600 text-white'
+                            : 'bg-gray-800 text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                        <span className="ml-1 text-xs opacity-60">
+                          {updates.filter(u => u.status === tab).length}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Date Range Filter */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={e => setDateFrom(e.target.value)}
+                    className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-sm text-white focus:border-cyan-500 focus:outline-none"
+                  />
+                  <span className="text-gray-500">to</span>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={e => setDateTo(e.target.value)}
+                    className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-sm text-white focus:border-cyan-500 focus:outline-none"
+                  />
+                  {(dateFrom || dateTo) && (
+                    <button
+                      onClick={clearDateFilter}
+                      className="text-gray-500 hover:text-white"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {/* Provider Filter */}
+                {uniqueProviders.length > 0 && (
+                  <select
+                    value={providerFilter}
+                    onChange={e => setProviderFilter(e.target.value)}
+                    className="px-3 py-1 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:border-cyan-500 focus:outline-none"
+                  >
+                    <option value="">All Providers</option>
+                    {uniqueProviders.map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            </div>
+
+            {/* Selected Date Banner */}
+            {selectedDate && (
+              <div className="mb-4 px-4 py-2 bg-cyan-500/20 border border-cyan-500/30 rounded-lg flex items-center justify-between">
+                <span className="text-sm text-cyan-400">
+                  Showing updates for {formatDate(selectedDate)}
                 </span>
-              </button>
-            ))}
-          </div>
+                <button
+                  onClick={() => setSelectedDate(null)}
+                  className="text-cyan-400 hover:text-cyan-300"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
 
-          {uniqueProviders.length > 0 && (
-            <select
-              value={providerFilter}
-              onChange={e => setProviderFilter(e.target.value)}
-              className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-cyan-500 focus:outline-none"
-            >
-              <option value="">All Providers</option>
-              {uniqueProviders.map(p => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          )}
-        </div>
-
-        {/* Updates List */}
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4" />
-            <p className="text-gray-400">Loading updates...</p>
-          </div>
-        ) : filteredUpdates.length === 0 ? (
-          <div className="text-center py-12 bg-gray-900/40 rounded-xl border border-gray-800">
-            <svg className="w-12 h-12 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <p className="text-gray-400 mb-2">No {activeTab} updates</p>
-            <p className="text-sm text-gray-500">
-              {activeTab === 'pending' ? 'Add an update to get started' : `No updates have been ${activeTab} yet`}
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredUpdates.map(update => (
-              <UpdateCard
-                key={update.id}
-                update={update}
-                onAction={handleAction}
-                onExecuteSQL={handleExecuteSQL}
+            {/* Content */}
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4" />
+                <p className="text-gray-400">Loading updates...</p>
+              </div>
+            ) : viewMode === 'calendar' ? (
+              <CalendarView
+                updates={updates.filter(u => u.status === 'pending')}
+                currentMonth={currentMonth}
+                onMonthChange={setCurrentMonth}
+                onSelectDate={setSelectedDate}
               />
-            ))}
+            ) : filteredUpdates.length === 0 ? (
+              <div className="text-center py-12 bg-gray-900/40 rounded-xl border border-gray-800">
+                <svg className="w-12 h-12 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <p className="text-gray-400 mb-2">No {activeTab} updates</p>
+                <p className="text-sm text-gray-500">
+                  {activeTab === 'pending' ? 'Add an update to get started' : `No updates have been ${activeTab} yet`}
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+                {filteredUpdates.map(update => (
+                  <UpdateCard
+                    key={update.id}
+                    update={update}
+                    onAction={handleAction}
+                    onExecuteSQL={handleExecuteSQL}
+                    onDryRun={handleDryRun}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Sidebar - Audit Log */}
+          <div className="hidden lg:block w-80">
+            <div className="sticky top-8">
+              <div className="bg-gray-900/60 rounded-xl border border-gray-700/50 overflow-hidden">
+                <div className="flex items-center justify-between p-4 border-b border-gray-800">
+                  <h3 className="font-semibold text-white">Activity Log</h3>
+                  <button
+                    onClick={() => setShowAuditLog(!showAuditLog)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <svg className={`w-4 h-4 transition-transform ${showAuditLog ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+                {showAuditLog && (
+                  <div className="p-4">
+                    <AuditLogPanel auditLog={auditLog} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

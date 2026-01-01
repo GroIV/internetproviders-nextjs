@@ -33,6 +33,9 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const provider = searchParams.get('provider')
     const upcoming = searchParams.get('upcoming') === 'true'
+    const dateFrom = searchParams.get('dateFrom')
+    const dateTo = searchParams.get('dateTo')
+    const includeAuditLog = searchParams.get('auditLog') === 'true'
 
     let query = supabase
       .from('provider_scheduled_updates')
@@ -49,6 +52,14 @@ export async function GET(request: NextRequest) {
 
     if (upcoming) {
       query = query.gte('effective_date', new Date().toISOString().split('T')[0])
+    }
+
+    // Date range filtering
+    if (dateFrom) {
+      query = query.gte('effective_date', dateFrom)
+    }
+    if (dateTo) {
+      query = query.lte('effective_date', dateTo)
     }
 
     const { data, error } = await query
@@ -78,11 +89,34 @@ export async function GET(request: NextRequest) {
       }).length,
     }
 
+    // Group by date for calendar view
+    const byDate: Record<string, typeof data> = {}
+    for (const update of data || []) {
+      const date = update.effective_date
+      if (!byDate[date]) {
+        byDate[date] = []
+      }
+      byDate[date].push(update)
+    }
+
+    // Fetch audit log if requested
+    let auditLog = null
+    if (includeAuditLog) {
+      const { data: logData } = await supabase
+        .from('provider_update_audit_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50)
+      auditLog = logData
+    }
+
     return NextResponse.json({
       success: true,
       data: data || [],
       grouped,
+      byDate,
       stats,
+      auditLog,
     })
 
   } catch (error) {
