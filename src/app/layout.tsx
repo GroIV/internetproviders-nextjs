@@ -6,7 +6,6 @@ import { Footer } from "@/components/Footer";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { LocationBanner } from "@/components/LocationBanner";
-import { PageChatSection } from "@/components/PageChatSection";
 import { FloatingChatButton } from "@/components/FloatingChatButton";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { JsonLd, generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo";
@@ -98,7 +97,6 @@ export default function RootLayout({
             <ChatProvider>
               <Navbar />
               <LocationBanner />
-              <PageChatSection />
               <main className="flex-grow">
                 {children}
               </main>

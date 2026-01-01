@@ -7,7 +7,7 @@ import { ChatWindow } from './ChatWindow'
 
 export function FloatingChatButton() {
   const pathname = usePathname()
-  const { isOpen, setIsOpen, messages, chatSectionVisible } = useChat()
+  const { isOpen, setIsOpen, messages } = useChat()
   const [isMounted, setIsMounted] = useState(false)
 
   // Prevent hydration mismatch
@@ -15,13 +15,6 @@ export function FloatingChatButton() {
     const timer = setTimeout(() => setIsMounted(true), 0)
     return () => clearTimeout(timer)
   }, [])
-
-  // Close floating panel when chat section becomes visible again
-  useEffect(() => {
-    if (chatSectionVisible && isOpen) {
-      setIsOpen(false)
-    }
-  }, [chatSectionVisible, isOpen, setIsOpen])
 
   // Don't show on homepage (has its own embedded chat) or AI assistant page
   const isHomepage = pathname === '/'
@@ -31,8 +24,8 @@ export function FloatingChatButton() {
     return null
   }
 
-  // Show floating button when chat section is scrolled out of view
-  const showButton = !chatSectionVisible
+  // Always show the button on non-homepage pages
+  const showButton = true
 
   return (
     <>
