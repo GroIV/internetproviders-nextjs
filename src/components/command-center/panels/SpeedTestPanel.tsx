@@ -62,16 +62,12 @@ function ResultCard({
   color: string
   delay: number
 }) {
-  const [showInfo, setShowInfo] = useState(false)
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
-      className="relative bg-gray-800/50 rounded-xl p-3 border border-gray-700/50 hover:border-gray-600/50 transition-all"
-      onMouseEnter={() => setShowInfo(true)}
-      onMouseLeave={() => setShowInfo(false)}
+      className="bg-gray-800/50 rounded-xl p-3 border border-gray-700/50"
     >
       {/* Main content */}
       <div className="flex items-start justify-between mb-1">
@@ -86,22 +82,13 @@ function ResultCard({
       <div className="mt-2">
         <div className={`text-2xl font-bold ${color}`}>{value}</div>
         <div className="text-[10px] text-gray-500 uppercase tracking-wide">{unit}</div>
-        <div className="text-xs text-gray-400 mt-1">{label}</div>
+        <div className="text-xs text-gray-400 mt-0.5">{label}</div>
       </div>
 
-      {/* Hover tooltip */}
-      <AnimatePresence>
-        {showInfo && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 5 }}
-            className="absolute left-0 right-0 -bottom-1 translate-y-full z-20 p-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl"
-          >
-            <p className="text-[11px] text-gray-300">{rating.description}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Always visible description */}
+      <div className="mt-2 pt-2 border-t border-gray-700/30">
+        <p className="text-[10px] text-gray-500 leading-relaxed">{rating.description}</p>
+      </div>
     </motion.div>
   )
 }
@@ -406,16 +393,6 @@ export function SpeedTestPanel() {
                   delay={0.3}
                 />
               </div>
-
-              {/* What do these mean? */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.35 }}
-                className="text-[10px] text-gray-500 text-center"
-              >
-                Hover over each metric to learn more
-              </motion.div>
 
               {/* Actions */}
               <motion.div
