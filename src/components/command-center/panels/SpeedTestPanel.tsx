@@ -226,16 +226,18 @@ export function SpeedTestPanel() {
       const SpeedTestModule = await import('@cloudflare/speedtest')
       const SpeedTest = SpeedTestModule.default
 
-      // Shorter test for panel (faster results)
+      // More thorough test configuration (~8-12 seconds)
       const speedTest = new SpeedTest({
         autoStart: false,
         measurements: [
-          { type: 'latency', numPackets: 10 },
-          { type: 'download', bytes: 1e5, count: 2 },
-          { type: 'download', bytes: 1e6, count: 6 },
-          { type: 'download', bytes: 1e7, count: 4 },
-          { type: 'upload', bytes: 1e5, count: 2 },
-          { type: 'upload', bytes: 1e6, count: 4 },
+          { type: 'latency', numPackets: 20 },
+          { type: 'download', bytes: 1e5, count: 4 },
+          { type: 'download', bytes: 1e6, count: 8 },
+          { type: 'download', bytes: 1e7, count: 6 },
+          { type: 'download', bytes: 2.5e7, count: 4 },
+          { type: 'upload', bytes: 1e5, count: 4 },
+          { type: 'upload', bytes: 1e6, count: 6 },
+          { type: 'upload', bytes: 5e6, count: 4 },
         ],
       })
 
@@ -243,8 +245,8 @@ export function SpeedTestPanel() {
 
       let downloadCount = 0
       let uploadCount = 0
-      const totalDownloads = 12
-      const totalUploads = 6
+      const totalDownloads = 22
+      const totalUploads = 14
 
       speedTest.onRunningChange = (running: boolean) => {
         if (!running) {
