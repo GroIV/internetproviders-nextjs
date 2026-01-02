@@ -230,16 +230,16 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // 5. Coverage/stats intent
-    if (/coverage|available|statistics|how many|percent|what.*available/i.test(lowerMessage) && context.zipCode) {
-      showPanel('coverage', { zipCode: context.zipCode })
+    // 5. General recommendations (with ZIP) - check before coverage since "providers available" should show providers
+    if (/recommend|suggest|best|options|show me|what.*have|providers|who offers|what.*get/i.test(lowerMessage) && context.zipCode) {
+      setContext(prev => ({ ...prev, intent: 'recommend' }))
+      showPanel('recommendations', { zipCode: context.zipCode })
       return
     }
 
-    // 6. General recommendations (with ZIP)
-    if (/recommend|suggest|best|options|show me|what.*have|providers/i.test(lowerMessage) && context.zipCode) {
-      setContext(prev => ({ ...prev, intent: 'recommend' }))
-      showPanel('recommendations', { zipCode: context.zipCode })
+    // 6. Coverage/stats intent - more specific patterns (not just "available")
+    if (/coverage|statistics|how many|percent|technology|tech.*breakdown/i.test(lowerMessage) && context.zipCode) {
+      showPanel('coverage', { zipCode: context.zipCode })
       return
     }
 
