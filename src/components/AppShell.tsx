@@ -3,17 +3,78 @@
 import { ReactNode, useEffect, useRef, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import dynamic from 'next/dynamic'
 import { CommandCenterProvider, useCommandCenter, PanelConfig } from '@/contexts/CommandCenterContext'
-import { ChatPanelEnhanced } from './command-center/ChatPanelEnhanced'
-import {
-  WelcomePanel,
-  ProviderRecommendationsPanel,
-  CoverageStatsPanel,
-  PlanComparisonPanel,
-  ProviderDetailPanel,
-  SpeedTestPanel,
-  AddressAvailabilityPanel,
-} from './command-center/panels'
+
+// Loading skeleton for chat panel
+function ChatPanelSkeleton() {
+  return (
+    <div className="h-full flex flex-col p-4 animate-pulse">
+      <div className="h-8 bg-gray-800 rounded w-3/4 mb-4" />
+      <div className="flex-1 space-y-3">
+        <div className="h-16 bg-gray-800/50 rounded-lg" />
+        <div className="h-12 bg-gray-800/50 rounded-lg w-5/6 ml-auto" />
+        <div className="h-16 bg-gray-800/50 rounded-lg" />
+      </div>
+      <div className="h-12 bg-gray-800 rounded-lg mt-4" />
+    </div>
+  )
+}
+
+// Loading skeleton for panels
+function PanelSkeleton() {
+  return (
+    <div className="p-6 animate-pulse">
+      <div className="h-6 bg-gray-800 rounded w-1/2 mb-4" />
+      <div className="space-y-3">
+        <div className="h-20 bg-gray-800/50 rounded-lg" />
+        <div className="h-20 bg-gray-800/50 rounded-lg" />
+        <div className="h-20 bg-gray-800/50 rounded-lg" />
+      </div>
+    </div>
+  )
+}
+
+// Dynamic imports with code splitting for heavy components
+const ChatPanelEnhanced = dynamic(
+  () => import('./command-center/ChatPanelEnhanced').then(mod => mod.ChatPanelEnhanced),
+  { loading: () => <ChatPanelSkeleton />, ssr: false }
+)
+
+const WelcomePanel = dynamic(
+  () => import('./command-center/panels').then(mod => mod.WelcomePanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const ProviderRecommendationsPanel = dynamic(
+  () => import('./command-center/panels').then(mod => mod.ProviderRecommendationsPanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const CoverageStatsPanel = dynamic(
+  () => import('./command-center/panels').then(mod => mod.CoverageStatsPanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const PlanComparisonPanel = dynamic(
+  () => import('./command-center/panels').then(mod => mod.PlanComparisonPanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const ProviderDetailPanel = dynamic(
+  () => import('./command-center/panels').then(mod => mod.ProviderDetailPanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const SpeedTestPanel = dynamic(
+  () => import('./command-center/panels').then(mod => mod.SpeedTestPanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const AddressAvailabilityPanel = dynamic(
+  () => import('./command-center/panels').then(mod => mod.AddressAvailabilityPanel),
+  { loading: () => <PanelSkeleton /> }
+)
 
 // Helper to get page name from pathname
 function getPageName(pathname: string): string {
@@ -134,7 +195,7 @@ function PanelArea({ children }: { children: ReactNode }) {
     if (isShowingInteractivePanel) {
       showPageContent()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- showPageContent changes on every render; only pathname change should trigger reset
   }, [pathname])
 
   return (

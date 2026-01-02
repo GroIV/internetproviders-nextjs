@@ -13,7 +13,8 @@ export function HomePageContent() {
     if (activePanel.type === 'pageContent') {
       showPanel('welcome')
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally run once on mount to show welcome panel
+  }, [])
 
   // The WelcomePanel is shown via the panel system,
   // but we also render it here as fallback content

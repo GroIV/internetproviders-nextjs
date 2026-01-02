@@ -152,14 +152,14 @@ export function LocationProvider({ children }: { children: ReactNode }) {
           const response = await fetch(`/api/location/reverse-geocode?lat=${latitude}&lng=${longitude}`)
           const data = await response.json()
 
-          if (data.success && data.location?.zipCode) {
+          if (data.success && data.data?.zipCode) {
             setLocation({
-              city: data.location.city,
-              region: data.location.region,
-              regionCode: data.location.regionCode,
-              zipCode: data.location.zipCode,
-              latitude: data.location.latitude,
-              longitude: data.location.longitude,
+              city: data.data.city,
+              region: data.data.region,
+              regionCode: data.data.regionCode,
+              zipCode: data.data.zipCode,
+              latitude: data.data.latitude,
+              longitude: data.data.longitude,
               source: 'gps',
             })
 
@@ -187,15 +187,15 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       const ipResponse = await fetch('/api/location')
       const ipData = await ipResponse.json()
 
-      if (ipData.success && ipData.location) {
+      if (ipData.success && ipData.data) {
         // Set IP location immediately
         setLocation({
-          city: ipData.location.city,
-          region: ipData.location.region,
-          regionCode: ipData.location.regionCode,
-          zipCode: ipData.location.zipCode,
-          latitude: ipData.location.latitude,
-          longitude: ipData.location.longitude,
+          city: ipData.data.city,
+          region: ipData.data.region,
+          regionCode: ipData.data.regionCode,
+          zipCode: ipData.data.zipCode,
+          latitude: ipData.data.latitude,
+          longitude: ipData.data.longitude,
           source: 'ip',
         })
       }
@@ -243,14 +243,14 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/location')
       const data = await response.json()
 
-      if (data.success && data.location) {
+      if (data.success && data.data) {
         setLocation({
-          city: data.location.city,
-          region: data.location.region,
-          regionCode: data.location.regionCode,
-          zipCode: data.location.zipCode,
-          latitude: data.location.latitude,
-          longitude: data.location.longitude,
+          city: data.data.city,
+          region: data.data.region,
+          regionCode: data.data.regionCode,
+          zipCode: data.data.zipCode,
+          latitude: data.data.latitude,
+          longitude: data.data.longitude,
           source: 'ip',
         })
       } else {
@@ -287,14 +287,14 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       const response = await fetch(`/api/location/reverse-geocode?lat=${latitude}&lng=${longitude}`)
       const data = await response.json()
 
-      if (data.success && data.location) {
+      if (data.success && data.data) {
         setLocation({
-          city: data.location.city,
-          region: data.location.region,
-          regionCode: data.location.regionCode,
-          zipCode: data.location.zipCode,
-          latitude: data.location.latitude,
-          longitude: data.location.longitude,
+          city: data.data.city,
+          region: data.data.region,
+          regionCode: data.data.regionCode,
+          zipCode: data.data.zipCode,
+          latitude: data.data.latitude,
+          longitude: data.data.longitude,
           source: 'gps',
         })
       } else {

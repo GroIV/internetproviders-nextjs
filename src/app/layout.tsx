@@ -8,6 +8,8 @@ import { AppShell } from "@/components/AppShell";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { JsonLd, generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo";
 import { GlobalBackground } from "@/components/effects/GlobalBackground";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { WebVitals } from "@/components/WebVitals";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -86,20 +88,25 @@ export default function RootLayout({
         <JsonLd data={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       </head>
       <body className={`${outfit.variable} font-sans antialiased bg-gray-950 text-gray-100 min-h-screen flex flex-col overflow-x-hidden`}>
+        {/* Web Vitals monitoring */}
+        <WebVitals />
+
         {/* Global animated background - fixed, behind all content */}
         <GlobalBackground />
 
         {/* Content wrapper - above background */}
         <div className="relative z-10 flex flex-col min-h-screen overflow-x-hidden max-w-full">
-          <LocationProvider>
-            <ChatProvider>
-              <Navbar />
-              <AppShell>
-                {children}
-              </AppShell>
-              <InstallPrompt />
-            </ChatProvider>
-          </LocationProvider>
+          <ErrorBoundary>
+            <LocationProvider>
+              <ChatProvider>
+                <Navbar />
+                <AppShell>
+                  {children}
+                </AppShell>
+                <InstallPrompt />
+              </ChatProvider>
+            </LocationProvider>
+          </ErrorBoundary>
         </div>
       </body>
     </html>

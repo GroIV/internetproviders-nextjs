@@ -63,10 +63,10 @@ export default function AiAssistantPage() {
               )
               const geoData = await geoResponse.json()
 
-              if (geoData.success && geoData.location?.zipCode) {
+              if (geoData.success && geoData.data?.zipCode) {
                 resolve({
-                  zipCode: geoData.location.zipCode,
-                  city: geoData.location.city || '',
+                  zipCode: geoData.data.zipCode,
+                  city: geoData.data.city || '',
                 })
               } else {
                 resolve(null)
@@ -82,9 +82,9 @@ export default function AiAssistantPage() {
 
       // Use IP result immediately if available
       const ipData = await ipPromise
-      if (ipData?.success && ipData.location?.zipCode) {
-        setZipCode(ipData.location.zipCode)
-        setCityName(ipData.location.city || '')
+      if (ipData?.success && ipData.data?.zipCode) {
+        setZipCode(ipData.data.zipCode)
+        setCityName(ipData.data.city || '')
         setLocationStatus('detected')
       }
 
@@ -102,7 +102,8 @@ export default function AiAssistantPage() {
     }
 
     detectLocation()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally run once on mount for initial location detection
+  }, [])
 
   // Function to request precise browser geolocation
   const requestPreciseLocation = async () => {
@@ -121,9 +122,9 @@ export default function AiAssistantPage() {
           )
           const geoData = await geoResponse.json()
 
-          if (geoData.success && geoData.location?.zipCode) {
-            setZipCode(geoData.location.zipCode)
-            setCityName(geoData.location.city || '')
+          if (geoData.success && geoData.data?.zipCode) {
+            setZipCode(geoData.data.zipCode)
+            setCityName(geoData.data.city || '')
             setIsPrecise(true)
             setLocationStatus('detected')
           } else {

@@ -1,10 +1,29 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// API route uses dynamic Supabase response types
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 
 interface Props {
   params: Promise<{ provider: string }>
+}
+
+// Type for broadband plan from Supabase
+interface BroadbandPlan {
+  id: number
+  fcc_plan_id: string
+  service_plan_name: string
+  tier_plan_name: string | null
+  connection_type: string
+  service_type: string
+  monthly_price: number
+  has_intro_rate: boolean
+  intro_rate_price: number | null
+  typical_download_speed: number
+  typical_upload_speed: number | null
+  typical_latency: number | null
+  monthly_data_gb: number | null
+  contract_required: boolean
+  one_time_fees: number | null
+  monthly_fees: number | null
+  support_phone: string | null
 }
 
 export async function GET(request: NextRequest, { params }: Props) {
@@ -84,13 +103,16 @@ export async function GET(request: NextRequest, { params }: Props) {
       )
     }
 
+    // Type the plans as BroadbandPlan[]
+    const typedPlans = (plans || []) as BroadbandPlan[]
+
     // Group plans by service type
-    const residentialPlans = (plans || []).filter(p => p.service_type === 'residential')
-    const mobilePlans = (plans || []).filter(p => p.service_type === 'mobile')
+    const residentialPlans = typedPlans.filter(p => p.service_type === 'residential')
+    const mobilePlans = typedPlans.filter(p => p.service_type === 'mobile')
 
     // Find best value (lowest price with decent speed)
-    const findBestValue = (planList: typeof plans) => {
-      if (!planList || planList.length === 0) return null
+    const findBestValue = (planList: BroadbandPlan[]): BroadbandPlan | null => {
+      if (planList.length === 0) return null
       return planList.reduce((best, plan) => {
         const score = (plan.typical_download_speed || 0) / (plan.monthly_price || 1)
         const bestScore = (best.typical_download_speed || 0) / (best.monthly_price || 1)
@@ -99,7 +121,7 @@ export async function GET(request: NextRequest, { params }: Props) {
     }
 
     // Transform plans
-    const transformPlan = (plan: any) => ({
+    const transformPlan = (plan: BroadbandPlan) => ({
       id: plan.id,
       fccPlanId: plan.fcc_plan_id,
       planName: plan.service_plan_name,
@@ -132,16 +154,16 @@ export async function GET(request: NextRequest, { params }: Props) {
         category: providerData.category,
       },
       summary: {
-        totalPlans: (plans || []).length,
+        totalPlans: typedPlans.length,
         residentialPlans: residentialPlans.length,
         mobilePlans: mobilePlans.length,
         priceRange: {
-          min: Math.min(...(plans || []).map(p => p.monthly_price)),
-          max: Math.max(...(plans || []).map(p => p.monthly_price)),
+          min: Math.min(...typedPlans.map(p => p.monthly_price)),
+          max: Math.max(...typedPlans.map(p => p.monthly_price)),
         },
         speedRange: {
-          min: Math.min(...(plans || []).filter(p => p.typical_download_speed).map(p => p.typical_download_speed)),
-          max: Math.max(...(plans || []).filter(p => p.typical_download_speed).map(p => p.typical_download_speed)),
+          min: Math.min(...typedPlans.filter(p => p.typical_download_speed).map(p => p.typical_download_speed)),
+          max: Math.max(...typedPlans.filter(p => p.typical_download_speed).map(p => p.typical_download_speed)),
         },
         bestValue: bestResidential ? transformPlan(bestResidential) : null,
       },

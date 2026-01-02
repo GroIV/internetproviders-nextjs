@@ -16,8 +16,8 @@ export async function GET(
     .order('total_min', { ascending: true })
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(plans || [])
+  return NextResponse.json({ success: true, data: plans || [] })
 }

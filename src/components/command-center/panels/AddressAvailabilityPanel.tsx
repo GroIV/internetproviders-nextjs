@@ -40,7 +40,7 @@ export function AddressAvailabilityPanel({ data }: AddressAvailabilityPanelProps
   // Auto-search if address was passed in - intentional side effect to trigger search on prop change
   useEffect(() => {
     if (data?.address && data.address.length > 5) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional async operation that sets loading/result state
       handleSearch(data.address)
     }
   }, [data?.address, handleSearch])

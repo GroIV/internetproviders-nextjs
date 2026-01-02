@@ -288,9 +288,9 @@ export function ChatWindow({
                   className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  title="Clear chat history"
+                  aria-label="Clear chat history"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </motion.button>
@@ -301,9 +301,9 @@ export function ChatWindow({
                   className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  title="Close chat"
+                  aria-label="Close chat"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </motion.button>
@@ -313,7 +313,13 @@ export function ChatWindow({
         )}
 
         {/* Messages */}
-        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto p-4 space-y-4"
+          role="log"
+          aria-live="polite"
+          aria-label="Chat messages"
+        >
           {messages.length === 0 && !isLoading ? (
             <motion.div
               className="text-center py-8"
@@ -480,6 +486,7 @@ export function ChatWindow({
               <motion.button
                 type="submit"
                 disabled={!input.trim() || isLoading}
+                aria-label="Send message"
                 className={`
                   relative px-4 py-3 rounded-xl font-medium overflow-hidden
                   transition-all duration-200

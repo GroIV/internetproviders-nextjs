@@ -1,8 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// API route uses dynamic Supabase response types
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getComparisonUrl } from '@/lib/affiliates'
+
+// Types for Supabase query responses
+interface CbsaProvider {
+  provider_id: number
+  coverage_pct: number
+}
+
+interface FccProvider {
+  provider_id: number
+  name: string
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +44,7 @@ export async function POST(request: NextRequest) {
           providerCount = cbsaData.length
 
           // Get provider names
-          const providerIds = cbsaData.map((p: any) => p.provider_id)
+          const providerIds = cbsaData.map((p: CbsaProvider) => p.provider_id)
           const { data: providers } = await supabase
             .from('fcc_providers')
             .select('provider_id, name')
@@ -43,13 +52,13 @@ export async function POST(request: NextRequest) {
 
           if (providers && providers.length > 0) {
             // Map provider IDs to names and clean up names
-            const nameMap = new Map(providers.map((p: any) => [p.provider_id, p.name]))
+            const nameMap = new Map((providers as FccProvider[]).map((p) => [p.provider_id, p.name]))
 
             // Satellite providers to deprioritize (they show 100% coverage everywhere)
             const satelliteProviders = ['viasat', 'hughesnet', 'starlink', 'echostar', 'dish']
 
             providerNames = cbsaData
-              .map((cp: any) => {
+              .map((cp: CbsaProvider) => {
                 let name = nameMap.get(cp.provider_id) || ''
                 // Clean up corporate names to consumer-facing names
                 name = name

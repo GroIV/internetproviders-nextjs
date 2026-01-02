@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { CreateScheduledUpdateSchema, PatchUpdateSchema, validateRequest, getValidationError } from '@/lib/validation/schemas'
 
 export interface ScheduledUpdate {
   id: number
@@ -131,48 +132,21 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient()
     const body = await request.json()
 
-    const {
-      provider_slug,
-      provider_name,
-      effective_date,
-      category,
-      change_type,
-      title,
-      description,
-      affected_table,
-      field_to_update,
-      old_value,
-      new_value,
-      sql_to_execute,
-      source_file,
-      source_notes,
-    } = body
-
-    // Validate required fields
-    if (!provider_slug || !provider_name || !effective_date || !category || !change_type || !title) {
+    // Validate with Zod
+    const validation = validateRequest(CreateScheduledUpdateSchema, body)
+    if (!validation.success) {
       return NextResponse.json({
         success: false,
-        error: 'Missing required fields: provider_slug, provider_name, effective_date, category, change_type, title'
+        error: getValidationError(validation)
       }, { status: 400 })
     }
+
+    const validatedData = validation.data
 
     const { data, error } = await supabase
       .from('provider_scheduled_updates')
       .insert({
-        provider_slug,
-        provider_name,
-        effective_date,
-        category,
-        change_type,
-        title,
-        description,
-        affected_table,
-        field_to_update,
-        old_value,
-        new_value,
-        sql_to_execute,
-        source_file,
-        source_notes,
+        ...validatedData,
         status: 'pending',
       })
       .select()
@@ -197,7 +171,16 @@ export async function PATCH(request: NextRequest) {
     const supabase = createAdminClient()
     const body = await request.json()
 
-    const { action, ids } = body
+    // Validate with Zod
+    const validation = validateRequest(PatchUpdateSchema, body)
+    if (!validation.success) {
+      return NextResponse.json({
+        success: false,
+        error: getValidationError(validation)
+      }, { status: 400 })
+    }
+
+    const { action, ids } = validation.data
 
     if (action === 'batch_apply') {
       // Get all pending updates that are due (effective_date <= today)

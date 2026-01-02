@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      location: {
+      data: {
         city: data.city || data.locality || null,
         region: data.principalSubdivision || null,
         regionCode: data.principalSubdivisionCode?.replace('US-', '') || null,
@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: false,
       error: 'Could not reverse geocode location',
-      location: null,
     })
   }
 }

@@ -1,10 +1,26 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// API route uses complex Anthropic SDK streaming types - any types used for SDK responses
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getAffiliateUrl, COMPARISON_ELIGIBLE_PROVIDERS, providerDisplayNames, getComparisonUrl } from '@/lib/affiliates'
 import { getPlansForZip, buildPlansContextForZip, getProviderSlug, type RealPlan } from '@/lib/getPlansForZip'
+import { ChatRequestSchema, validateRequest, getValidationError } from '@/lib/validation/schemas'
+import { checkRateLimit, getClientIP } from '@/lib/ratelimit'
+
+// Types for Supabase query responses
+interface CbsaProvider {
+  provider_id: number
+  coverage_pct: number
+}
+
+interface FccProvider {
+  provider_id: number
+  name: string
+}
+
+interface ProviderDisplay {
+  name: string
+  coverage: number
+}
 
 // Plan with provider info for suggestions (compatible with frontend)
 interface SuggestedPlan {
@@ -247,25 +263,42 @@ Available tools on the site (always link these with markdown):
 - [ISP Quiz](/tools/quiz) - Get personalized recommendations
 - [Compare Providers](/compare) - Search by ZIP code (add ?zip=XXXXX if you know their ZIP)` + buildOrderLinksSection() + buildFeaturedPlansSection()
 
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const { messages, zipCode, pageContext } = await request.json() as {
-      messages: Message[]
-      zipCode?: string
-      pageContext?: string
+    // Check rate limit
+    const clientIP = getClientIP(request.headers)
+    const rateLimitResult = await checkRateLimit(clientIP)
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Too many requests. Please wait a moment before trying again.',
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter || 60),
+            'X-RateLimit-Limit': String(rateLimitResult.limit),
+            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+            'X-RateLimit-Reset': String(rateLimitResult.reset),
+          },
+        }
+      )
     }
 
-    if (!messages || !Array.isArray(messages)) {
+    const body = await request.json()
+
+    // Validate request with Zod
+    const validation = validateRequest(ChatRequestSchema, body)
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Messages array is required' },
+        { error: getValidationError(validation) },
         { status: 400 }
       )
     }
+
+    const { messages, zipCode, pageContext } = validation.data
 
     // If ZIP code provided, get provider context from database
     let providerContext = ''
@@ -295,27 +328,27 @@ export async function POST(request: NextRequest) {
 
         if (cbsaData && cbsaData.length > 0) {
           // Step 3: Get provider names
-          const providerIds = cbsaData.map((p: any) => p.provider_id)
+          const providerIds = cbsaData.map((p: CbsaProvider) => p.provider_id)
           const { data: providerNames } = await supabase
             .from('fcc_providers')
             .select('provider_id, name')
             .in('provider_id', providerIds)
 
           if (providerNames && providerNames.length > 0) {
-            const nameMap = new Map(providerNames.map((p: any) => [p.provider_id, p.name]))
+            const nameMap = new Map((providerNames as FccProvider[]).map((p) => [p.provider_id, p.name]))
 
             // Satellite providers to filter out when better options exist
             const satelliteKeywords = ['viasat', 'hughesnet', 'starlink', 'echostar', 'dish network']
 
-            const allProviders = cbsaData
-              .map((cp: any) => ({
+            const allProviders: ProviderDisplay[] = cbsaData
+              .map((cp: CbsaProvider) => ({
                 name: nameMap.get(cp.provider_id) || 'Unknown',
                 coverage: Math.round(cp.coverage_pct * 100),
               }))
-              .filter((p: any) => p.name !== 'Unknown')
+              .filter((p: ProviderDisplay) => p.name !== 'Unknown')
 
             // Check if we have fiber or cable providers
-            const hasFiberOrCable = allProviders.some((p: any) => {
+            const hasFiberOrCable = allProviders.some((p: ProviderDisplay) => {
               const nameLower = p.name.toLowerCase()
               // Common fiber/cable providers
               return nameLower.includes('at&t') ||
@@ -334,13 +367,13 @@ export async function POST(request: NextRequest) {
 
             // Filter out satellite if fiber/cable available
             const providers = hasFiberOrCable
-              ? allProviders.filter((p: any) =>
+              ? allProviders.filter((p: ProviderDisplay) =>
                   !satelliteKeywords.some(sat => p.name.toLowerCase().includes(sat))
                 )
               : allProviders
 
             if (providers.length > 0) {
-              providerContext = `\n\nThe user is in ZIP code ${zipCode}. Here are the internet providers available in their area:\n${providers.map((p: any) =>
+              providerContext = `\n\nThe user is in ZIP code ${zipCode}. Here are the internet providers available in their area:\n${providers.map((p: ProviderDisplay) =>
                 `- ${p.name} (${p.coverage}% area coverage)`
               ).join('\n')}\n\nUse this information to give personalized recommendations. Focus on fiber and cable options first. You can reference specific providers and their coverage when answering questions.`
             }
