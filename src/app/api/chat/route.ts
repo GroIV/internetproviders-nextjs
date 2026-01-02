@@ -404,12 +404,29 @@ export async function POST(request: NextRequest) {
       providerContext += plansContext
     }
 
-    const systemPrompt = SYSTEM_PROMPT + providerContext
+    // Build system message with prompt caching
+    // Static part (SYSTEM_PROMPT) is cached, dynamic part (providerContext) is fresh
+    const systemMessages: Anthropic.Messages.TextBlockParam[] = [
+      {
+        type: 'text',
+        text: SYSTEM_PROMPT,
+        // Cache the static system prompt (~3.5K tokens) - saves ~90% on input costs
+        cache_control: { type: 'ephemeral' },
+      },
+    ]
+
+    // Add dynamic provider context if available (not cached)
+    if (providerContext) {
+      systemMessages.push({
+        type: 'text',
+        text: providerContext,
+      })
+    }
 
     const response = await anthropic.messages.create({
       model: 'claude-3-5-haiku-20241022',
       max_tokens: 1024,
-      system: systemPrompt,
+      system: systemMessages,
       messages: messages.map(m => ({
         role: m.role,
         content: m.content,
