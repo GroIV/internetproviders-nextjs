@@ -42,8 +42,13 @@ export async function trackApiUsage(data: ApiUsageData): Promise<void> {
 }
 
 /**
- * Calculate estimated cost based on Claude 3.5 Haiku pricing
- * Prices as of Jan 2025:
+ * Calculate estimated cost based on model pricing
+ *
+ * GPT-4o-mini (Jan 2025):
+ * - Input: $0.15 per million tokens
+ * - Output: $0.60 per million tokens
+ *
+ * Claude 3.5 Haiku (Jan 2025):
  * - Input: $0.80 per million tokens
  * - Output: $4.00 per million tokens
  * - Cache write: $1.00 per million tokens
@@ -54,7 +59,16 @@ export function calculateCost(usage: {
   outputTokens: number
   cacheCreationTokens: number
   cacheReadTokens: number
+  model?: string
 }): number {
+  // GPT-4o-mini pricing (much cheaper!)
+  if (usage.model === 'gpt-4o-mini') {
+    const inputCost = (usage.inputTokens / 1_000_000) * 0.15
+    const outputCost = (usage.outputTokens / 1_000_000) * 0.60
+    return inputCost + outputCost
+  }
+
+  // Claude 3.5 Haiku pricing (default/fallback)
   const inputCost = (usage.inputTokens / 1_000_000) * 0.80
   const outputCost = (usage.outputTokens / 1_000_000) * 4.00
   const cacheWriteCost = (usage.cacheCreationTokens / 1_000_000) * 1.00
@@ -74,6 +88,7 @@ export async function getUsageSummary(hours: number = 24): Promise<{
   totalCacheReadTokens: number
   estimatedCost: number
   byEndpoint: Record<string, number>
+  byModel: Record<string, number>
 }> {
   const supabase = createAdminClient()
   const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString()
@@ -94,6 +109,7 @@ export async function getUsageSummary(hours: number = 24): Promise<{
       totalCacheReadTokens: 0,
       estimatedCost: 0,
       byEndpoint: {},
+      byModel: {},
     }
   }
 
@@ -105,6 +121,7 @@ export async function getUsageSummary(hours: number = 24): Promise<{
     totalCacheReadTokens: 0,
     estimatedCost: 0,
     byEndpoint: {} as Record<string, number>,
+    byModel: {} as Record<string, number>,
   }
 
   for (const row of data) {
@@ -113,14 +130,20 @@ export async function getUsageSummary(hours: number = 24): Promise<{
     summary.totalCacheCreationTokens += row.cache_creation_tokens || 0
     summary.totalCacheReadTokens += row.cache_read_tokens || 0
     summary.byEndpoint[row.endpoint] = (summary.byEndpoint[row.endpoint] || 0) + 1
-  }
 
-  summary.estimatedCost = calculateCost({
-    inputTokens: summary.totalInputTokens,
-    outputTokens: summary.totalOutputTokens,
-    cacheCreationTokens: summary.totalCacheCreationTokens,
-    cacheReadTokens: summary.totalCacheReadTokens,
-  })
+    // Track by model
+    const model = row.model || 'unknown'
+    summary.byModel[model] = (summary.byModel[model] || 0) + 1
+
+    // Calculate cost per row based on model (more accurate)
+    summary.estimatedCost += calculateCost({
+      inputTokens: row.input_tokens || 0,
+      outputTokens: row.output_tokens || 0,
+      cacheCreationTokens: row.cache_creation_tokens || 0,
+      cacheReadTokens: row.cache_read_tokens || 0,
+      model: row.model,
+    })
+  }
 
   return summary
 }

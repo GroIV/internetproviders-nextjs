@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
             outputTokens: row.output_tokens || 0,
             cacheCreationTokens: row.cache_creation_tokens || 0,
             cacheReadTokens: row.cache_read_tokens || 0,
+            model: row.model,
           }),
         }))
       }
@@ -81,6 +82,7 @@ export async function GET(request: NextRequest) {
         estimatedCost: `$${summary.estimatedCost.toFixed(4)}`,
         savingsFromCache: `$${savingsFromCache.toFixed(4)}`,
         byEndpoint: summary.byEndpoint,
+        byModel: summary.byModel,
       },
       recentRequests: detailed ? recentRequests : undefined,
     })

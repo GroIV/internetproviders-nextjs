@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getAffiliateUrl, COMPARISON_ELIGIBLE_PROVIDERS, providerDisplayNames, getComparisonUrl } from '@/lib/affiliates'
@@ -134,9 +135,111 @@ async function getSuggestedPlans(message: string, zipCode?: string): Promise<Sug
   }
 }
 
+// Initialize AI clients
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+})
+
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
+
+// AI Response type
+interface AIResponse {
+  message: string
+  model: string
+  usage: {
+    inputTokens: number
+    outputTokens: number
+    cacheCreationTokens?: number
+    cacheReadTokens?: number
+  }
+}
+
+// Call GPT-4o-mini (primary model - cheapest and fast)
+async function callOpenAI(
+  systemPrompt: string,
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>
+): Promise<AIResponse> {
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    max_tokens: 1024,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      ...messages.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
+    ],
+  })
+
+  const content = response.choices[0]?.message?.content || ''
+  const usage = response.usage
+
+  return {
+    message: content,
+    model: 'gpt-4o-mini',
+    usage: {
+      inputTokens: usage?.prompt_tokens || 0,
+      outputTokens: usage?.completion_tokens || 0,
+    },
+  }
+}
+
+// Call Claude (fallback model)
+async function callClaude(
+  systemPrompt: string,
+  providerContext: string,
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>
+): Promise<AIResponse> {
+  // Build system message with prompt caching for Claude
+  const systemMessages: Anthropic.Messages.TextBlockParam[] = [
+    {
+      type: 'text',
+      text: systemPrompt,
+      cache_control: { type: 'ephemeral' },
+    },
+  ]
+
+  if (providerContext) {
+    systemMessages.push({
+      type: 'text',
+      text: providerContext,
+    })
+  }
+
+  const response = await anthropic.messages.create({
+    model: 'claude-3-5-haiku-20241022',
+    max_tokens: 1024,
+    system: systemMessages,
+    messages: messages.map(m => ({
+      role: m.role,
+      content: m.content,
+    })),
+  })
+
+  const usage = response.usage as {
+    input_tokens: number
+    output_tokens: number
+    cache_creation_input_tokens?: number
+    cache_read_input_tokens?: number
+  }
+
+  const content = response.content[0].type === 'text'
+    ? response.content[0].text
+    : ''
+
+  return {
+    message: content,
+    model: 'claude-3-5-haiku-20241022',
+    usage: {
+      inputTokens: usage.input_tokens,
+      outputTokens: usage.output_tokens,
+      cacheCreationTokens: usage.cache_creation_input_tokens || 0,
+      cacheReadTokens: usage.cache_read_input_tokens || 0,
+    },
+  }
+}
 
 // Build dynamic order links section
 function buildOrderLinksSection(): string {
@@ -405,49 +508,31 @@ export async function POST(request: NextRequest) {
       providerContext += plansContext
     }
 
-    // Build system message with prompt caching
-    // Static part (SYSTEM_PROMPT) is cached, dynamic part (providerContext) is fresh
-    const systemMessages: Anthropic.Messages.TextBlockParam[] = [
-      {
-        type: 'text',
-        text: SYSTEM_PROMPT,
-        // Cache the static system prompt (~3.5K tokens) - saves ~90% on input costs
-        cache_control: { type: 'ephemeral' },
-      },
-    ]
+    // Build full system prompt with dynamic context
+    const fullSystemPrompt = providerContext
+      ? SYSTEM_PROMPT + providerContext
+      : SYSTEM_PROMPT
 
-    // Add dynamic provider context if available (not cached)
-    if (providerContext) {
-      systemMessages.push({
-        type: 'text',
-        text: providerContext,
-      })
-    }
+    // Try GPT-4o-mini first (cheaper), fall back to Claude on error
+    let aiResponse: AIResponse
+    let usedFallback = false
 
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: 1024,
-      system: systemMessages,
-      messages: messages.map(m => ({
-        role: m.role,
-        content: m.content,
-      })),
-    })
-
-    // Track API usage for cost monitoring
-    const usage = response.usage as {
-      input_tokens: number
-      output_tokens: number
-      cache_creation_input_tokens?: number
-      cache_read_input_tokens?: number
+    try {
+      aiResponse = await callOpenAI(fullSystemPrompt, messages)
+    } catch (openaiError) {
+      console.error('[Chat API] OpenAI failed, falling back to Claude:', openaiError)
+      usedFallback = true
+      aiResponse = await callClaude(SYSTEM_PROMPT, providerContext, messages)
     }
 
     // Log to console for debugging
     console.log('[Chat API] Token usage:', {
-      input_tokens: usage.input_tokens,
-      output_tokens: usage.output_tokens,
-      cache_creation_input_tokens: usage.cache_creation_input_tokens || 0,
-      cache_read_input_tokens: usage.cache_read_input_tokens || 0,
+      model: aiResponse.model,
+      usedFallback,
+      input_tokens: aiResponse.usage.inputTokens,
+      output_tokens: aiResponse.usage.outputTokens,
+      cache_creation_tokens: aiResponse.usage.cacheCreationTokens || 0,
+      cache_read_tokens: aiResponse.usage.cacheReadTokens || 0,
       zipCode: zipCode || 'none',
       messageCount: messages.length,
     })
@@ -455,18 +540,16 @@ export async function POST(request: NextRequest) {
     // Track to database (async, doesn't block response)
     trackApiUsage({
       endpoint: '/api/chat',
-      model: 'claude-3-5-haiku-20241022',
-      inputTokens: usage.input_tokens,
-      outputTokens: usage.output_tokens,
-      cacheCreationTokens: usage.cache_creation_input_tokens || 0,
-      cacheReadTokens: usage.cache_read_input_tokens || 0,
+      model: aiResponse.model,
+      inputTokens: aiResponse.usage.inputTokens,
+      outputTokens: aiResponse.usage.outputTokens,
+      cacheCreationTokens: aiResponse.usage.cacheCreationTokens || 0,
+      cacheReadTokens: aiResponse.usage.cacheReadTokens || 0,
       zipCode: zipCode || undefined,
       messageCount: messages.length,
     })
 
-    const assistantMessage = response.content[0].type === 'text'
-      ? response.content[0].text
-      : ''
+    const assistantMessage = aiResponse.message
 
     // Get the last user message to check for plan queries
     const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || ''
