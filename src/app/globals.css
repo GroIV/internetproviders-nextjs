@@ -1302,3 +1302,8 @@ body {
     transform: none;
   }
 }
+
+/* Safe area for bottom navigation on notched devices */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

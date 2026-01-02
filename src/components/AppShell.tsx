@@ -1,9 +1,9 @@
 'use client'
 
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useRef, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { CommandCenterProvider, useCommandCenter, PanelConfig, INTERACTIVE_PANELS } from '@/contexts/CommandCenterContext'
+import { motion, AnimatePresence, PanHandler } from 'framer-motion'
+import { CommandCenterProvider, useCommandCenter, PanelConfig } from '@/contexts/CommandCenterContext'
 import { ChatPanelEnhanced } from './command-center/ChatPanelEnhanced'
 import {
   WelcomePanel,
@@ -14,6 +14,64 @@ import {
   SpeedTestPanel,
   AddressAvailabilityPanel,
 } from './command-center/panels'
+
+// Helper to get page name from pathname
+function getPageName(pathname: string): string {
+  if (pathname === '/') return 'Home'
+
+  // Provider pages
+  if (pathname.startsWith('/providers/')) {
+    const slug = pathname.split('/providers/')[1]?.split('/')[0]
+    if (!slug) return 'Providers'
+    // Format provider name
+    const name = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    if (slug === 'att-internet') return 'AT&T'
+    if (slug === 'verizon-fios') return 'Verizon Fios'
+    if (slug === 't-mobile') return 'T-Mobile'
+    if (slug === 'google-fiber') return 'Google Fiber'
+    return name
+  }
+
+  // State/city pages
+  if (pathname.startsWith('/internet/')) {
+    const parts = pathname.split('/internet/')[1]?.split('/')
+    if (parts?.length === 2) {
+      const city = parts[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      return city
+    } else if (parts?.length === 1) {
+      const state = parts[0].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      return state
+    }
+  }
+
+  // Compare pages
+  if (pathname.startsWith('/compare/')) {
+    return 'Compare'
+  }
+
+  // Guide pages
+  if (pathname.startsWith('/guides/')) {
+    return 'Guides'
+  }
+
+  // Static pages
+  const pageNames: Record<string, string> = {
+    '/providers': 'Providers',
+    '/compare': 'Compare',
+    '/guides': 'Guides',
+    '/tools': 'Tools',
+    '/tools/speed-test': 'Speed Test',
+    '/tools/quiz': 'Quiz',
+    '/deals': 'Deals',
+    '/faq': 'FAQ',
+    '/about': 'About',
+    '/contact': 'Contact',
+    '/plans': 'Plans',
+    '/check-availability': 'Availability',
+  }
+
+  return pageNames[pathname] || 'Browse'
+}
 
 // Panel renderer for interactive panels
 function InteractivePanel({ panel }: { panel: PanelConfig }) {
@@ -87,7 +145,7 @@ function PanelArea({ children }: { children: ReactNode }) {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.15 }}
         >
           {children}
         </motion.div>
@@ -97,7 +155,7 @@ function PanelArea({ children }: { children: ReactNode }) {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.15 }}
         >
           <WelcomePanel />
         </motion.div>
@@ -107,7 +165,7 @@ function PanelArea({ children }: { children: ReactNode }) {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.15 }}
         >
           <InteractivePanel panel={activePanel} />
         </motion.div>
@@ -116,48 +174,82 @@ function PanelArea({ children }: { children: ReactNode }) {
   )
 }
 
+// Floating chat bubble for mobile when on Content tab
+function FloatingChatBubble({ onClick }: { onClick: () => void }) {
+  return (
+    <motion.button
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0, opacity: 0 }}
+      whileTap={{ scale: 0.9 }}
+      onClick={onClick}
+      className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/25 flex items-center justify-center"
+    >
+      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+      {/* Pulse effect */}
+      <span className="absolute inset-0 rounded-full bg-cyan-400 animate-ping opacity-25" />
+    </motion.button>
+  )
+}
+
 // The unified layout with chat on left and content on right
 function AppShellLayout({ children }: { children: ReactNode }) {
   const { mobileTab, setMobileTab } = useCommandCenter()
+  const pathname = usePathname()
+  const pageName = getPageName(pathname)
+
+  // Swipe gesture handling
+  const touchStartX = useRef<number | null>(null)
+  const touchStartY = useRef<number | null>(null)
+  const [swiping, setSwiping] = useState(false)
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+  }, [])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return
+
+    const deltaX = e.touches[0].clientX - touchStartX.current
+    const deltaY = e.touches[0].clientY - touchStartY.current
+
+    // Only trigger swipe if horizontal movement is greater than vertical
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
+      setSwiping(true)
+    }
+  }, [])
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null || !swiping) {
+      touchStartX.current = null
+      touchStartY.current = null
+      setSwiping(false)
+      return
+    }
+
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current
+    const threshold = 80 // Minimum swipe distance
+
+    if (Math.abs(deltaX) > threshold) {
+      if (deltaX > 0 && mobileTab === 'panel') {
+        // Swipe right -> go to chat
+        setMobileTab('chat')
+      } else if (deltaX < 0 && mobileTab === 'chat') {
+        // Swipe left -> go to content
+        setMobileTab('panel')
+      }
+    }
+
+    touchStartX.current = null
+    touchStartY.current = null
+    setSwiping(false)
+  }, [mobileTab, setMobileTab, swiping])
 
   return (
     <div className="flex flex-col flex-1">
-      {/* Mobile Tab Bar */}
-      <div className="lg:hidden sticky top-16 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-gray-800">
-        <div className="flex">
-          <button
-            onClick={() => setMobileTab('chat')}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
-              mobileTab === 'chat'
-                ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-500/5'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            <span className="flex items-center justify-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              Chat
-            </span>
-          </button>
-          <button
-            onClick={() => setMobileTab('panel')}
-            className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
-              mobileTab === 'panel'
-                ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-500/5'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            <span className="flex items-center justify-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-              </svg>
-              Content
-            </span>
-          </button>
-        </div>
-      </div>
-
       {/* Desktop: Split Layout */}
       <div className="hidden lg:flex flex-1 h-[calc(100vh-64px)]">
         {/* Chat Panel - Fixed Left */}
@@ -175,15 +267,21 @@ function AppShellLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      {/* Mobile: Tabbed Layout */}
-      <div className="lg:hidden flex-1 overflow-hidden">
+      {/* Mobile: Tabbed Layout with swipe */}
+      <div
+        className="lg:hidden flex-1 overflow-hidden pb-16"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <AnimatePresence mode="wait">
           {mobileTab === 'chat' ? (
             <motion.div
               key="mobile-chat"
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
               className="h-full"
             >
               <ChatPanelEnhanced />
@@ -191,15 +289,71 @@ function AppShellLayout({ children }: { children: ReactNode }) {
           ) : (
             <motion.div
               key="mobile-panel"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
+              exit={{ opacity: 0, x: 50 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
               className="h-full overflow-y-auto p-4"
             >
               <PanelArea>{children}</PanelArea>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Floating chat bubble when on Content tab */}
+        <AnimatePresence>
+          {mobileTab === 'panel' && (
+            <FloatingChatBubble onClick={() => setMobileTab('chat')} />
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Mobile Bottom Tab Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-t border-gray-800 safe-area-pb">
+        <div className="flex">
+          <button
+            onClick={() => setMobileTab('chat')}
+            className={`flex-1 py-3 px-4 transition-all ${
+              mobileTab === 'chat'
+                ? 'text-cyan-400'
+                : 'text-gray-500'
+            }`}
+          >
+            <span className="flex flex-col items-center gap-1">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <span className="text-xs font-medium">Chat</span>
+              {mobileTab === 'chat' && (
+                <motion.div
+                  layoutId="tab-indicator"
+                  className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-500"
+                />
+              )}
+            </span>
+          </button>
+          <button
+            onClick={() => setMobileTab('panel')}
+            className={`flex-1 py-3 px-4 transition-all relative ${
+              mobileTab === 'panel'
+                ? 'text-cyan-400'
+                : 'text-gray-500'
+            }`}
+          >
+            <span className="flex flex-col items-center gap-1">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <span className="text-xs font-medium truncate max-w-[80px]">{pageName}</span>
+              {mobileTab === 'panel' && (
+                <motion.div
+                  layoutId="tab-indicator"
+                  className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-500"
+                />
+              )}
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   )
