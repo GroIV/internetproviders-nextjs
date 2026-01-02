@@ -5,6 +5,7 @@ import { getAffiliateUrl, COMPARISON_ELIGIBLE_PROVIDERS, providerDisplayNames, g
 import { getPlansForZip, buildPlansContextForZip, getProviderSlug, type RealPlan } from '@/lib/getPlansForZip'
 import { ChatRequestSchema, validateRequest, getValidationError } from '@/lib/validation/schemas'
 import { checkRateLimit, getClientIP } from '@/lib/ratelimit'
+import { trackApiUsage } from '@/lib/apiUsageTracker'
 
 // Types for Supabase query responses
 interface CbsaProvider {
@@ -433,13 +434,33 @@ export async function POST(request: NextRequest) {
       })),
     })
 
-    // Log token usage for debugging
+    // Track API usage for cost monitoring
+    const usage = response.usage as {
+      input_tokens: number
+      output_tokens: number
+      cache_creation_input_tokens?: number
+      cache_read_input_tokens?: number
+    }
+
+    // Log to console for debugging
     console.log('[Chat API] Token usage:', {
-      input_tokens: response.usage.input_tokens,
-      output_tokens: response.usage.output_tokens,
-      cache_creation_input_tokens: (response.usage as { cache_creation_input_tokens?: number }).cache_creation_input_tokens || 0,
-      cache_read_input_tokens: (response.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens || 0,
+      input_tokens: usage.input_tokens,
+      output_tokens: usage.output_tokens,
+      cache_creation_input_tokens: usage.cache_creation_input_tokens || 0,
+      cache_read_input_tokens: usage.cache_read_input_tokens || 0,
       zipCode: zipCode || 'none',
+      messageCount: messages.length,
+    })
+
+    // Track to database (async, doesn't block response)
+    trackApiUsage({
+      endpoint: '/api/chat',
+      model: 'claude-3-5-haiku-20241022',
+      inputTokens: usage.input_tokens,
+      outputTokens: usage.output_tokens,
+      cacheCreationTokens: usage.cache_creation_input_tokens || 0,
+      cacheReadTokens: usage.cache_read_input_tokens || 0,
+      zipCode: zipCode || undefined,
       messageCount: messages.length,
     })
 
