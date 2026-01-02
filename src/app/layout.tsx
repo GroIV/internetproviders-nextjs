@@ -85,12 +85,12 @@ export default function RootLayout({
       <head>
         <JsonLd data={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       </head>
-      <body className={`${outfit.variable} font-sans antialiased bg-gray-950 text-gray-100 min-h-screen flex flex-col`}>
+      <body className={`${outfit.variable} font-sans antialiased bg-gray-950 text-gray-100 min-h-screen flex flex-col overflow-x-hidden`}>
         {/* Global animated background - fixed, behind all content */}
         <GlobalBackground />
 
         {/* Content wrapper - above background */}
-        <div className="relative z-10 flex flex-col min-h-screen">
+        <div className="relative z-10 flex flex-col min-h-screen overflow-x-hidden max-w-full">
           <LocationProvider>
             <ChatProvider>
               <Navbar />

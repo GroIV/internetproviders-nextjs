@@ -269,7 +269,7 @@ function AppShellLayout({ children }: { children: ReactNode }) {
 
       {/* Mobile: Tabbed Layout with swipe */}
       <div
-        className="lg:hidden flex-1 overflow-hidden pb-16"
+        className="lg:hidden flex-1 overflow-hidden pb-16 overflow-x-hidden max-w-full"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

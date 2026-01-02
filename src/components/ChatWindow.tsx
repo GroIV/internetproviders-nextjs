@@ -382,8 +382,8 @@ export function ChatWindow({
                         </>
                       )}
 
-                      <div className={`relative ${!isUser ? 'px-4 py-3' : ''}`}>
-                        <div className={`whitespace-pre-wrap text-sm leading-relaxed ${!isUser ? 'text-gray-200' : ''}`}>
+                      <div className={`relative ${!isUser ? 'px-4 py-3' : ''} overflow-hidden`}>
+                        <div className={`whitespace-pre-wrap text-sm leading-relaxed break-words overflow-wrap-anywhere ${!isUser ? 'text-gray-200' : ''}`}>
                           {shouldTypewrite ? (
                             <TypewriterText
                               content={message.content}
