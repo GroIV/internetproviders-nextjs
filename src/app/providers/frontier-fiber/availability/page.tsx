@@ -69,8 +69,7 @@ async function getFrontierCities(): Promise<FrontierCity[]> {
   }
 
   // Step 3: Get fiber coverage data for these cities
-  const cityKeys = cities.map(c => `${c.state_slug}:${c.city_slug}`)
-  const { data: availability, error: availError } = await supabase
+  const { data: availability } = await supabase
     .from('city_availability_v1')
     .select('state_slug, city_slug, fiber_100_20_pct')
 

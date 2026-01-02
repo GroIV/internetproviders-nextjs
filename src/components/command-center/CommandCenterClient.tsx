@@ -132,19 +132,15 @@ function ConnectionIndicator({ show }: { show: boolean }) {
 // Single panel with enhanced animations
 function SinglePanel() {
   const { activePanel } = useCommandCenter()
-  const [showBanner, setShowBanner] = useState(true)
+  // Use lazy initializer to check localStorage synchronously without effect
+  const [showBanner, setShowBanner] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return localStorage.getItem('panel_intro_dismissed') !== 'true'
+  })
   const [showConnection, setShowConnection] = useState(false)
   const [showPulse, setShowPulse] = useState(false)
   const prevPanelRef = useRef(activePanel.type)
   const isFirstRender = useRef(true)
-
-  // Check localStorage for banner dismissal
-  useEffect(() => {
-    const dismissed = localStorage.getItem('panel_intro_dismissed')
-    if (dismissed === 'true') {
-      setShowBanner(false)
-    }
-  }, [])
 
   // Handle banner dismissal
   const handleDismissBanner = () => {
@@ -153,6 +149,7 @@ function SinglePanel() {
   }
 
   // Trigger connection indicator and pulse on panel change
+  // This effect intentionally sets state to trigger animations when panel changes
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false
@@ -160,7 +157,8 @@ function SinglePanel() {
     }
 
     if (prevPanelRef.current !== activePanel.type) {
-      // Show connection indicator
+      // Show connection indicator - intentional animation trigger
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowConnection(true)
       setTimeout(() => setShowConnection(false), 600)
 

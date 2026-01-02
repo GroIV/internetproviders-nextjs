@@ -269,7 +269,6 @@ export async function POST(request: NextRequest) {
 
     // If ZIP code provided, get provider context from database
     let providerContext = ''
-    let availableProviderNames: string[] = [] // Track providers available in user's ZIP
 
     // Add page context if provided
     if (pageContext) {
@@ -341,9 +340,6 @@ export async function POST(request: NextRequest) {
               : allProviders
 
             if (providers.length > 0) {
-              // Store provider names for plan filtering
-              availableProviderNames = providers.map((p: any) => p.name)
-
               providerContext = `\n\nThe user is in ZIP code ${zipCode}. Here are the internet providers available in their area:\n${providers.map((p: any) =>
                 `- ${p.name} (${p.coverage}% area coverage)`
               ).join('\n')}\n\nUse this information to give personalized recommendations. Focus on fiber and cable options first. You can reference specific providers and their coverage when answering questions.`

@@ -162,26 +162,43 @@ export function NetworkMeshBackground({
   )
 }
 
+// Helper to generate random particle data - called during lazy state init
+function generateParticleData(count: number) {
+  return Array.from({ length: count }, () => ({
+    initialX: Math.random() * 100,
+    initialY: Math.random() * 100,
+    scale: Math.random() * 0.5 + 0.5,
+    animateY1: Math.random() * 100,
+    animateY2: Math.random() * 100,
+    animateX1: Math.random() * 100,
+    animateX2: Math.random() * 100,
+    duration: Math.random() * 10 + 15,
+  }))
+}
+
 // Simpler floating particles version for lower-end devices
 export function FloatingParticles({ count = 15 }: { count?: number }) {
+  // Use state with lazy initializer - this only runs once and is allowed
+  const [particles] = useState(() => generateParticleData(count))
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {Array.from({ length: count }).map((_, i) => (
+      {particles.map((p, i) => (
         <motion.div
           key={i}
           className="absolute w-1 h-1 rounded-full bg-cyan-400/30"
           initial={{
-            x: `${Math.random() * 100}%`,
-            y: `${Math.random() * 100}%`,
-            scale: Math.random() * 0.5 + 0.5,
+            x: `${p.initialX}%`,
+            y: `${p.initialY}%`,
+            scale: p.scale,
           }}
           animate={{
-            y: [`${Math.random() * 100}%`, `${Math.random() * 100}%`],
-            x: [`${Math.random() * 100}%`, `${Math.random() * 100}%`],
+            y: [`${p.animateY1}%`, `${p.animateY2}%`],
+            x: [`${p.animateX1}%`, `${p.animateX2}%`],
             opacity: [0.2, 0.5, 0.2],
           }}
           transition={{
-            duration: Math.random() * 10 + 15,
+            duration: p.duration,
             repeat: Infinity,
             ease: 'linear',
           }}

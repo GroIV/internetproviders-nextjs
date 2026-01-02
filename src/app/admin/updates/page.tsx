@@ -987,7 +987,7 @@ export default function AdminUpdatesPage() {
         loading: false,
         result: data.dryRun || { success: false, error: data.error },
       }))
-    } catch (error) {
+    } catch (_error) {
       setDryRunModal(prev => ({
         ...prev,
         loading: false,

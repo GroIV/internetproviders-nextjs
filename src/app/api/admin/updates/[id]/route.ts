@@ -63,9 +63,6 @@ async function dryRunSQL(sql: string): Promise<{ success: boolean; estimatedRows
     const fieldMatch = setClause.match(/(\w+)\s*=\s*([^,]+)/)
     const fieldToUpdate = fieldMatch ? fieldMatch[1] : null
 
-    // Build a SELECT query to find affected rows
-    const selectQuery = `SELECT * FROM ${tableName} WHERE ${whereClause.replace(/;$/, '')}`
-
     // For broadband_plans, we can query directly
     if (tableName === 'broadband_plans') {
       // Parse the WHERE clause to build Supabase query

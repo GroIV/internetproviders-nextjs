@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback, useRef, useState } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { ChatWindow } from '@/components/ChatWindow'
 import { useChat } from '@/contexts/ChatContext'
@@ -36,13 +36,13 @@ export function ChatPanelEnhanced() {
   const { messages, hasWelcomed, initializeChat, updateCurrentZip } = useChat()
   const { processMessage, setZipCode, context, showPanel } = useCommandCenter()
   const { location } = useLocation()
-  const [hasInitialized, setHasInitialized] = useState(false)
+  const hasInitializedRef = useRef(false)
   const processedMessagesRef = useRef<Set<string>>(new Set())
   const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Initialize chat when location is detected
   useEffect(() => {
-    if (location?.zipCode && location?.city && !hasWelcomed && !hasInitialized) {
+    if (location?.zipCode && location?.city && !hasWelcomed && !hasInitializedRef.current) {
       // Clear fallback timer if location detected
       if (fallbackTimerRef.current) {
         clearTimeout(fallbackTimerRef.current)
@@ -50,19 +50,19 @@ export function ChatPanelEnhanced() {
       }
       initializeChat(location.zipCode, location.city)
       setZipCode(location.zipCode)
-      setHasInitialized(true)
+      hasInitializedRef.current = true
     }
-  }, [location?.zipCode, location?.city, hasWelcomed, hasInitialized, initializeChat, setZipCode])
+  }, [location?.zipCode, location?.city, hasWelcomed, initializeChat, setZipCode])
 
   // Fallback greeting if location isn't detected within 2 seconds
   useEffect(() => {
-    if (!hasWelcomed && !hasInitialized && messages.length === 0) {
+    if (!hasWelcomed && !hasInitializedRef.current && messages.length === 0) {
       fallbackTimerRef.current = setTimeout(() => {
         // If still no welcome after 2 seconds, show a generic greeting
-        if (!hasWelcomed && messages.length === 0) {
+        if (!hasWelcomed && messages.length === 0 && !hasInitializedRef.current) {
           // Use a generic location to trigger the greeting
           initializeChat('00000', '')
-          setHasInitialized(true)
+          hasInitializedRef.current = true
         }
       }, 2000)
 
@@ -72,7 +72,7 @@ export function ChatPanelEnhanced() {
         }
       }
     }
-  }, [hasWelcomed, hasInitialized, messages.length, initializeChat])
+  }, [hasWelcomed, messages.length, initializeChat])
 
   // Process USER messages for panel triggers (not AI messages - they shouldn't auto-trigger panels)
   const lastMessage = messages[messages.length - 1]

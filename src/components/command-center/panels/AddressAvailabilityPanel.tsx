@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLocation, H3Provider } from '@/contexts/LocationContext'
 import { TechBadge, getTechType } from '@/components/ui/TechBadge'
@@ -21,14 +21,7 @@ export function AddressAvailabilityPanel({ data }: AddressAvailabilityPanelProps
   // If we already have H3 availability from GPS, show it
   const showExistingData = h3Availability && !hasSearched && location?.source === 'gps'
 
-  // Auto-search if address was passed in
-  useEffect(() => {
-    if (data?.address && data.address.length > 5) {
-      handleSearch(data.address)
-    }
-  }, [data?.address])
-
-  const handleSearch = async (searchAddress?: string) => {
+  const handleSearch = useCallback(async (searchAddress?: string) => {
     const addr = searchAddress || address
     setError('')
 
@@ -42,7 +35,15 @@ export function AddressAvailabilityPanel({ data }: AddressAvailabilityPanelProps
     if (!success) {
       setError('Could not find that address. Try including city and state.')
     }
-  }
+  }, [address, setAddressLocation])
+
+  // Auto-search if address was passed in - intentional side effect to trigger search on prop change
+  useEffect(() => {
+    if (data?.address && data.address.length > 5) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      handleSearch(data.address)
+    }
+  }, [data?.address, handleSearch])
 
   const formatSpeed = (speed: number) => {
     if (speed >= 1000) {

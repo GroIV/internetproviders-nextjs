@@ -141,58 +141,6 @@ export function LocationProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Try to detect from IP first, then automatically try GPS
-  const detectFromIPThenGPS = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      // Start IP detection
-      const ipResponse = await fetch('/api/location')
-      const ipData = await ipResponse.json()
-
-      if (ipData.success && ipData.location) {
-        // Set IP location immediately
-        setLocation({
-          city: ipData.location.city,
-          region: ipData.location.region,
-          regionCode: ipData.location.regionCode,
-          zipCode: ipData.location.zipCode,
-          latitude: ipData.location.latitude,
-          longitude: ipData.location.longitude,
-          source: 'ip',
-        })
-      }
-      setIsLoading(false)
-
-      // Try GPS upgrade in background
-      tryGPSUpgrade()
-    } catch {
-      setError('Failed to detect location')
-      setIsLoading(false)
-    }
-  }, [])
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        const parsedLocation = JSON.parse(stored)
-        setLocation(parsedLocation)
-        // If stored location is IP-based, try to upgrade to GPS in background
-        if (parsedLocation.source === 'ip') {
-          tryGPSUpgrade()
-        }
-      } catch {
-        localStorage.removeItem(STORAGE_KEY)
-      }
-    } else {
-      // Auto-detect from IP on first visit, then try GPS
-      detectFromIPThenGPS()
-    }
-  }, [detectFromIPThenGPS])
-
   // Try to upgrade to GPS location in background (doesn't show loading state)
   const tryGPSUpgrade = useCallback(() => {
     if (!navigator.geolocation) return
@@ -228,6 +176,58 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       { enableHighAccuracy: true, timeout: 10000 }
     )
   }, [fetchH3Availability])
+
+  // Try to detect from IP first, then automatically try GPS
+  const detectFromIPThenGPS = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // Start IP detection
+      const ipResponse = await fetch('/api/location')
+      const ipData = await ipResponse.json()
+
+      if (ipData.success && ipData.location) {
+        // Set IP location immediately
+        setLocation({
+          city: ipData.location.city,
+          region: ipData.location.region,
+          regionCode: ipData.location.regionCode,
+          zipCode: ipData.location.zipCode,
+          latitude: ipData.location.latitude,
+          longitude: ipData.location.longitude,
+          source: 'ip',
+        })
+      }
+      setIsLoading(false)
+
+      // Try GPS upgrade in background
+      tryGPSUpgrade()
+    } catch {
+      setError('Failed to detect location')
+      setIsLoading(false)
+    }
+  }, [tryGPSUpgrade])
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      try {
+        const parsedLocation = JSON.parse(stored)
+        setLocation(parsedLocation)
+        // If stored location is IP-based, try to upgrade to GPS in background
+        if (parsedLocation.source === 'ip') {
+          tryGPSUpgrade()
+        }
+      } catch {
+        localStorage.removeItem(STORAGE_KEY)
+      }
+    } else {
+      // Auto-detect from IP on first visit, then try GPS
+      detectFromIPThenGPS()
+    }
+  }, [detectFromIPThenGPS, tryGPSUpgrade])
 
   // Save to localStorage when location changes
   useEffect(() => {

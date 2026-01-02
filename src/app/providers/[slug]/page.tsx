@@ -759,7 +759,6 @@ export default async function ProviderPage({ params }: Props) {
                 {comparisonSlugs.map((compSlug) => {
                   const displayName = compSlug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
                     .replace('Att', 'AT&T').replace('Directv', 'DIRECTV').replace('Verizon Fios', 'Verizon Fios')
-                  const compDetails = providerDetails[compSlug] || { color: 'from-gray-500 to-gray-600' }
                   return (
                     <Link
                       key={compSlug}

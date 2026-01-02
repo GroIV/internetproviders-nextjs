@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useRef, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence, PanHandler } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { CommandCenterProvider, useCommandCenter, PanelConfig } from '@/contexts/CommandCenterContext'
 import { ChatPanelEnhanced } from './command-center/ChatPanelEnhanced'
 import {

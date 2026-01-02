@@ -1,15 +1,12 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createAdminClient } from '@/lib/supabase/server'
 import { states } from '@/data/states'
 import { ZipSearch } from '@/components/ZipSearch'
 import { ProviderLogo } from '@/components/ProviderLogo'
 import { RelatedRankings } from '@/components/RelatedRankings'
 import {
   getCityData,
-  getCityAvailability,
-  getCityProviders,
   categorizeProvider,
   CityProvider,
 } from '@/lib/getCityData'

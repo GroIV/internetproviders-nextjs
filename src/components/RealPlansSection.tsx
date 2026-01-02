@@ -130,11 +130,9 @@ const tierColors = {
 function PlanCard({
   plan,
   tier,
-  providerName,
 }: {
   plan: RealPlan
   tier: 'budget' | 'value' | 'premium'
-  providerName: string
 }) {
   const colors = tierColors[tier]
   const features = getPlanFeatures(plan)
@@ -302,7 +300,6 @@ export function RealPlansSection({
               key={plan.id}
               plan={plan}
               tier={tier}
-              providerName={providerName}
             />
           ))}
         </div>
