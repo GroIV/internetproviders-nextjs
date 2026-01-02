@@ -33,46 +33,11 @@ function QuickActionChip({
 }
 
 export function ChatPanelEnhanced() {
-  const { messages, hasWelcomed, initializeChat, updateCurrentZip } = useChat()
+  // Chat initialization is now handled centrally in ChatContext
+  const { messages } = useChat()
   const { processMessage, setZipCode, context, showPanel } = useCommandCenter()
   const { location } = useLocation()
-  const hasInitializedRef = useRef(false)
   const processedMessagesRef = useRef<Set<string>>(new Set())
-  const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Initialize chat when location is detected
-  useEffect(() => {
-    if (location?.zipCode && location?.city && !hasWelcomed && !hasInitializedRef.current) {
-      // Clear fallback timer if location detected
-      if (fallbackTimerRef.current) {
-        clearTimeout(fallbackTimerRef.current)
-        fallbackTimerRef.current = null
-      }
-      initializeChat(location.zipCode, location.city)
-      setZipCode(location.zipCode)
-      hasInitializedRef.current = true
-    }
-  }, [location?.zipCode, location?.city, hasWelcomed, initializeChat, setZipCode])
-
-  // Fallback greeting if location isn't detected within 2 seconds
-  useEffect(() => {
-    if (!hasWelcomed && !hasInitializedRef.current && messages.length === 0) {
-      fallbackTimerRef.current = setTimeout(() => {
-        // If still no welcome after 2 seconds, show a generic greeting
-        if (!hasWelcomed && messages.length === 0 && !hasInitializedRef.current) {
-          // Use a generic location to trigger the greeting
-          initializeChat('00000', '')
-          hasInitializedRef.current = true
-        }
-      }, 2000)
-
-      return () => {
-        if (fallbackTimerRef.current) {
-          clearTimeout(fallbackTimerRef.current)
-        }
-      }
-    }
-  }, [hasWelcomed, messages.length, initializeChat])
 
   // Process USER messages for panel triggers (not AI messages - they shouldn't auto-trigger panels)
   const lastMessage = messages[messages.length - 1]
@@ -93,17 +58,12 @@ export function ChatPanelEnhanced() {
     }
   }, [lastMessage, messages.length, processUserMessage])
 
-  // Sync ZIP from location context to command center and chat (always keep in sync)
+  // Sync ZIP from location context to command center
   useEffect(() => {
-    if (location?.zipCode) {
-      // Update command center if different
-      if (location.zipCode !== context.zipCode) {
-        setZipCode(location.zipCode)
-      }
-      // Always update chat context's current ZIP
-      updateCurrentZip(location.zipCode)
+    if (location?.zipCode && location.zipCode !== context.zipCode) {
+      setZipCode(location.zipCode)
     }
-  }, [location?.zipCode, context.zipCode, setZipCode, updateCurrentZip])
+  }, [location?.zipCode, context.zipCode, setZipCode])
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-gray-900 to-gray-950">

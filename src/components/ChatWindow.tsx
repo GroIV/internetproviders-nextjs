@@ -155,7 +155,8 @@ export function ChatWindow({
   className = ''
 }: ChatWindowProps) {
   const pathname = usePathname()
-  const { messages, isLoading, sendMessage, initializeChat, hasWelcomed, setPageContext, clearHistory, updateCurrentZip } = useChat()
+  // Chat initialization is now handled centrally in ChatContext
+  const { messages, isLoading, sendMessage, hasWelcomed, setPageContext, clearHistory } = useChat()
   const { location, isLoading: locationLoading } = useLocation()
   const [input, setInput] = useState('')
   const [isFocused, setIsFocused] = useState(false)
@@ -215,20 +216,6 @@ export function ChatWindow({
 
     prevMessagesLength.current = messages.length
   }, [messages.length])
-
-  // Initialize chat with welcome message when location is available
-  useEffect(() => {
-    if (location?.zipCode && location?.city && !hasWelcomed && !locationLoading) {
-      initializeChat(location.zipCode, location.city)
-    }
-  }, [location, hasWelcomed, locationLoading, initializeChat])
-
-  // Keep current ZIP updated when location changes (e.g., GPS upgrade from IP)
-  useEffect(() => {
-    if (location?.zipCode) {
-      updateCurrentZip(location.zipCode)
-    }
-  }, [location?.zipCode, updateCurrentZip])
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()

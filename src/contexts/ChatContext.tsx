@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react'
 import { getComparisonUrl, getSourceFromPathname } from '@/lib/affiliates'
 import type { FeaturedPlan } from '@/lib/featuredPlans'
+import { useLocation } from '@/contexts/LocationContext'
 
 // Suggested plan type from API
 export interface SuggestedPlan extends FeaturedPlan {
@@ -25,13 +26,11 @@ interface ChatContextType {
   chatSectionVisible: boolean
   currentZip: string | null
   sendMessage: (content: string, zipCode?: string) => Promise<void>
-  initializeChat: (zipCode: string, city: string) => Promise<void>
   clearHistory: () => void
   setIsOpen: (open: boolean) => void
   setPageContext: (context: string) => void
   setChatSectionVisible: (visible: boolean) => void
   sendProactiveMessage: (pathname: string, freshZipCode?: string) => void
-  updateCurrentZip: (zipCode: string) => void
 }
 
 const ChatContext = createContext<ChatContextType | null>(null)
@@ -170,11 +169,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [hasWelcomed, setHasWelcomed] = useState(false)
   const [welcomedZip, setWelcomedZip] = useState<string | null>(null)
-  const [currentZip, setCurrentZip] = useState<string | null>(null) // Tracks the CURRENT location ZIP (may differ from welcomedZip)
+  const [currentZip, setCurrentZip] = useState<string | null>(null)
   const [pageContext, setPageContext] = useState('')
   const [chatSectionVisible, setChatSectionVisible] = useState(true)
   const [proactivePages, setProactivePages] = useState<Set<string>>(new Set())
   const initializingRef = useRef(false)
+
+  // Get location from context - ChatProvider is wrapped by LocationProvider
+  const { location, isLoading: locationLoading } = useLocation()
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -286,6 +288,35 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [hasWelcomed, welcomedZip, resetForNewLocation])
 
+  // Auto-initialize chat when location is available (centralized - no component duplication)
+  useEffect(() => {
+    // Wait for location to be loaded
+    if (locationLoading) return
+
+    // If we have a valid ZIP and haven't welcomed yet
+    if (location?.zipCode && !hasWelcomed && !initializingRef.current) {
+      initializeChat(location.zipCode, location.city || '')
+    }
+
+    // Update current ZIP when location changes (e.g., GPS upgrade from IP)
+    if (location?.zipCode && location.zipCode !== currentZip) {
+      setCurrentZip(location.zipCode)
+    }
+  }, [location?.zipCode, location?.city, locationLoading, hasWelcomed, currentZip, initializeChat])
+
+  // Fallback: if no location detected after 3 seconds, show generic welcome
+  useEffect(() => {
+    if (hasWelcomed || initializingRef.current) return
+
+    const timer = setTimeout(() => {
+      if (!hasWelcomed && !initializingRef.current && messages.length === 0) {
+        initializeChat('', '')
+      }
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [hasWelcomed, messages.length, initializeChat])
+
   // Send a message
   const sendMessage = useCallback(async (content: string, zipCode?: string) => {
     if (!content.trim() || isLoading) return
@@ -340,13 +371,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(WELCOMED_ZIP_KEY)
     localStorage.removeItem(PROACTIVE_PAGES_KEY)
   }, [])
-
-  // Update current ZIP when location changes (e.g., GPS upgrade from IP)
-  const updateCurrentZip = useCallback((zipCode: string) => {
-    if (zipCode !== currentZip) {
-      setCurrentZip(zipCode)
-    }
-  }, [currentZip])
 
   // Send proactive message when navigating to certain pages
   // freshZipCode: Pass the current location ZIP directly to avoid stale state issues
@@ -431,13 +455,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         chatSectionVisible,
         currentZip,
         sendMessage,
-        initializeChat,
         clearHistory,
         setIsOpen,
         setPageContext,
         setChatSectionVisible,
         sendProactiveMessage,
-        updateCurrentZip,
       }}
     >
       {children}

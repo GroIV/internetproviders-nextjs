@@ -433,6 +433,16 @@ export async function POST(request: NextRequest) {
       })),
     })
 
+    // Log token usage for debugging
+    console.log('[Chat API] Token usage:', {
+      input_tokens: response.usage.input_tokens,
+      output_tokens: response.usage.output_tokens,
+      cache_creation_input_tokens: (response.usage as { cache_creation_input_tokens?: number }).cache_creation_input_tokens || 0,
+      cache_read_input_tokens: (response.usage as { cache_read_input_tokens?: number }).cache_read_input_tokens || 0,
+      zipCode: zipCode || 'none',
+      messageCount: messages.length,
+    })
+
     const assistantMessage = response.content[0].type === 'text'
       ? response.content[0].text
       : ''

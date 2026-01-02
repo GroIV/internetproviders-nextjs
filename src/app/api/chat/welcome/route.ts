@@ -17,6 +17,9 @@ export async function POST(request: NextRequest) {
   try {
     const { zipCode, city } = await request.json()
 
+    // Log welcome requests for debugging
+    console.log('[Welcome API] Request:', { zipCode, city, timestamp: new Date().toISOString() })
+
     let providerNames: string[] = []
     let providerCount = 0
     let coverageInfo = ''
