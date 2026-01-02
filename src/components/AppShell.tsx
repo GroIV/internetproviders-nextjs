@@ -267,38 +267,34 @@ function AppShellLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      {/* Mobile: Tabbed Layout with swipe */}
+      {/* Mobile: Tabbed Layout with swipe - both tabs stay mounted to preserve state */}
       <div
-        className="lg:hidden flex-1 overflow-hidden pb-16 overflow-x-hidden max-w-full"
+        className="lg:hidden flex-1 overflow-hidden pb-16 overflow-x-hidden max-w-full relative"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <AnimatePresence mode="wait">
-          {mobileTab === 'chat' ? (
-            <motion.div
-              key="mobile-chat"
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="h-full"
-            >
-              <ChatPanelEnhanced />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="mobile-panel"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 50 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="h-full overflow-y-auto p-4"
-            >
-              <PanelArea>{children}</PanelArea>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Chat tab - always mounted, visibility controlled by CSS */}
+        <div
+          className={`absolute inset-0 transition-opacity duration-150 ${
+            mobileTab === 'chat'
+              ? 'opacity-100 z-10 pointer-events-auto'
+              : 'opacity-0 z-0 pointer-events-none'
+          }`}
+        >
+          <ChatPanelEnhanced />
+        </div>
+
+        {/* Content tab - always mounted, visibility controlled by CSS */}
+        <div
+          className={`absolute inset-0 overflow-y-auto p-4 transition-opacity duration-150 ${
+            mobileTab === 'panel'
+              ? 'opacity-100 z-10 pointer-events-auto'
+              : 'opacity-0 z-0 pointer-events-none'
+          }`}
+        >
+          <PanelArea>{children}</PanelArea>
+        </div>
 
         {/* Floating chat bubble when on Content tab */}
         <AnimatePresence>
