@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
 
 const navItems = [
   {
@@ -40,13 +41,22 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname()
 
+  // Hide the main site navbar and app shell when in admin
+  useEffect(() => {
+    // Add class to body to hide main layout elements
+    document.body.classList.add('admin-mode')
+    return () => {
+      document.body.classList.remove('admin-mode')
+    }
+  }, [])
+
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex">
+    <div className="fixed inset-0 z-[100] bg-gray-950 text-white flex overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-900/50 border-r border-gray-800 flex flex-col">
+      <aside className="w-64 bg-gray-900/80 border-r border-gray-800 flex flex-col flex-shrink-0">
         {/* Logo/Header */}
         <div className="p-6 border-b border-gray-800">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/admin" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -61,7 +71,7 @@ export default function AdminLayout({
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4 overflow-y-auto">
           <ul className="space-y-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href
