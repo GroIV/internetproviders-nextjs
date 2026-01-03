@@ -47,8 +47,8 @@ This document tracks planned features for the admin dashboard at `/admin`.
 - [ ] Bulk coverage updates
 
 ### Cache Management
-- [ ] View cached responses
-- [ ] Manual cache invalidation
+- [x] View cached responses
+- [x] Manual cache invalidation
 - [ ] Cache hit rate analytics
 - [ ] Response time monitoring
 
@@ -91,7 +91,7 @@ This document tracks planned features for the admin dashboard at `/admin`.
 ## Technical Debt
 
 - [x] Add authentication to admin routes
-- [ ] Rate limiting for admin APIs
+- [x] Rate limiting for admin APIs
 - [ ] Audit logging for admin actions
 - [ ] Admin role permissions
 

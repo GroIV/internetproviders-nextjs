@@ -494,6 +494,14 @@ const sentryWebpackPluginOptions = {
   // Hides source maps from generated client bundles
   hideSourceMaps: true,
 
+  // Source map upload configuration
+  sourcemaps: {
+    // Disable source map reference warnings for chunks without maps
+    disable: false,
+    // Delete source maps after upload to reduce bundle size
+    deleteSourcemapsAfterUpload: true,
+  },
+
   // Webpack-specific options (new format to avoid deprecation warnings)
   webpack: {
     // Automatically annotate React components to show their full name in breadcrumbs and session replay
