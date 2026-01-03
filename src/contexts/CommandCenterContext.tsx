@@ -13,6 +13,15 @@ export type PanelType =
   | 'speedTest'
   | 'quiz'
   | 'addressAvailability'
+  // Route-based panels
+  | 'toolsPanel'
+  | 'guidesPanel'
+  | 'plansPanel'
+  | 'providersPanel'
+  | 'comparePanel'
+  | 'dealsPanel'
+  | 'statePanel'
+  | 'cityPanel'
 
 export interface PanelConfig {
   type: PanelType

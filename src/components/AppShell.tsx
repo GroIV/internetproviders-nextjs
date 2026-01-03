@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useRef, useState, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
-import { CommandCenterProvider, useCommandCenter, PanelConfig } from '@/contexts/CommandCenterContext'
+import { CommandCenterProvider, useCommandCenter, PanelConfig, PanelType } from '@/contexts/CommandCenterContext'
 
 // Loading skeleton for chat panel
 function ChatPanelSkeleton() {
@@ -76,6 +76,47 @@ const AddressAvailabilityPanel = dynamic(
   { loading: () => <PanelSkeleton /> }
 )
 
+// Route-based panels
+const ToolsPanel = dynamic(
+  () => import('./command-center/panels/RoutePanels').then(mod => mod.ToolsPanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const GuidesPanel = dynamic(
+  () => import('./command-center/panels/RoutePanels').then(mod => mod.GuidesPanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const PlansPanel = dynamic(
+  () => import('./command-center/panels/RoutePanels').then(mod => mod.PlansPanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const ProvidersPanel = dynamic(
+  () => import('./command-center/panels/RoutePanels').then(mod => mod.ProvidersPanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const ComparePanel = dynamic(
+  () => import('./command-center/panels/RoutePanels').then(mod => mod.ComparePanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const DealsPanel = dynamic(
+  () => import('./command-center/panels/RoutePanels').then(mod => mod.DealsPanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const StatePanel = dynamic(
+  () => import('./command-center/panels/RoutePanels').then(mod => mod.StatePanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
+const CityPanel = dynamic(
+  () => import('./command-center/panels/RoutePanels').then(mod => mod.CityPanel),
+  { loading: () => <PanelSkeleton /> }
+)
+
 // Helper to get page name from pathname
 function getPageName(pathname: string): string {
   if (pathname === '/') return 'Home'
@@ -134,10 +175,83 @@ function getPageName(pathname: string): string {
   return pageNames[pathname] || 'Browse'
 }
 
+// Helper to get panel type and data from pathname
+function getRoutePanelConfig(pathname: string): { type: PanelType; data?: Record<string, unknown> } | null {
+  // Home page - show welcome
+  if (pathname === '/') {
+    return { type: 'welcome' }
+  }
+
+  // Tools pages
+  if (pathname === '/tools') {
+    return { type: 'toolsPanel' }
+  }
+  if (pathname === '/tools/speed-test') {
+    return { type: 'speedTest' }
+  }
+  if (pathname === '/tools/quiz') {
+    return { type: 'quiz' }
+  }
+
+  // Guides page
+  if (pathname === '/guides' || pathname.startsWith('/guides/')) {
+    return { type: 'guidesPanel' }
+  }
+
+  // Plans page
+  if (pathname === '/plans') {
+    return { type: 'plansPanel' }
+  }
+
+  // Providers pages
+  if (pathname === '/providers') {
+    return { type: 'providersPanel' }
+  }
+  if (pathname.startsWith('/providers/')) {
+    const slug = pathname.split('/providers/')[1]?.split('/')[0]
+    if (slug) {
+      const name = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      return { type: 'providerDetail', data: { providerSlug: slug, providerName: name } }
+    }
+  }
+
+  // Compare pages
+  if (pathname === '/compare' || pathname.startsWith('/compare/')) {
+    return { type: 'comparePanel' }
+  }
+
+  // Deals page
+  if (pathname === '/deals') {
+    return { type: 'dealsPanel' }
+  }
+
+  // State/city pages
+  if (pathname.startsWith('/internet/')) {
+    const parts = pathname.split('/internet/')[1]?.split('/')
+    if (parts?.length === 2) {
+      const stateSlug = parts[0]
+      const citySlug = parts[1]
+      const city = citySlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      const state = stateSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      return { type: 'cityPanel', data: { city, state, stateSlug, citySlug } }
+    } else if (parts?.length === 1) {
+      const stateSlug = parts[0]
+      const state = stateSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      return { type: 'statePanel', data: { state, stateSlug } }
+    }
+  }
+
+  // Check availability
+  if (pathname === '/check-availability') {
+    return { type: 'addressAvailability' }
+  }
+
+  // Default - no route panel, show page content
+  return null
+}
+
 // Panel renderer for interactive panels
 function InteractivePanel({ panel }: { panel: PanelConfig }) {
-  const { showPageContent } = useCommandCenter()
-
   const renderPanel = () => {
     switch (panel.type) {
       case 'welcome':
@@ -163,44 +277,66 @@ function InteractivePanel({ panel }: { panel: PanelConfig }) {
         )
       case 'addressAvailability':
         return <AddressAvailabilityPanel data={panel.data as { address?: string }} />
+      // Route-based panels
+      case 'toolsPanel':
+        return <ToolsPanel />
+      case 'guidesPanel':
+        return <GuidesPanel />
+      case 'plansPanel':
+        return <PlansPanel />
+      case 'providersPanel':
+        return <ProvidersPanel />
+      case 'comparePanel':
+        return <ComparePanel />
+      case 'dealsPanel':
+        return <DealsPanel />
+      case 'statePanel':
+        return <StatePanel data={panel.data as { state?: string; stateSlug?: string }} />
+      case 'cityPanel':
+        return <CityPanel data={panel.data as { city?: string; state?: string; zipCode?: string }} />
       default:
         return null
     }
   }
 
-  return (
-    <div>
-      {/* Back to page button */}
-      <button
-        onClick={showPageContent}
-        className="mb-4 flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Back to page
-      </button>
-      {renderPanel()}
-    </div>
-  )
+  return renderPanel()
 }
 
 // Main panel area that switches between page content and interactive panels
 function PanelArea({ children }: { children: ReactNode }) {
-  const { activePanel, isShowingInteractivePanel, showPageContent } = useCommandCenter()
+  const { activePanel, showPanel } = useCommandCenter()
   const pathname = usePathname()
+  const prevPathname = useRef(pathname)
 
-  // Reset to page content when route changes
+  // Show route-based panel when route changes
   useEffect(() => {
-    if (isShowingInteractivePanel) {
-      showPageContent()
+    if (pathname !== prevPathname.current) {
+      prevPathname.current = pathname
+      const routePanel = getRoutePanelConfig(pathname)
+      if (routePanel) {
+        showPanel(routePanel.type, routePanel.data)
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- showPageContent changes on every render; only pathname change should trigger reset
-  }, [pathname])
+  }, [pathname, showPanel])
+
+  // On initial mount, show the route panel
+  useEffect(() => {
+    const routePanel = getRoutePanelConfig(pathname)
+    if (routePanel && activePanel.type === 'pageContent') {
+      showPanel(routePanel.type, routePanel.data)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run on mount
+  }, [])
+
+  // Get the panel to display - either the active panel or the route-based default
+  const displayPanel = activePanel.type === 'pageContent'
+    ? getRoutePanelConfig(pathname) || activePanel
+    : activePanel
 
   return (
     <AnimatePresence mode="wait">
-      {activePanel.type === 'pageContent' ? (
+      {displayPanel.type === 'pageContent' ? (
+        // Fallback to page content only if no route panel exists
         <motion.div
           key="pageContent"
           initial={{ opacity: 0, x: 20 }}
@@ -210,25 +346,15 @@ function PanelArea({ children }: { children: ReactNode }) {
         >
           {children}
         </motion.div>
-      ) : activePanel.type === 'welcome' ? (
-        <motion.div
-          key="welcome"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.15 }}
-        >
-          <WelcomePanel />
-        </motion.div>
       ) : (
         <motion.div
-          key={`interactive-${activePanel.type}`}
+          key={`panel-${displayPanel.type}-${JSON.stringify(displayPanel.data || {})}`}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.15 }}
         >
-          <InteractivePanel panel={activePanel} />
+          <InteractivePanel panel={displayPanel} />
         </motion.div>
       )}
     </AnimatePresence>
