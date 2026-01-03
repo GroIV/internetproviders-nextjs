@@ -476,8 +476,8 @@ const sentryWebpackPluginOptions = {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
 
-  // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
+  // Suppress all CLI output (warnings and info)
+  silent: true,
 
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
@@ -496,8 +496,6 @@ const sentryWebpackPluginOptions = {
 
   // Source map upload configuration
   sourcemaps: {
-    // Disable source map reference warnings for chunks without maps
-    disable: false,
     // Delete source maps after upload to reduce bundle size
     deleteSourcemapsAfterUpload: true,
   },
