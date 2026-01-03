@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import crypto from 'crypto'
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 const COOKIE_NAME = 'admin_session'
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
+
+function getAdminPassword(): string | undefined {
+  return process.env.ADMIN_PASSWORD
+}
 
 function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password).digest('hex')
@@ -18,8 +21,9 @@ function generateSessionToken(): string {
 export async function POST(request: NextRequest) {
   try {
     const { password } = await request.json()
+    const adminPassword = getAdminPassword()
 
-    if (!ADMIN_PASSWORD) {
+    if (!adminPassword) {
       console.error('ADMIN_PASSWORD environment variable not set')
       return NextResponse.json(
         { success: false, error: 'Admin authentication not configured' },
@@ -28,8 +32,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Compare passwords (supports both plain and hashed in env)
-    const isValid = password === ADMIN_PASSWORD ||
-                    hashPassword(password) === ADMIN_PASSWORD
+    const isValid = password === adminPassword ||
+                    hashPassword(password) === adminPassword
 
     if (!isValid) {
       return NextResponse.json(
@@ -45,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Create signed session value
     const sessionValue = `${sessionToken}:${expiresAt}`
     const signature = crypto
-      .createHmac('sha256', ADMIN_PASSWORD)
+      .createHmac('sha256', adminPassword)
       .update(sessionValue)
       .digest('hex')
     const signedSession = `${sessionValue}:${signature}`
@@ -81,8 +85,9 @@ export async function DELETE() {
 export async function GET() {
   const cookieStore = await cookies()
   const sessionCookie = cookieStore.get(COOKIE_NAME)
+  const adminPassword = getAdminPassword()
 
-  if (!sessionCookie?.value || !ADMIN_PASSWORD) {
+  if (!sessionCookie?.value || !adminPassword) {
     return NextResponse.json({ authenticated: false })
   }
 
@@ -97,7 +102,7 @@ export async function GET() {
 
     // Verify signature
     const expectedSignature = crypto
-      .createHmac('sha256', ADMIN_PASSWORD)
+      .createHmac('sha256', adminPassword)
       .update(sessionValue)
       .digest('hex')
 
