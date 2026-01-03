@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { OfflineIndicator } from './OfflineIndicator'
+import { ThemeToggle } from './ThemeToggle'
 import { getComparisonUrl } from '@/lib/affiliates'
 import { useCommandCenterOptional, PanelType } from '@/contexts/CommandCenterContext'
 
@@ -281,7 +282,8 @@ export function Navbar() {
           </button>
         </nav>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
+          <ThemeToggle />
           <OfflineIndicator />
           <motion.a
             href={getComparisonUrl('navbar')}

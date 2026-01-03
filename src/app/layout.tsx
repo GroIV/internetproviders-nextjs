@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { ChatProvider } from "@/contexts/ChatContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppShell } from "@/components/AppShell";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { JsonLd, generateOrganizationSchema, generateWebSiteSchema } from "@/lib/seo";
@@ -77,14 +78,31 @@ export const metadata: Metadata = {
   },
 };
 
+// Script to prevent flash of wrong theme
+const themeScript = `
+  (function() {
+    try {
+      var theme = localStorage.getItem('ipai-theme');
+      if (theme === 'light') {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+      } else {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+      }
+    } catch (e) {}
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <JsonLd data={[generateOrganizationSchema(), generateWebSiteSchema()]} />
       </head>
       <body className={`${outfit.variable} font-sans antialiased bg-gray-950 text-gray-100 min-h-screen flex flex-col overflow-x-hidden`}>
@@ -97,15 +115,17 @@ export default function RootLayout({
         {/* Content wrapper - above background */}
         <div className="relative z-10 flex flex-col min-h-screen overflow-x-hidden max-w-full">
           <ErrorBoundary>
-            <LocationProvider>
-              <ChatProvider>
-                <Navbar />
-                <AppShell>
-                  {children}
-                </AppShell>
-                <InstallPrompt />
-              </ChatProvider>
-            </LocationProvider>
+            <ThemeProvider>
+              <LocationProvider>
+                <ChatProvider>
+                  <Navbar />
+                  <AppShell>
+                    {children}
+                  </AppShell>
+                  <InstallPrompt />
+                </ChatProvider>
+              </LocationProvider>
+            </ThemeProvider>
           </ErrorBoundary>
         </div>
       </body>
