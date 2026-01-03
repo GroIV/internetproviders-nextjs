@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -19,11 +20,13 @@ function isInStandaloneMode(): boolean {
 }
 
 export function InstallPrompt() {
+  const pathname = usePathname()
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isInstallable, setIsInstallable] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
   const [showIOSPrompt, setShowIOSPrompt] = useState(false)
+  const isAdminPage = pathname?.startsWith('/admin')
 
   useEffect(() => {
     // Use timeout to satisfy lint (setState in callback)
@@ -100,8 +103,8 @@ export function InstallPrompt() {
     localStorage.setItem('pwa-install-dismissed', Date.now().toString())
   }
 
-  // Don't show if already installed or dismissed
-  if (isInstalled || isDismissed) {
+  // Don't show if already installed, dismissed, or on admin pages
+  if (isInstalled || isDismissed || isAdminPage) {
     return null
   }
 

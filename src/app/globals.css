@@ -74,6 +74,9 @@ body {
 
 .animate-gradient-x {
   animation: gradient-x 3s ease infinite;
+  will-change: background-position;
+  transform: translateZ(0);
+  contain: content;
 }
 
 /* ========================================
@@ -1315,4 +1318,13 @@ body {
 .overflow-wrap-anywhere {
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+/* ========================================
+   ADMIN MODE - Hide main site elements
+   ======================================== */
+
+body.admin-mode > div > nav,
+body.admin-mode > div > .install-prompt {
+  display: none !important;
 }

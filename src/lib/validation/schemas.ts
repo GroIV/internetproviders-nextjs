@@ -24,6 +24,7 @@ export const ChatRequestSchema = z.object({
   messages: z.array(ChatMessageSchema).min(1).max(50),
   zipCode: z.string().regex(/^\d{5}$/).optional(),
   pageContext: z.string().max(500).optional(),
+  sessionId: z.string().min(1).max(100).optional(),
 })
 
 export type ChatRequest = z.infer<typeof ChatRequestSchema>

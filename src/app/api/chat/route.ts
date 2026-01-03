@@ -7,6 +7,7 @@ import { getPlansForZip, buildPlansContextForZip, getProviderSlug, type RealPlan
 import { ChatRequestSchema, validateRequest, getValidationError } from '@/lib/validation/schemas'
 import { checkRateLimit, getClientIP } from '@/lib/ratelimit'
 import { trackApiUsage } from '@/lib/apiUsageTracker'
+import { trackChatSession } from '@/lib/chatSessionTracker'
 
 // Types for Supabase query responses
 interface CbsaProvider {
@@ -135,14 +136,27 @@ async function getSuggestedPlans(message: string, zipCode?: string): Promise<Sug
   }
 }
 
-// Initialize AI clients
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Lazy initialization of AI clients (avoids build-time errors)
+let _openai: OpenAI | null = null
+let _anthropic: Anthropic | null = null
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+function getOpenAI(): OpenAI {
+  if (!_openai) {
+    _openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  }
+  return _openai
+}
+
+function getAnthropic(): Anthropic {
+  if (!_anthropic) {
+    _anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    })
+  }
+  return _anthropic
+}
 
 // AI Response type
 interface AIResponse {
@@ -161,7 +175,7 @@ async function callOpenAI(
   systemPrompt: string,
   messages: Array<{ role: 'user' | 'assistant'; content: string }>
 ): Promise<AIResponse> {
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: 'gpt-4o-mini',
     max_tokens: 1024,
     messages: [
@@ -208,7 +222,7 @@ async function callClaude(
     })
   }
 
-  const response = await anthropic.messages.create({
+  const response = await getAnthropic().messages.create({
     model: 'claude-3-5-haiku-20241022',
     max_tokens: 1024,
     system: systemMessages,
@@ -402,7 +416,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { messages, zipCode, pageContext } = validation.data
+    const { messages, zipCode, pageContext, sessionId: providedSessionId } = validation.data
+
+    // Generate session ID if not provided (based on IP hash + date)
+    const sessionId = providedSessionId || `${clientIP.replace(/\./g, '-')}-${Date.now()}`
 
     // If ZIP code provided, get provider context from database
     let providerContext = ''
@@ -547,6 +564,25 @@ export async function POST(request: NextRequest) {
       cacheReadTokens: aiResponse.usage.cacheReadTokens || 0,
       zipCode: zipCode || undefined,
       messageCount: messages.length,
+    })
+
+    // Extract providers mentioned in the conversation for analytics
+    const providerKeywords = ['at&t', 'att', 'spectrum', 'xfinity', 'comcast', 'verizon', 'frontier',
+      'google fiber', 't-mobile', 'tmobile', 'cox', 'centurylink', 'lumen', 'wow', 'metronet',
+      'starlink', 'viasat', 'hughesnet', 'optimum', 'altice', 'windstream', 'earthlink', 'ziply']
+    const allContent = messages.map(m => m.content).join(' ').toLowerCase()
+    const providersDiscussed = providerKeywords.filter(p => allContent.includes(p))
+
+    // Track chat session for analytics (async, doesn't block response)
+    const fullMessages = [...messages, { role: 'assistant' as const, content: aiResponse.message }]
+    trackChatSession({
+      sessionId,
+      zipCode: zipCode || undefined,
+      messages: fullMessages,
+      model: aiResponse.model,
+      inputTokens: aiResponse.usage.inputTokens,
+      outputTokens: aiResponse.usage.outputTokens,
+      providersDiscussed,
     })
 
     const assistantMessage = aiResponse.message

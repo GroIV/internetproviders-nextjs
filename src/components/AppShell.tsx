@@ -418,6 +418,13 @@ function AppShellLayout({ children }: { children: ReactNode }) {
 
 // Main AppShell export - wraps everything in providers
 export function AppShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname()
+
+  // Admin pages bypass the entire app shell layout
+  if (pathname?.startsWith('/admin')) {
+    return <>{children}</>
+  }
+
   return (
     <CommandCenterProvider>
       <AppShellLayout>{children}</AppShellLayout>

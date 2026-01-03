@@ -74,16 +74,12 @@ function AnimatedLogo() {
 
       {/* Text Logo */}
       <div className="flex flex-col">
-        <motion.span
-          className="text-lg font-bold leading-tight"
-          whileHover={{ scale: 1.02 }}
-          transition={{ type: "spring" as const, stiffness: 400, damping: 25 }}
-        >
+        <span className="text-lg font-bold leading-tight hover:scale-[1.02] transition-transform duration-150">
           <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-x">
             InternetProviders
           </span>
           <span className="text-cyan-400">.ai</span>
-        </motion.span>
+        </span>
         <span className="text-[10px] text-gray-500 tracking-wider uppercase">
           Find Your Best Connection
         </span>
@@ -97,6 +93,11 @@ export function Navbar() {
   const pathname = usePathname()
   const isHomePage = pathname === '/'
   const commandCenter = useCommandCenterOptional()
+
+  // Hide navbar on admin pages
+  if (pathname?.startsWith('/admin')) {
+    return null
+  }
 
   // Handler for nav items that should show panels on home page
   const handlePanelClick = (
