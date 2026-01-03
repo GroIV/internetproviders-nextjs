@@ -887,7 +887,7 @@ export default function AdminUpdatesPage() {
   const [dateTo, setDateTo] = useState<string>('')
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
-  const [showAuditLog, setShowAuditLog] = useState(false)
+  const [showAuditLog, setShowAuditLog] = useState(true)
   const [batchApplying, setBatchApplying] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
@@ -1056,7 +1056,7 @@ export default function AdminUpdatesPage() {
   const uniqueProviders = [...new Set(updates.map(u => u.provider_slug))]
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="p-8">
       {/* Toast Notification */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all ${
@@ -1087,53 +1087,42 @@ export default function AdminUpdatesPage() {
       />
 
       {/* Header */}
-      <div className="bg-gray-900/50 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Link href="/" className="text-gray-400 hover:text-white">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+            Provider Updates
+          </h1>
+          <p className="text-gray-400 mt-2">Track and manage upcoming provider pricing and product changes</p>
+        </div>
+        <div className="flex items-center gap-3">
+          {stats.dueSoon > 0 && (
+            <button
+              onClick={handleBatchApply}
+              disabled={batchApplying}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+            >
+              {batchApplying ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                </Link>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                  Provider Updates Tracker
-                </h1>
-              </div>
-              <p className="text-gray-400">Track and manage upcoming provider pricing and product changes</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {stats.dueSoon > 0 && (
-                <button
-                  onClick={handleBatchApply}
-                  disabled={batchApplying}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {batchApplying ? (
-                    <>
-                      <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Applying...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                      Batch Apply ({stats.dueSoon})
-                    </>
-                  )}
-                </button>
+                  Applying...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Batch Apply ({stats.dueSoon})
+                </>
               )}
-              <AddUpdateForm onSuccess={fetchUpdates} />
-            </div>
-          </div>
+            </button>
+          )}
+          <AddUpdateForm onSuccess={fetchUpdates} />
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div>
         <div className="flex gap-8">
           {/* Main Content */}
           <div className="flex-1">
