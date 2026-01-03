@@ -117,6 +117,295 @@ body {
   background: #94a3b8;
 }
 
+/* Light mode chat panel */
+.light .command-chat-panel {
+  background: linear-gradient(
+    180deg,
+    rgba(248, 250, 252, 0.98) 0%,
+    rgba(241, 245, 249, 1) 100%
+  ) !important;
+  box-shadow: inset -10px 0 30px rgba(6, 182, 212, 0.02);
+}
+
+/* Light mode chat messages - assistant bubbles */
+.light [class*="bg-gray-800"][class*="rounded"] {
+  background-color: #e2e8f0 !important;
+}
+
+.light [class*="bg-gray-900"][class*="rounded"] {
+  background-color: #f1f5f9 !important;
+}
+
+/* Light mode chat container backgrounds */
+.light [class*="bg-gray-950"] {
+  background-color: #f8fafc !important;
+}
+
+.light [class*="bg-\[#030712\]"],
+.light [class*="bg-\[#0a0f1a\]"],
+.light [class*="bg-\[#111827\]"] {
+  background-color: #f8fafc !important;
+}
+
+/* Light mode chat input area */
+.light input[class*="bg-gray-800"],
+.light input[class*="bg-gray-900"],
+.light textarea[class*="bg-gray-800"],
+.light textarea[class*="bg-gray-900"] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Light mode chat text colors */
+.light .prose {
+  color: #1e293b;
+}
+
+.light .prose p,
+.light .prose li,
+.light .prose span {
+  color: #334155;
+}
+
+.light .prose a {
+  color: #0891b2;
+}
+
+.light .prose strong {
+  color: #0f172a;
+}
+
+/* Light mode chat quick action buttons */
+.light [class*="bg-blue-500\/10"],
+.light [class*="bg-cyan-500\/10"],
+.light [class*="bg-purple-500\/10"] {
+  background-color: rgba(14, 165, 233, 0.1) !important;
+}
+
+/* Light mode aurora background - reduce intensity */
+.light .aurora-bg {
+  background: linear-gradient(
+    -45deg,
+    rgba(59, 130, 246, 0.05),
+    rgba(6, 182, 212, 0.03),
+    rgba(139, 92, 246, 0.02),
+    rgba(59, 130, 246, 0.04),
+    rgba(6, 182, 212, 0.05)
+  );
+}
+
+/* Light mode chat glow effects - reduce intensity */
+.light .chat-glow {
+  box-shadow:
+    0 0 20px rgba(59, 130, 246, 0.03),
+    0 0 40px rgba(6, 182, 212, 0.02),
+    inset 0 0 20px rgba(59, 130, 246, 0.01);
+}
+
+/* Light mode global background */
+.light .fixed.inset-0[class*="bg-gray-950"] {
+  background-color: #f8fafc !important;
+}
+
+/* Light mode provider cards */
+.light [class*="futuristic-card"],
+.light [class*="bg-gray-900"][class*="border"] {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: #e2e8f0 !important;
+}
+
+.light [class*="futuristic-card"]:hover {
+  border-color: #0891b2 !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 30px rgba(6, 182, 212, 0.05) !important;
+}
+
+/* Light mode provider card text */
+.light [class*="text-gray-400"] {
+  color: #64748b !important;
+}
+
+.light [class*="text-gray-300"] {
+  color: #475569 !important;
+}
+
+.light [class*="text-gray-200"] {
+  color: #334155 !important;
+}
+
+/* Light mode pricing/stats on cards */
+.light [class*="text-xl"],
+.light [class*="text-2xl"],
+.light [class*="text-3xl"],
+.light [class*="text-4xl"] {
+  color: #0f172a;
+}
+
+/* Light mode dividers */
+.light [class*="border-gray-800"],
+.light [class*="divide-gray-800"] > * {
+  border-color: #e2e8f0 !important;
+}
+
+/* Light mode dropdown menus */
+.light [class*="bg-gray-900"][class*="backdrop-blur"] {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Light mode badges */
+.light .tech-badge-fiber {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.light .tech-badge-cable {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.light .tech-badge-5g {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* Light mode modal/dialog backgrounds */
+.light [class*="bg-black\/50"],
+.light [class*="bg-black\/60"],
+.light [class*="bg-black\/70"] {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ========================================
+   ADMIN PANEL - Light Mode Overrides
+   ======================================== */
+
+/* Admin main container */
+.light .fixed.inset-0.z-\[100\].bg-gray-950 {
+  background-color: #f8fafc !important;
+}
+
+/* Admin sidebar */
+.light .bg-gray-900\/80[class*="border-r"] {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Admin sidebar - more specific selector */
+.light aside.bg-gray-900\/80 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Admin sidebar header and footer borders */
+.light aside .border-gray-800 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Admin text colors */
+.light .fixed.inset-0.z-\[100\] .text-white {
+  color: #0f172a !important;
+}
+
+.light .fixed.inset-0.z-\[100\] .text-gray-400 {
+  color: #64748b !important;
+}
+
+.light .fixed.inset-0.z-\[100\] .text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+/* Admin navigation items */
+.light .fixed.inset-0.z-\[100\] a.text-gray-400:hover {
+  color: #0f172a !important;
+  background-color: rgba(241, 245, 249, 0.8) !important;
+}
+
+.light .fixed.inset-0.z-\[100\] .hover\:bg-gray-800\/50:hover {
+  background-color: rgba(241, 245, 249, 0.8) !important;
+}
+
+/* Admin active nav item */
+.light .fixed.inset-0.z-\[100\] .bg-cyan-600\/20 {
+  background-color: rgba(6, 182, 212, 0.15) !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+}
+
+/* Admin main content area */
+.light .fixed.inset-0.z-\[100\] main {
+  background-color: #f1f5f9;
+}
+
+/* Admin cards/panels */
+.light .fixed.inset-0.z-\[100\] [class*="bg-gray-900"],
+.light .fixed.inset-0.z-\[100\] [class*="bg-gray-800"] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Admin stat cards */
+.light .fixed.inset-0.z-\[100\] [class*="bg-gray-800\/50"] {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Admin table headers */
+.light .fixed.inset-0.z-\[100\] th {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+}
+
+/* Admin table rows */
+.light .fixed.inset-0.z-\[100\] td {
+  border-color: #e2e8f0 !important;
+}
+
+.light .fixed.inset-0.z-\[100\] tr:hover {
+  background-color: rgba(241, 245, 249, 0.5) !important;
+}
+
+/* Admin buttons */
+.light .fixed.inset-0.z-\[100\] button.bg-gray-800 {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+.light .fixed.inset-0.z-\[100\] button.bg-gray-800:hover {
+  background-color: #e2e8f0 !important;
+}
+
+/* Admin logout button */
+.light .fixed.inset-0.z-\[100\] .hover\:text-red-400:hover {
+  color: #ef4444 !important;
+}
+
+.light .fixed.inset-0.z-\[100\] .hover\:bg-red-500\/10:hover {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Admin gradient backgrounds (keep colorful) */
+.light .fixed.inset-0.z-\[100\] .from-cyan-500,
+.light .fixed.inset-0.z-\[100\] .to-blue-600 {
+  /* Keep gradient colors for logo */
+}
+
+/* Admin inputs */
+.light .fixed.inset-0.z-\[100\] input[type="text"],
+.light .fixed.inset-0.z-\[100\] input[type="search"],
+.light .fixed.inset-0.z-\[100\] input[type="number"],
+.light .fixed.inset-0.z-\[100\] select {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+.light .fixed.inset-0.z-\[100\] input::placeholder {
+  color: #94a3b8 !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
