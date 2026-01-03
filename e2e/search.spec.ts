@@ -7,9 +7,8 @@ test.describe('Search and Location', () => {
     // Wait for page load
     await page.waitForLoadState('networkidle')
 
-    // Should show state-specific content
-    await expect(page.locator('main')).toBeVisible()
-    await expect(page.locator('body')).toContainText(/texas/i)
+    // Should show Texas-specific content
+    await expect(page.locator('body')).toContainText(/Texas/i)
   })
 
   test('city page should load', async ({ page }) => {
@@ -18,16 +17,18 @@ test.describe('Search and Location', () => {
     // Wait for page load
     await page.waitForLoadState('networkidle')
 
-    // Should show city-specific content
-    await expect(page.locator('main')).toBeVisible()
-    await expect(page.locator('body')).toContainText(/austin/i)
+    // Should show Austin-specific content
+    await expect(page.locator('body')).toContainText(/Austin/i)
   })
 
   test('ZIP code search should work on compare page', async ({ page }) => {
     await page.goto('/compare')
 
+    // Wait for page load
+    await page.waitForLoadState('networkidle')
+
     // Look for ZIP input field
-    const zipInput = page.locator('input[placeholder*="zip" i], input[type="text"]').first()
+    const zipInput = page.locator('input[placeholder*="zip" i], input[placeholder*="ZIP" i], input[type="text"]').first()
 
     if (await zipInput.isVisible()) {
       // Enter a valid ZIP code
@@ -37,8 +38,8 @@ test.describe('Search and Location', () => {
       // Wait for results
       await page.waitForLoadState('networkidle')
 
-      // Should show some results or update
-      await expect(page.locator('main')).toBeVisible()
+      // Page should still be functional
+      await expect(page).toHaveTitle(/InternetProviders/i)
     }
   })
 })

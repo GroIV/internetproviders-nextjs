@@ -1,0 +1,89 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - img
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e6]:
+        - link "InternetProviders.ai Find Your Best Connection" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img [ref=e11]
+          - generic [ref=e17]:
+            - generic [ref=e18]: InternetProviders.ai
+            - generic [ref=e19]: Find Your Best Connection
+        - navigation [ref=e20]:
+          - button "Compare" [ref=e22]:
+            - text: Compare
+            - img [ref=e23]
+          - button "Rankings" [ref=e26]:
+            - text: Rankings
+            - img [ref=e27]
+          - button "By State" [ref=e30]:
+            - text: By State
+            - img [ref=e31]
+          - button "Providers" [ref=e33]
+          - button "Plans" [ref=e34]
+          - link "Guides" [ref=e35] [cursor=pointer]:
+            - /url: /guides
+          - button "Tools" [ref=e36]
+        - link "Order Now" [ref=e38] [cursor=pointer]:
+          - /url: https://oc.brcclx.com/t?lid=26728747&s1=IPAInavbar
+          - generic [ref=e40]: Order Now
+          - img [ref=e41]
+    - generic [ref=e44]:
+      - generic [ref=e46]:
+        - generic [ref=e48]:
+          - img [ref=e51]
+          - generic [ref=e54]:
+            - heading "AI Internet Advisor" [level=2] [ref=e55]
+            - paragraph [ref=e56]: Ready to help you find the best internet
+        - generic [ref=e58]:
+          - generic [ref=e59]: "Try:"
+          - button "Speed Test" [ref=e60]:
+            - img [ref=e61]
+            - text: Speed Test
+          - button "Coverage" [ref=e63]:
+            - img [ref=e64]
+            - text: Coverage
+        - generic [ref=e68]:
+          - log "Chat messages" [ref=e69]:
+            - generic [ref=e80]: Finding best options...
+          - generic [ref=e88]:
+            - textbox "Ask about internet providers..." [disabled] [ref=e89]
+            - button "Send message" [disabled] [ref=e90]:
+              - img [ref=e91]
+      - region "Get Started" [ref=e97]:
+        - generic [ref=e99]:
+          - img [ref=e101]
+          - heading "Get Started" [level=3] [ref=e104]
+        - generic [ref=e106]:
+          - generic [ref=e107]:
+            - heading "Find Your Perfect Internet Provider" [level=2] [ref=e108]:
+              - text: Find Your Perfect
+              - text: Internet Provider
+            - paragraph [ref=e109]: Enter your ZIP code or let us detect your location
+          - generic [ref=e110]:
+            - textbox "Enter ZIP code" [ref=e112]
+            - button "Find Providers" [disabled] [ref=e113]
+          - generic [ref=e118]: or
+          - button "Detecting location..." [disabled] [ref=e119]:
+            - img [ref=e120]
+            - text: Detecting location...
+          - button "Check Exact Address (More precise)" [ref=e123]:
+            - img [ref=e124]
+            - text: Check Exact Address
+            - generic [ref=e126]: (More precise)
+          - generic [ref=e127]:
+            - button "Speed Test" [ref=e128]:
+              - img [ref=e129]
+              - text: Speed Test
+            - button "Take Quiz" [ref=e131]:
+              - img [ref=e132]
+              - text: Take Quiz
+  - button "Open Next.js Dev Tools" [ref=e139] [cursor=pointer]:
+    - img [ref=e140]
+  - alert [ref=e143]
+```

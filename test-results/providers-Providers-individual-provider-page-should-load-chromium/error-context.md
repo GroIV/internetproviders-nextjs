@@ -1,0 +1,305 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - img
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e6]:
+        - link "InternetProviders.ai Find Your Best Connection" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img [ref=e11]
+          - generic [ref=e17]:
+            - generic [ref=e18]: InternetProviders.ai
+            - generic [ref=e19]: Find Your Best Connection
+        - navigation [ref=e20]:
+          - button "Compare" [ref=e22]:
+            - text: Compare
+            - img [ref=e23]
+          - button "Rankings" [ref=e26]:
+            - text: Rankings
+            - img [ref=e27]
+          - button "By State" [ref=e30]:
+            - text: By State
+            - img [ref=e31]
+          - button "Providers" [ref=e33]
+          - button "Plans" [ref=e34]
+          - link "Guides" [ref=e35] [cursor=pointer]:
+            - /url: /guides
+          - button "Tools" [ref=e36]
+        - link "Order Now" [ref=e38] [cursor=pointer]:
+          - /url: https://oc.brcclx.com/t?lid=26728747&s1=IPAInavbar
+          - generic [ref=e40]: Order Now
+          - img [ref=e41]
+    - generic [ref=e44]:
+      - generic [ref=e46]:
+        - generic [ref=e48]:
+          - img [ref=e51]
+          - generic [ref=e54]:
+            - heading "AI Internet Advisor" [level=2] [ref=e55]
+            - paragraph [ref=e56]: Ready to help you find the best internet
+        - generic [ref=e58]:
+          - generic [ref=e59]: "Try:"
+          - button "Speed Test" [ref=e60]:
+            - img [ref=e61]
+            - text: Speed Test
+          - button "Coverage" [ref=e63]:
+            - img [ref=e64]
+            - text: Coverage
+        - generic [ref=e68]:
+          - log "Chat messages" [ref=e69]:
+            - generic [ref=e80]: Comparing plans...
+          - generic [ref=e88]:
+            - textbox "Ask about internet providers..." [disabled] [ref=e89]
+            - button "Send message" [disabled] [ref=e90]:
+              - img [ref=e91]
+      - generic [ref=e98]:
+        - navigation "Breadcrumb" [ref=e99]:
+          - link "Home" [ref=e100] [cursor=pointer]:
+            - /url: /
+          - text: /
+          - link "Providers" [ref=e101] [cursor=pointer]:
+            - /url: /providers
+          - text: /AT&T Internet
+        - generic [ref=e105]:
+          - img "AT&T Internet logo" [ref=e109]
+          - generic [ref=e111]:
+            - generic [ref=e112]:
+              - heading "AT&T Internet" [level=1] [ref=e113]
+              - paragraph [ref=e114]: Nationwide fiber and DSL provider with extensive coverage
+              - generic [ref=e115]:
+                - generic [ref=e116]: Fiber
+                - generic [ref=e117]: Fixed Wireless
+                - generic [ref=e118]: DSL
+            - generic [ref=e119]:
+              - link "Order AT&T Internet" [ref=e120] [cursor=pointer]:
+                - /url: https://www.myfinance.com/reporting/32346948/?utm_campaign=chameleon-konecteaze-att-dl&sub_id=IPAIatt-internet
+                - generic [ref=e121]: Order AT&T Internet
+                - img [ref=e122]
+              - generic [ref=e124]:
+                - img [ref=e125]
+                - generic [ref=e128]: 27,479 ZIP codes
+        - generic [ref=e129]:
+          - generic [ref=e132]:
+            - generic [ref=e133]:
+              - img [ref=e134]
+              - generic [ref=e136]: Max Speed
+            - generic [ref=e137]: 5.1 Gbps
+          - generic [ref=e142]:
+            - generic [ref=e143]:
+              - img [ref=e144]
+              - generic [ref=e146]: Starting Price
+            - generic [ref=e147]: $15/mo*
+          - generic [ref=e150]:
+            - generic [ref=e151]:
+              - img [ref=e152]
+              - generic [ref=e154]: Coverage
+            - generic [ref=e155]: 27,479
+            - generic [ref=e156]: ZIP codes served
+          - generic [ref=e159]:
+            - generic [ref=e160]:
+              - img [ref=e161]
+              - generic [ref=e163]: Available Plans
+            - generic [ref=e164]: "124"
+            - generic [ref=e165]: verified plans
+        - generic [ref=e169]:
+          - heading "Check AT&T Internet Availability" [level=2] [ref=e170]
+          - paragraph [ref=e171]: See if AT&T Internet is available at your address
+          - generic [ref=e172]:
+            - img [ref=e173]
+            - generic [ref=e176]: Detecting your location...
+          - link "Check AT&T Internet Availability" [ref=e178] [cursor=pointer]:
+            - /url: https://www.myfinance.com/reporting/32346948/?utm_campaign=chameleon-konecteaze-att-dl&sub_id=IPAIprovider-page-att-internet
+            - img [ref=e179]
+            - text: Check AT&T Internet Availability
+        - generic [ref=e183]:
+          - generic [ref=e184]:
+            - heading "AT&T Internet Internet Plans" [level=2] [ref=e185]
+            - generic [ref=e186]: Data from FCC Broadband Labels
+          - generic [ref=e187]:
+            - generic [ref=e188]:
+              - generic [ref=e190]: Budget Pick
+              - heading "Access from AT&T Internet 10 (Copper 10Mbps)" [level=3] [ref=e191]
+              - generic [ref=e192]: $15/mo
+              - generic [ref=e193]:
+                - generic [ref=e194]:
+                  - generic [ref=e195]:
+                    - img
+                    - text: Download
+                  - generic [ref=e197]: N/A
+                - generic [ref=e198]:
+                  - generic [ref=e199]:
+                    - img [ref=e200]
+                    - text: Upload
+                  - generic [ref=e202]: N/A
+              - list [ref=e203]:
+                - listitem [ref=e204]:
+                  - img [ref=e205]
+                  - text: No data caps
+                - listitem [ref=e207]:
+                  - img [ref=e208]
+                  - text: No contract
+              - paragraph [ref=e210]: Basic internet for light usage
+            - generic [ref=e211]:
+              - generic [ref=e212]:
+                - generic [ref=e213]: Best Value
+                - generic [ref=e214]: Recommended
+              - heading "Internet 300 (Fiber 300Mbps)" [level=3] [ref=e215]
+              - generic [ref=e216]: $65/mo
+              - generic [ref=e217]:
+                - generic [ref=e218]:
+                  - generic [ref=e219]:
+                    - img
+                    - text: Download
+                  - generic [ref=e221]: 398 Mbps
+                - generic [ref=e222]:
+                  - generic [ref=e223]:
+                    - img [ref=e224]
+                    - text: Upload
+                  - generic [ref=e226]: 378 Mbps
+              - generic [ref=e228]:
+                - generic [ref=e229]: Typical Latency
+                - generic [ref=e230]: 14ms
+              - list [ref=e231]:
+                - listitem [ref=e232]:
+                  - img [ref=e233]
+                  - text: No data caps
+                - listitem [ref=e235]:
+                  - img [ref=e236]
+                  - text: No contract
+                - listitem [ref=e238]:
+                  - img [ref=e239]
+                  - text: 14ms latency
+              - paragraph [ref=e241]: Good all-around option for families
+            - generic [ref=e242]:
+              - generic [ref=e244]: Premium
+              - heading "Internet 5000 (Fiber 5GIG)" [level=3] [ref=e245]
+              - generic [ref=e246]: $255/mo
+              - generic [ref=e247]:
+                - generic [ref=e248]:
+                  - generic [ref=e249]:
+                    - img
+                    - text: Download
+                  - generic [ref=e251]: 5.1 Gbps
+                - generic [ref=e252]:
+                  - generic [ref=e253]:
+                    - img [ref=e254]
+                    - text: Upload
+                  - generic [ref=e256]: 5.3 Gbps
+              - generic [ref=e258]:
+                - generic [ref=e259]: Typical Latency
+                - generic [ref=e260]: 5ms
+              - list [ref=e261]:
+                - listitem [ref=e262]:
+                  - img [ref=e263]
+                  - text: No data caps
+                - listitem [ref=e265]:
+                  - img [ref=e266]
+                  - text: No contract
+                - listitem [ref=e268]:
+                  - img [ref=e269]
+                  - text: 5ms latency
+              - paragraph [ref=e271]: Ultra-fast for power users and large households
+          - paragraph [ref=e272]: "Pricing and availability may vary by location. Data sourced from FCC Broadband Consumer Labels. Last updated: 12/27/2025"
+        - generic [ref=e283]:
+          - heading "About AT&T Internet" [level=2] [ref=e284]
+          - generic [ref=e285]:
+            - paragraph [ref=e286]: AT&T Internet is a leading internet service provider offering Fiber, Fixed Wireless, DSL service across the United States. With coverage in 27,479 ZIP codes,AT&T Internet provides reliable internet connectivity for homes and businesses.
+            - paragraph [ref=e287]: As a fiber internet provider, AT&T Internet offers some of the fastest speeds available, with symmetrical upload and download speeds perfect for streaming, gaming, and working from home.
+        - generic [ref=e290]:
+          - heading "Available Technologies" [level=2] [ref=e291]
+          - generic [ref=e292]:
+            - generic [ref=e293]:
+              - img [ref=e295]
+              - generic [ref=e297]:
+                - heading "Fiber" [level=3] [ref=e298]
+                - paragraph [ref=e299]: Ultra-fast symmetrical speeds up to 8 Gbps
+            - generic [ref=e300]:
+              - img [ref=e302]
+              - generic [ref=e304]:
+                - heading "Fixed Wireless" [level=3] [ref=e305]
+                - paragraph [ref=e306]: Wireless broadband for underserved areas
+            - generic [ref=e307]:
+              - img [ref=e309]
+              - generic [ref=e311]:
+                - heading "DSL" [level=3] [ref=e312]
+                - paragraph [ref=e313]: Widely available internet over phone lines
+        - generic [ref=e316]:
+          - heading "Compare AT&T Internet" [level=2] [ref=e317]
+          - paragraph [ref=e318]: See how AT&T Internet stacks up against other providers
+          - generic [ref=e319]:
+            - link "AT&T Internet logo Xfinity logo vs Xfinity" [ref=e320] [cursor=pointer]:
+              - /url: /compare/att-internet-vs-xfinity
+              - generic [ref=e321]:
+                - generic [ref=e322]:
+                  - img "AT&T Internet logo" [ref=e324]
+                  - img "Xfinity logo" [ref=e326]
+                - generic [ref=e327]: vs Xfinity
+              - img
+            - link "AT&T Internet logo Spectrum logo vs Spectrum" [ref=e329] [cursor=pointer]:
+              - /url: /compare/att-internet-vs-spectrum
+              - generic [ref=e330]:
+                - generic [ref=e331]:
+                  - img "AT&T Internet logo" [ref=e333]
+                  - img "Spectrum logo" [ref=e335]
+                - generic [ref=e336]: vs Spectrum
+              - img
+            - link "AT&T Internet logo Verizon Fios logo vs Verizon Fios" [ref=e338] [cursor=pointer]:
+              - /url: /compare/att-internet-vs-verizon-fios
+              - generic [ref=e339]:
+                - generic [ref=e340]:
+                  - img "AT&T Internet logo" [ref=e342]
+                  - img "Verizon Fios logo" [ref=e344]
+                - generic [ref=e345]: vs Verizon Fios
+              - img
+        - generic [ref=e349]:
+          - heading "Similar Providers" [level=2] [ref=e350]
+          - paragraph [ref=e351]: Other providers you might want to consider
+          - generic [ref=e352]:
+            - link "Xfinity logo Xfinity Cable Fiber" [ref=e353] [cursor=pointer]:
+              - /url: /providers/xfinity
+              - img "Xfinity logo" [ref=e357]
+              - heading "Xfinity" [level=3] [ref=e358]
+              - generic [ref=e359]:
+                - generic [ref=e360]: Cable
+                - generic [ref=e361]: Fiber
+            - link "Verizon Fios logo Verizon Fios Fiber" [ref=e362] [cursor=pointer]:
+              - /url: /providers/verizon-fios
+              - img "Verizon Fios logo" [ref=e366]
+              - heading "Verizon Fios" [level=3] [ref=e367]
+              - generic [ref=e369]: Fiber
+            - link "Cox Internet logo Cox Internet Cable Fiber" [ref=e370] [cursor=pointer]:
+              - /url: /providers/cox
+              - img "Cox Internet logo" [ref=e374]
+              - heading "Cox Internet" [level=3] [ref=e375]
+              - generic [ref=e376]:
+                - generic [ref=e377]: Cable
+                - generic [ref=e378]: Fiber
+            - link "Spectrum logo Spectrum Cable" [ref=e379] [cursor=pointer]:
+              - /url: /providers/spectrum
+              - img "Spectrum logo" [ref=e383]
+              - heading "Spectrum" [level=3] [ref=e384]
+              - generic [ref=e386]: Cable
+        - generic [ref=e390]:
+          - heading "Ready to Get Started?" [level=2] [ref=e391]
+          - paragraph [ref=e392]: Order AT&T Internet today and enjoy fast, reliable internet service
+          - generic [ref=e393]:
+            - link "Order AT&T Internet" [ref=e394] [cursor=pointer]:
+              - /url: https://www.myfinance.com/reporting/32346948/?utm_campaign=chameleon-konecteaze-att-dl&sub_id=IPAIatt-internet
+              - generic [ref=e395]: Order AT&T Internet
+              - img [ref=e396]
+            - link "Compare All Providers" [ref=e398] [cursor=pointer]:
+              - /url: /compare
+              - img [ref=e399]
+              - text: Compare All Providers
+  - button "Open Next.js Dev Tools" [ref=e406] [cursor=pointer]:
+    - generic [ref=e409]:
+      - text: Compiling
+      - generic [ref=e410]:
+        - generic [ref=e411]: .
+        - generic [ref=e412]: .
+        - generic [ref=e413]: .
+  - alert [ref=e414]
+```

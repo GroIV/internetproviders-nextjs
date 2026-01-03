@@ -1,0 +1,81 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - img
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e6]:
+        - link "InternetProviders.ai Find Your Best Connection" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img [ref=e11]
+          - generic [ref=e17]:
+            - generic [ref=e18]: InternetProviders.ai
+            - generic [ref=e19]: Find Your Best Connection
+        - navigation [ref=e20]:
+          - button "Compare" [ref=e22]:
+            - text: Compare
+            - img [ref=e23]
+          - button "Rankings" [ref=e26]:
+            - text: Rankings
+            - img [ref=e27]
+          - button "By State" [ref=e30]:
+            - text: By State
+            - img [ref=e31]
+          - button "Providers" [ref=e33]
+          - button "Plans" [ref=e34]
+          - link "Guides" [ref=e35] [cursor=pointer]:
+            - /url: /guides
+          - button "Tools" [ref=e36]
+        - link "Order Now" [ref=e38] [cursor=pointer]:
+          - /url: https://oc.brcclx.com/t?lid=26728747&s1=IPAInavbar
+          - generic [ref=e40]: Order Now
+          - img [ref=e41]
+    - generic [ref=e59]:
+      - navigation [ref=e60]:
+        - link "Home" [ref=e61] [cursor=pointer]:
+          - /url: /
+        - text: /
+        - link "Tools" [ref=e62] [cursor=pointer]:
+          - /url: /tools
+        - text: /Speed Test
+      - generic [ref=e63]:
+        - heading "Internet Speed Test" [level=1] [ref=e64]
+        - paragraph [ref=e65]: Test your connection with our comprehensive speed analysis
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - generic [ref=e69]:
+            - img [ref=e70]
+            - generic [ref=e82]:
+              - generic [ref=e83]: "0"
+              - generic [ref=e84]: Mbps
+              - generic [ref=e85]: Ready
+          - generic [ref=e86]: "0"
+          - generic [ref=e87]: 500+
+        - button "Start Speed Test" [ref=e88]
+      - generic [ref=e89]:
+        - text: Powered by
+        - link "Cloudflare" [ref=e90] [cursor=pointer]:
+          - /url: https://speed.cloudflare.com
+      - generic [ref=e91]:
+        - heading "Tips for Accurate Results" [level=2] [ref=e92]
+        - list [ref=e93]:
+          - listitem [ref=e94]:
+            - img [ref=e95]
+            - text: Close other browser tabs and applications using bandwidth
+          - listitem [ref=e97]:
+            - img [ref=e98]
+            - text: Use a wired ethernet connection if possible for most accurate results
+          - listitem [ref=e100]:
+            - img [ref=e101]
+            - text: Run the test multiple times at different hours to see consistency
+          - listitem [ref=e103]:
+            - img [ref=e104]
+            - text: Test runs ~45-60 seconds for comprehensive analysis
+      - generic [ref=e106]:
+        - paragraph [ref=e107]: Not happy with your speeds?
+        - link "Compare Faster Providers" [ref=e108] [cursor=pointer]:
+          - /url: /compare
+```

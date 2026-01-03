@@ -14,7 +14,7 @@ const customJestConfig = {
     // Handle module aliases (must match your tsconfig paths)
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
+  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/', '<rootDir>/e2e/'],
   collectCoverageFrom: [
     'src/lib/**/*.{js,jsx,ts,tsx}',
     'src/components/**/*.{js,jsx,ts,tsx}',

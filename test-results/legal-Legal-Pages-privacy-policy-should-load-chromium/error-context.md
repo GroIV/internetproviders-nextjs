@@ -1,0 +1,125 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - img
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e6]:
+        - link "InternetProviders.ai Find Your Best Connection" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img [ref=e11]
+          - generic [ref=e17]:
+            - generic [ref=e18]: InternetProviders.ai
+            - generic [ref=e19]: Find Your Best Connection
+        - navigation [ref=e20]:
+          - button "Compare" [ref=e22]:
+            - text: Compare
+            - img [ref=e23]
+          - button "Rankings" [ref=e26]:
+            - text: Rankings
+            - img [ref=e27]
+          - button "By State" [ref=e30]:
+            - text: By State
+            - img [ref=e31]
+          - button "Providers" [ref=e33]
+          - button "Plans" [ref=e34]
+          - link "Guides" [ref=e35] [cursor=pointer]:
+            - /url: /guides
+          - button "Tools" [ref=e36]
+        - link "Order Now" [ref=e38] [cursor=pointer]:
+          - /url: https://oc.brcclx.com/t?lid=26728747&s1=IPAInavbar
+          - generic [ref=e40]: Order Now
+          - img [ref=e41]
+    - generic [ref=e58]:
+      - navigation [ref=e59]:
+        - link "Home" [ref=e60] [cursor=pointer]:
+          - /url: /
+        - text: /Privacy Policy
+      - heading "Privacy Policy" [level=1] [ref=e61]
+      - paragraph [ref=e62]: "Last updated: December 2025"
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - heading "Introduction" [level=2] [ref=e65]
+          - paragraph [ref=e66]: InternetProviders.ai ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website.
+        - generic [ref=e67]:
+          - heading "Information We Collect" [level=2] [ref=e68]
+          - heading "Information You Provide" [level=3] [ref=e69]
+          - list [ref=e70]:
+            - listitem [ref=e71]: ZIP codes entered to search for internet providers
+            - listitem [ref=e72]: Email address if you subscribe to our newsletter
+            - listitem [ref=e73]: Contact information if you reach out to us
+          - heading "Information Collected Automatically" [level=3] [ref=e74]
+          - list [ref=e75]:
+            - listitem [ref=e76]: IP address and approximate location
+            - listitem [ref=e77]: Browser type and version
+            - listitem [ref=e78]: Device information
+            - listitem [ref=e79]: Pages visited and time spent on our site
+            - listitem [ref=e80]: Referring website or source
+        - generic [ref=e81]:
+          - heading "How We Use Your Information" [level=2] [ref=e82]
+          - paragraph [ref=e83]: "We use the information we collect to:"
+          - list [ref=e84]:
+            - listitem [ref=e85]: Provide internet provider information for your area
+            - listitem [ref=e86]: Improve our website and user experience
+            - listitem [ref=e87]: Send newsletters and promotional communications (with your consent)
+            - listitem [ref=e88]: Respond to your inquiries and provide customer support
+            - listitem [ref=e89]: Analyze usage patterns and trends
+            - listitem [ref=e90]: Prevent fraud and ensure security
+        - generic [ref=e91]:
+          - heading "Cookies and Tracking Technologies" [level=2] [ref=e92]
+          - paragraph [ref=e93]: "We use cookies and similar tracking technologies to collect information about your browsing activities. These include:"
+          - list [ref=e94]:
+            - listitem [ref=e95]:
+              - strong [ref=e96]: "Essential cookies:"
+              - text: Required for the website to function properly
+            - listitem [ref=e97]:
+              - strong [ref=e98]: "Analytics cookies:"
+              - text: Help us understand how visitors use our site
+            - listitem [ref=e99]:
+              - strong [ref=e100]: "Advertising cookies:"
+              - text: Used to deliver relevant advertisements
+          - paragraph [ref=e101]: You can control cookies through your browser settings. Note that disabling cookies may affect website functionality.
+        - generic [ref=e102]:
+          - heading "Third-Party Services" [level=2] [ref=e103]
+          - paragraph [ref=e104]: "We may share information with third parties in the following circumstances:"
+          - list [ref=e105]:
+            - listitem [ref=e106]:
+              - strong [ref=e107]: "Analytics providers:"
+              - text: To analyze website usage
+            - listitem [ref=e108]:
+              - strong [ref=e109]: "Advertising partners:"
+              - text: To serve relevant ads
+            - listitem [ref=e110]:
+              - strong [ref=e111]: "Internet providers:"
+              - text: When you click to sign up for their service
+            - listitem [ref=e112]:
+              - strong [ref=e113]: "Legal requirements:"
+              - text: When required by law or to protect our rights
+        - generic [ref=e114]:
+          - heading "Data Security" [level=2] [ref=e115]
+          - paragraph [ref=e116]: We implement appropriate technical and organizational measures to protect your personal information. However, no internet transmission is completely secure, and we cannot guarantee absolute security.
+        - generic [ref=e117]:
+          - heading "Your Rights" [level=2] [ref=e118]
+          - paragraph [ref=e119]: "Depending on your location, you may have the right to:"
+          - list [ref=e120]:
+            - listitem [ref=e121]: Access the personal information we hold about you
+            - listitem [ref=e122]: Request correction of inaccurate information
+            - listitem [ref=e123]: Request deletion of your personal information
+            - listitem [ref=e124]: Opt out of marketing communications
+            - listitem [ref=e125]: Object to certain processing of your data
+        - generic [ref=e126]:
+          - heading "Children's Privacy" [level=2] [ref=e127]
+          - paragraph [ref=e128]: Our website is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13.
+        - generic [ref=e129]:
+          - heading "Changes to This Policy" [level=2] [ref=e130]
+          - paragraph [ref=e131]: We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date.
+        - generic [ref=e132]:
+          - heading "Contact Us" [level=2] [ref=e133]
+          - paragraph [ref=e134]:
+            - text: If you have questions about this Privacy Policy, please contact us at
+            - link "privacy@internetproviders.ai" [ref=e135] [cursor=pointer]:
+              - /url: mailto:privacy@internetproviders.ai
+```

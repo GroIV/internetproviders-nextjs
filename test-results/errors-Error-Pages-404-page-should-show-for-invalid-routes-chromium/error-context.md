@@ -1,0 +1,55 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - img
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e6]:
+        - link "InternetProviders.ai Find Your Best Connection" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img [ref=e11]
+          - generic [ref=e17]:
+            - generic [ref=e18]: InternetProviders.ai
+            - generic [ref=e19]: Find Your Best Connection
+        - navigation [ref=e20]:
+          - button "Compare" [ref=e22]:
+            - text: Compare
+            - img [ref=e23]
+          - button "Rankings" [ref=e26]:
+            - text: Rankings
+            - img [ref=e27]
+          - button "By State" [ref=e30]:
+            - text: By State
+            - img [ref=e31]
+          - button "Providers" [ref=e33]
+          - button "Plans" [ref=e34]
+          - link "Guides" [ref=e35] [cursor=pointer]:
+            - /url: /guides
+          - button "Tools" [ref=e36]
+        - link "Order Now" [ref=e38] [cursor=pointer]:
+          - /url: https://oc.brcclx.com/t?lid=26728747&s1=IPAInavbar
+          - generic [ref=e40]: Order Now
+          - img [ref=e41]
+    - generic [ref=e58]:
+      - img [ref=e61]
+      - heading "404" [level=1] [ref=e63]
+      - heading "Page Not Found" [level=2] [ref=e64]
+      - paragraph [ref=e65]: Sorry, we couldn't find the page you're looking for. It might have been moved or doesn't exist.
+      - generic [ref=e66]:
+        - link "Go Home" [ref=e67] [cursor=pointer]:
+          - /url: /
+          - img [ref=e68]
+          - text: Go Home
+        - link "Browse Providers" [ref=e70] [cursor=pointer]:
+          - /url: /providers
+          - img [ref=e71]
+          - text: Browse Providers
+      - paragraph [ref=e73]:
+        - text: Need help? Try searching for a provider or
+        - link "contact us" [ref=e74] [cursor=pointer]:
+          - /url: /contact
+        - text: .
+```

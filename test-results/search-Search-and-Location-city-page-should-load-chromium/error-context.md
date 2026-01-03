@@ -1,0 +1,354 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - img
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e6]:
+        - link "InternetProviders.ai Find Your Best Connection" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img [ref=e11]
+          - generic [ref=e17]:
+            - generic [ref=e18]: InternetProviders.ai
+            - generic [ref=e19]: Find Your Best Connection
+        - navigation [ref=e20]:
+          - button "Compare" [ref=e22]:
+            - text: Compare
+            - img [ref=e23]
+          - button "Rankings" [ref=e26]:
+            - text: Rankings
+            - img [ref=e27]
+          - button "By State" [ref=e30]:
+            - text: By State
+            - img [ref=e31]
+          - button "Providers" [ref=e33]
+          - button "Plans" [ref=e34]
+          - link "Guides" [ref=e35] [cursor=pointer]:
+            - /url: /guides
+          - button "Tools" [ref=e36]
+        - link "Order Now" [ref=e38] [cursor=pointer]:
+          - /url: https://oc.brcclx.com/t?lid=26728747&s1=IPAInavbar
+          - generic [ref=e40]: Order Now
+          - img [ref=e41]
+    - generic [ref=e44]:
+      - generic [ref=e46]:
+        - generic [ref=e48]:
+          - img [ref=e51]
+          - generic [ref=e54]:
+            - heading "AI Internet Advisor" [level=2] [ref=e55]
+            - paragraph [ref=e56]: Ready to help you find the best internet
+        - generic [ref=e58]:
+          - generic [ref=e59]: "Try:"
+          - button "Speed Test" [ref=e60]:
+            - img [ref=e61]
+            - text: Speed Test
+          - button "Coverage" [ref=e63]:
+            - img [ref=e64]
+            - text: Coverage
+        - generic [ref=e68]:
+          - log "Chat messages" [ref=e69]:
+            - generic [ref=e80]: Comparing plans...
+          - generic [ref=e88]:
+            - textbox "Ask about internet providers..." [disabled] [ref=e89]
+            - button "Send message" [disabled] [ref=e90]:
+              - img [ref=e91]
+      - generic [ref=e99]:
+        - navigation "Breadcrumb" [ref=e100]:
+          - link "Home" [ref=e101] [cursor=pointer]:
+            - /url: /
+          - generic [ref=e102]: /
+          - link "Internet by State" [ref=e103] [cursor=pointer]:
+            - /url: /internet
+          - generic [ref=e104]: /
+          - link "Texas" [ref=e105] [cursor=pointer]:
+            - /url: /internet/texas
+          - generic [ref=e106]: /
+          - generic [ref=e107]: Best Internet Providers in Austin, TX
+        - article [ref=e108]:
+          - generic [ref=e109]:
+            - generic [ref=e111]:
+              - generic [ref=e112]: City Guide
+              - heading "Best Internet Providers in Austin, TX" [level=1] [ref=e113]
+              - paragraph [ref=e114]: Austin's tech-forward culture demands high-speed internet, and the city delivers with excellent fiber coverage and competitive options. From Google Fiber's gigabit speeds to AT&T's widespread availability, Austin residents enjoy some of the best internet infrastructure in Texas.
+            - generic [ref=e115]:
+              - generic [ref=e116]:
+                - generic [ref=e117]: Available Providers
+                - generic [ref=e118]: 15+
+              - generic [ref=e119]:
+                - generic [ref=e120]: Fiber Coverage
+                - generic [ref=e121]: 85%
+              - generic [ref=e122]:
+                - generic [ref=e123]: Max Speed
+                - generic [ref=e124]: 5 Gig
+              - generic [ref=e125]:
+                - generic [ref=e126]: Avg Price
+                - generic [ref=e127]: $65/mo
+            - generic [ref=e128]:
+              - heading "Key Takeaways" [level=2] [ref=e129]
+              - list [ref=e130]:
+                - listitem [ref=e131]:
+                  - generic [ref=e132]: ✓
+                  - generic [ref=e133]: Google Fiber offers the fastest speeds up to 5 Gig in select areas
+                - listitem [ref=e134]:
+                  - generic [ref=e135]: ✓
+                  - generic [ref=e136]: AT&T Fiber provides widespread coverage across most Austin neighborhoods
+                - listitem [ref=e137]:
+                  - generic [ref=e138]: ✓
+                  - generic [ref=e139]: Spectrum offers reliable cable internet with no data caps
+                - listitem [ref=e140]:
+                  - generic [ref=e141]: ✓
+                  - generic [ref=e142]: T-Mobile 5G Home Internet provides wireless alternative in qualifying areas
+                - listitem [ref=e143]:
+                  - generic [ref=e144]: ✓
+                  - generic [ref=e145]: Most providers offer no-contract options with competitive pricing
+            - generic [ref=e146]:
+              - generic [ref=e149]:
+                - generic [ref=e150]:
+                  - generic [ref=e151]:
+                    - paragraph [ref=e152]: Google Fiber
+                    - heading "Gig + TV" [level=3] [ref=e153]
+                  - generic [ref=e154]: Best Overall
+                - generic [ref=e155]:
+                  - text: $100 /mo
+                  - paragraph [ref=e156]: "*Pricing as of 2025"
+                - list [ref=e157]:
+                  - listitem [ref=e158]:
+                    - generic [ref=e159]: ✓
+                    - generic [ref=e160]: 1 Gig speeds (up to 5 Gig available)
+                  - listitem [ref=e161]:
+                    - generic [ref=e162]: ✓
+                    - generic [ref=e163]: YouTube TV included
+                  - listitem [ref=e164]:
+                    - generic [ref=e165]: ✓
+                    - generic [ref=e166]:
+                      - generic [ref=e167]: Fiber
+                      - text: technology
+                  - listitem [ref=e168]:
+                    - generic [ref=e169]: ✓
+                    - generic [ref=e170]: No data caps
+                - link "Check Availability" [ref=e172] [cursor=pointer]:
+                  - /url: /go/google-fiber
+              - generic [ref=e175]:
+                - generic [ref=e176]:
+                  - generic [ref=e177]:
+                    - paragraph [ref=e178]: AT&T Fiber
+                    - heading "Internet 1000" [level=3] [ref=e179]
+                  - generic [ref=e180]: Best Value
+                - generic [ref=e181]:
+                  - text: $80 /mo
+                  - paragraph [ref=e182]: "*With autopay & paperless"
+                - list [ref=e183]:
+                  - listitem [ref=e184]:
+                    - generic [ref=e185]: ✓
+                    - generic [ref=e186]: 1 Gig symmetrical speeds
+                  - listitem [ref=e187]:
+                    - generic [ref=e188]: ✓
+                    - generic [ref=e189]: Wide Austin coverage
+                  - listitem [ref=e190]:
+                    - generic [ref=e191]: ✓
+                    - generic [ref=e192]:
+                      - generic [ref=e193]: Fiber
+                      - text: technology
+                  - listitem [ref=e194]:
+                    - generic [ref=e195]: ✓
+                    - generic [ref=e196]: No annual contract
+                - link "Check Availability" [ref=e198] [cursor=pointer]:
+                  - /url: /go/att-fiber
+              - generic [ref=e201]:
+                - generic [ref=e202]:
+                  - generic [ref=e203]:
+                    - paragraph [ref=e204]: Spectrum
+                    - heading "Internet" [level=3] [ref=e205]
+                  - generic [ref=e206]: Most Available
+                - generic [ref=e207]:
+                  - text: $50 /mo
+                  - paragraph [ref=e208]: "*New customers, 12 months"
+                - list [ref=e209]:
+                  - listitem [ref=e210]:
+                    - generic [ref=e211]: ✓
+                    - generic [ref=e212]: 300 Mbps download speeds
+                  - listitem [ref=e213]:
+                    - generic [ref=e214]: ✓
+                    - generic [ref=e215]: Citywide availability
+                  - listitem [ref=e216]:
+                    - generic [ref=e217]: ✓
+                    - generic [ref=e218]:
+                      - generic [ref=e219]: Cable
+                      - text: technology
+                  - listitem [ref=e220]:
+                    - generic [ref=e221]: ✓
+                    - generic [ref=e222]: No data caps
+                - link "Check Availability" [ref=e224] [cursor=pointer]:
+                  - /url: /go/spectrum
+            - generic [ref=e226]:
+              - heading "Austin Internet Provider Comparison" [level=2] [ref=e227]
+              - table [ref=e228]:
+                - rowgroup [ref=e229]:
+                  - row "Provider Technology Max Speed Starting Price Coverage Data Cap" [ref=e230]:
+                    - columnheader "Provider" [ref=e231]
+                    - columnheader "Technology" [ref=e232]
+                    - columnheader "Max Speed" [ref=e233]
+                    - columnheader "Starting Price" [ref=e234]
+                    - columnheader "Coverage" [ref=e235]
+                    - columnheader "Data Cap" [ref=e236]
+                - rowgroup [ref=e237]:
+                  - row "Google Fiber Fiber 5 Gig $70/mo Select areas None" [ref=e238]:
+                    - cell "Google Fiber" [ref=e239]:
+                      - strong [ref=e240]: Google Fiber
+                    - cell "Fiber" [ref=e241]:
+                      - generic [ref=e242]: Fiber
+                    - cell "5 Gig" [ref=e243]
+                    - cell "$70/mo" [ref=e244]
+                    - cell "Select areas" [ref=e245]
+                    - cell "None" [ref=e246]
+                  - row "AT&T Fiber Fiber 5 Gig $55/mo Most areas None" [ref=e247]:
+                    - cell "AT&T Fiber" [ref=e248]:
+                      - strong [ref=e249]: AT&T Fiber
+                    - cell "Fiber" [ref=e250]:
+                      - generic [ref=e251]: Fiber
+                    - cell "5 Gig" [ref=e252]
+                    - cell "$55/mo" [ref=e253]
+                    - cell "Most areas" [ref=e254]
+                    - cell "None" [ref=e255]
+                  - row "Spectrum Cable 1 Gig $50/mo Citywide None" [ref=e256]:
+                    - cell "Spectrum" [ref=e257]:
+                      - strong [ref=e258]: Spectrum
+                    - cell "Cable" [ref=e259]:
+                      - generic [ref=e260]: Cable
+                    - cell "1 Gig" [ref=e261]
+                    - cell "$50/mo" [ref=e262]
+                    - cell "Citywide" [ref=e263]
+                    - cell "None" [ref=e264]
+                  - row "T-Mobile 5G 5G 245 Mbps $50/mo Qualifying areas None" [ref=e265]:
+                    - cell "T-Mobile 5G" [ref=e266]:
+                      - strong [ref=e267]: T-Mobile 5G
+                    - cell "5G" [ref=e268]:
+                      - generic [ref=e269]: 5G
+                    - cell "245 Mbps" [ref=e270]
+                    - cell "$50/mo" [ref=e271]
+                    - cell "Qualifying areas" [ref=e272]
+                    - cell "None" [ref=e273]
+                  - row "Verizon 5G 5G 300+ Mbps $50/mo Limited areas None" [ref=e274]:
+                    - cell "Verizon 5G" [ref=e275]:
+                      - strong [ref=e276]: Verizon 5G
+                    - cell "5G" [ref=e277]:
+                      - generic [ref=e278]: 5G
+                    - cell "300+ Mbps" [ref=e279]
+                    - cell "$50/mo" [ref=e280]
+                    - cell "Limited areas" [ref=e281]
+                    - cell "None" [ref=e282]
+            - generic [ref=e283]:
+              - heading "Internet Technology Availability in Austin" [level=2] [ref=e284]
+              - heading "Fiber Internet" [level=3] [ref=e285]
+              - paragraph [ref=e286]:
+                - text: Austin boasts exceptional fiber coverage with approximately 85% of the city having access to fiber internet.
+                - link "Google Fiber" [ref=e287] [cursor=pointer]:
+                  - /url: /go/google-fiber
+                - text: leads in premium fiber services, offering speeds up to 5 Gig in select neighborhoods including Downtown, South Austin, and East Austin.
+                - link "AT&T Fiber" [ref=e288] [cursor=pointer]:
+                  - /url: /go/att-fiber
+                - text: provides the most comprehensive fiber network, covering most residential areas with symmetrical gigabit speeds.
+              - heading "Cable Internet" [level=3] [ref=e289]
+              - paragraph [ref=e290]:
+                - link "Spectrum" [ref=e291] [cursor=pointer]:
+                  - /url: /go/spectrum
+                - text: serves as Austin's primary cable internet provider, offering citywide coverage with speeds up to 1 Gig. Cable internet remains a reliable choice for areas where fiber isn't yet available, particularly in some suburban neighborhoods and newer developments.
+              - heading "5G Home Internet" [level=3] [ref=e292]
+              - paragraph [ref=e293]:
+                - text: Wireless internet options have expanded significantly in Austin.
+                - link "T-Mobile 5G Home Internet" [ref=e294] [cursor=pointer]:
+                  - /url: /go/tmobile-home-internet
+                - text: and
+                - link "Verizon 5G Home Internet" [ref=e295] [cursor=pointer]:
+                  - /url: /go/verizon-5g-home
+                - text: offer competitive speeds and pricing, particularly beneficial for renters or those in areas with limited wired options. Coverage varies by specific location within the city.
+              - heading "DSL and Satellite" [level=3] [ref=e296]
+              - paragraph [ref=e297]:
+                - text: Traditional DSL service from AT&T remains available but is largely overshadowed by fiber and cable options. Satellite internet from providers like
+                - link "HughesNet" [ref=e298] [cursor=pointer]:
+                  - /url: /go/hughesnet
+                - text: and
+                - link "Viasat" [ref=e299] [cursor=pointer]:
+                  - /url: /go/viasat
+                - text: serves as backup options, though most Austin residents have access to superior terrestrial services.
+            - generic [ref=e300]:
+              - generic [ref=e302]:
+                - heading "Best for Remote Work & Gaming" [level=3] [ref=e303]
+                - paragraph [ref=e304]: Need ultra-fast, reliable internet for work-from-home or gaming? Prioritize fiber providers with symmetrical upload speeds.
+                - list [ref=e305]:
+                  - listitem [ref=e306]:
+                    - generic [ref=e307]: ✓
+                    - generic [ref=e308]:
+                      - strong [ref=e309]: "Google Fiber:"
+                      - text: Up to 5 Gig speeds
+                  - listitem [ref=e310]:
+                    - generic [ref=e311]: ✓
+                    - generic [ref=e312]:
+                      - strong [ref=e313]: "AT&T Fiber:"
+                      - text: Symmetrical gigabit
+                - link "Compare Fiber Plans" [ref=e314] [cursor=pointer]:
+                  - /url: /go/google-fiber
+              - generic [ref=e316]:
+                - heading "Best Budget Option" [level=3] [ref=e317]
+                - paragraph [ref=e318]: Looking for reliable internet without breaking the bank? These providers offer great value for basic to moderate usage.
+                - list [ref=e319]:
+                  - listitem [ref=e320]:
+                    - generic [ref=e321]: ✓
+                    - generic [ref=e322]:
+                      - strong [ref=e323]: "T-Mobile 5G:"
+                      - text: $50/mo fixed pricing
+                  - listitem [ref=e324]:
+                    - generic [ref=e325]: ✓
+                    - generic [ref=e326]:
+                      - strong [ref=e327]: "Spectrum:"
+                      - text: $50/mo introductory rate
+                - link "Check 5G Availability" [ref=e328] [cursor=pointer]:
+                  - /url: /go/tmobile-home-internet
+            - generic [ref=e329]:
+              - generic [ref=e330]:
+                - img [ref=e331]
+                - heading "Austin Internet Provider FAQ" [level=2] [ref=e333]
+              - generic [ref=e334]:
+                - group [ref=e335]:
+                  - generic "Which internet provider has the best coverage in Austin?" [ref=e336] [cursor=pointer]:
+                    - generic [ref=e337]: Which internet provider has the best coverage in Austin?
+                    - img [ref=e338]
+                - group [ref=e340]:
+                  - generic "Is Google Fiber available throughout Austin?" [ref=e341] [cursor=pointer]:
+                    - generic [ref=e342]: Is Google Fiber available throughout Austin?
+                    - img [ref=e343]
+                - group [ref=e345]:
+                  - generic "What's the fastest internet speed available in Austin?" [ref=e346] [cursor=pointer]:
+                    - generic [ref=e347]: What's the fastest internet speed available in Austin?
+                    - img [ref=e348]
+                - group [ref=e350]:
+                  - generic "Are there data caps on Austin internet plans?" [ref=e351] [cursor=pointer]:
+                    - generic [ref=e352]: Are there data caps on Austin internet plans?
+                    - img [ref=e353]
+                - group [ref=e355]:
+                  - generic "How much does internet cost in Austin?" [ref=e356] [cursor=pointer]:
+                    - generic [ref=e357]: How much does internet cost in Austin?
+                    - img [ref=e358]
+                - group [ref=e360]:
+                  - generic "Is 5G home internet good in Austin?" [ref=e361] [cursor=pointer]:
+                    - generic [ref=e362]: Is 5G home internet good in Austin?
+                    - img [ref=e363]
+            - generic [ref=e366]:
+              - heading "Find Your Perfect Austin Internet Plan" [level=2] [ref=e367]
+              - paragraph [ref=e368]: Austin's competitive internet market means great options for every budget and need. Compare providers and find the best deal for your address.
+              - generic [ref=e369]:
+                - link "Check Google Fiber" [ref=e370] [cursor=pointer]:
+                  - /url: /go/google-fiber
+                - link "Compare All Austin Providers" [ref=e371] [cursor=pointer]:
+                  - /url: /compare
+        - link "Back to Texas" [ref=e373] [cursor=pointer]:
+          - /url: /internet/texas
+          - img [ref=e374]
+          - text: Back to Texas
+  - button "Open Next.js Dev Tools" [ref=e381] [cursor=pointer]:
+    - img [ref=e382]
+  - alert [ref=e385]
+```
