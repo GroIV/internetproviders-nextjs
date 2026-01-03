@@ -2,7 +2,6 @@ import {
   ChatRequestSchema,
   ZipCodeSchema,
   CreateScheduledUpdateSchema,
-  PatchUpdateSchema,
   AvailabilityQuerySchema,
   PlansQuerySchema,
   validateRequest,

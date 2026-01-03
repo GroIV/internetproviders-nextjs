@@ -31,6 +31,7 @@ export default function AffiliatePage() {
 
   useEffect(() => {
     fetchData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days])
 
   async function fetchData() {

@@ -156,7 +156,7 @@ export function ChatWindow({
 }: ChatWindowProps) {
   const pathname = usePathname()
   // Chat initialization is now handled centrally in ChatContext
-  const { messages, isLoading, sendMessage, hasWelcomed, setPageContext, clearHistory } = useChat()
+  const { messages, isLoading, sendMessage, setPageContext, clearHistory } = useChat()
   const { location, isLoading: locationLoading } = useLocation()
   const [input, setInput] = useState('')
   const [isFocused, setIsFocused] = useState(false)

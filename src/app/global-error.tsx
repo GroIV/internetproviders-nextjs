@@ -65,6 +65,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
               </svg>
               Try Again
             </button>
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Global error boundary runs outside Next.js context */}
             <a
               href="/"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-gray-300 font-medium rounded-lg hover:bg-gray-700 hover:text-white transition-colors border border-gray-700"

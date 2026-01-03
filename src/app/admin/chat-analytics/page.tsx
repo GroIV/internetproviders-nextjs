@@ -48,6 +48,7 @@ export default function ChatAnalyticsPage() {
 
   useEffect(() => {
     fetchData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days])
 
   async function fetchData() {
@@ -213,7 +214,7 @@ export default function ChatAnalyticsPage() {
             <div className="bg-gray-900/60 rounded-xl p-6 border border-gray-700/50">
               <h3 className="text-lg font-semibold text-white mb-4">Top ZIP Codes</h3>
               <div className="space-y-3">
-                {analytics?.topZipCodes.slice(0, 5).map((zip, i) => (
+                {analytics?.topZipCodes.slice(0, 5).map((zip) => (
                   <div key={zip.zip} className="flex items-center justify-between">
                     <span className="text-gray-300 font-mono">{zip.zip}</span>
                     <div className="flex items-center gap-2">

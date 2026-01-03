@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('')
@@ -86,7 +87,7 @@ export default function AdminLoginPage() {
           </form>
 
           <div className="mt-8 pt-6 border-t border-gray-800">
-            <a
+            <Link
               href="/"
               className="flex items-center justify-center gap-2 text-gray-400 hover:text-white text-sm transition-colors"
             >
@@ -94,7 +95,7 @@ export default function AdminLoginPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               Back to site
-            </a>
+            </Link>
           </div>
         </div>
       </div>
