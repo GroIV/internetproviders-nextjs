@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { OfflineIndicator } from './OfflineIndicator'
 import { ThemeToggle } from './ThemeToggle'
@@ -92,7 +92,7 @@ function AnimatedLogo() {
 export function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const pathname = usePathname()
-  const isHomePage = pathname === '/'
+  const router = useRouter()
   const commandCenter = useCommandCenterOptional()
 
   // Hide navbar on admin pages
@@ -100,18 +100,19 @@ export function Navbar() {
     return null
   }
 
-  // Handler for nav items that should show panels on home page
+  // Handler for nav items - always use client-side navigation and show panel
   const handlePanelClick = (
     panelType: PanelType,
     panelData: Record<string, unknown> | undefined,
-    fallbackHref: string
+    href: string
   ) => {
-    if (isHomePage && commandCenter) {
+    setOpenDropdown(null)
+    // Show the panel immediately
+    if (commandCenter) {
       commandCenter.showPanel(panelType, panelData)
-      setOpenDropdown(null)
-    } else {
-      window.location.href = fallbackHref
     }
+    // Navigate to update URL (client-side, no reload)
+    router.push(href)
   }
 
   return (
@@ -147,7 +148,7 @@ export function Navbar() {
                   className="absolute top-full left-0 mt-1 w-56 bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-lg shadow-xl shadow-black/50 py-2 glow-border-cyan"
                   style={{ boxShadow: '0 0 20px rgba(6, 182, 212, 0.1), 0 10px 40px rgba(0,0,0,0.5)' }}
                 >
-                  <button onClick={() => handlePanelClick('comparison', undefined, '/compare')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
+                  <button onClick={() => handlePanelClick('comparePanel', undefined, '/compare')} className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-cyan-400 hover:bg-gray-800/50 transition-colors">
                     Compare by ZIP Code
                   </button>
                   <div className="border-t border-gray-700/50 my-2" />
@@ -257,25 +258,28 @@ export function Navbar() {
           </div>
 
           <button
-            onClick={() => handlePanelClick('recommendations', { title: 'All Internet Providers' }, '/providers')}
+            onClick={() => handlePanelClick('providersPanel', undefined, '/providers')}
             className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
           >
             Providers
           </button>
 
           <button
-            onClick={() => handlePanelClick('recommendations', { view: 'plans', title: 'Internet Plans' }, '/plans')}
+            onClick={() => handlePanelClick('plansPanel', undefined, '/plans')}
             className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
           >
             Plans
           </button>
 
-          <Link href="/guides" className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+          <button
+            onClick={() => handlePanelClick('guidesPanel', undefined, '/guides')}
+            className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+          >
             Guides
-          </Link>
+          </button>
 
           <button
-            onClick={() => handlePanelClick('speedTest', undefined, '/tools')}
+            onClick={() => handlePanelClick('toolsPanel', undefined, '/tools')}
             className="px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
           >
             Tools
